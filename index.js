@@ -73,7 +73,7 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
   conn.on('ready', function() {
 
     var opts = {};
-    if(cmd.match(/^sudo/) ) opts.pty = true;
+    if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
 
     log.verbose(pkg.name, cmd);
 
@@ -133,7 +133,7 @@ SSH2Utils.prototype.run = function(server,cmd,done){
   conn.on('ready', function() {
 
     var opts = {};
-    if(cmd.match(/^sudo/) ) opts.pty = true;
+    if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
 
     log.verbose(pkg.name, cmd);
 
