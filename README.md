@@ -13,7 +13,16 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 ```js
 var SSH2Utils = require('');
 
-var server = {};
+var server = {
+host:         "IP Address",
+    port:         "external port number",
+    // username:     "Is acceptable", // mscdex/ssh2 style
+    userName:     "It s surprising, but works too", // cmp-202/ssh2shell style
+    // dont ask me why.
+    password:     "user password",
+    passPhrase:   "privateKeyPassphrase", //optional default:""
+    privateKey:   require('fs').readFileSync('/path/to/private/key/id_rsa'), //optional default:""
+};
 
 var ssh = new SSH2Utils();
 
