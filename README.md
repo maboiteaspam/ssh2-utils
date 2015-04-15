@@ -11,7 +11,7 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 # Usage
 
 ```js
-var SSH2Utils = require('');
+var SSH2Utils = require('ssh2-utils');
 
 var server = {
 host:         "IP Address",
@@ -32,7 +32,7 @@ ssh.exec(server, 'ls', function(err,stdout,stderr){
 
 // stream and interact
 ssh.run(server, 'sudo tail -f /var/log/some', function(err,stream,stderr){
-    stream.end('\nexit\n);
+    stream.end('\nexit\n');
 });
 
 var cmds = [
