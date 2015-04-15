@@ -1,0 +1,15 @@
+{
+  "name": "ssh2-utils",
+  "version": "1.0.0",
+  "description": "ssh2 utilities around mscdex ssh2 module to make it more easy to use",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ssh2",
+    "utitilities"
+  ],
+  "author": "maboiteaspam",
+  "license": "WTF"
+}
