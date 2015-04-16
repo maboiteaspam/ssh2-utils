@@ -31,8 +31,9 @@ ssh.exec(server, 'ls', function(err,stdout,stderr){
 });
 
 // stream and interact
-ssh.run(server, 'sudo tail -f /var/log/some', function(err,stream,stderr){
+ssh.run(server, 'sudo tail -f /var/log/some', function(err,stream,stderr,server,conn){
     stream.end('\nexit\n');
+    conn.end();
 });
 
 var cmds = [

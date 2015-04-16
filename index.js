@@ -6,6 +6,7 @@ var Client = require('ssh2').Client;
 var SSH2Shell = require ('ssh2shell');
 var glob = require("glob");
 var _ = require("underscore");
+var _s = require("underscore.string");
 
 var pkg = require('./package.json');
 
@@ -47,6 +48,7 @@ var sudoChallenge = function(stream, pwd, then){
  * @constructor
  */
 function SSH2Utils(){
+  this.log = log;
 }
 
 /**
@@ -96,17 +98,17 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
 
       if( opts.pty ){
         sudoChallenge(stream, server['password'], function(success){
-          if (done) done(success, stdout, stderr);
+          if (done) done(!success, stdout, stderr, server, conn);
         });
       }else {
         stream.on('close', function(){
-          if (done) done(true, stdout, stderr);
+          if (done) done(false, stdout, stderr, server, conn);
         });
       }
     });
   }).connect(server);
 
-  log.verbose(pkg.name, 'connecting');
+  log.verbose(pkg.name, 'connecting %j', server);
 
 };
 
@@ -128,7 +130,7 @@ SSH2Utils.prototype.run = function(server,cmd,done){
 
   var conn = new Client();
 
-  server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
+  server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
 
   conn.on('ready', function() {
 
@@ -143,9 +145,6 @@ SSH2Utils.prototype.run = function(server,cmd,done){
 
       stream.stderr.on('data', function(data){
         log.error('exec', 'STDERR: %s', data);
-      });
-      stream.on('close', function(){
-        conn.end();
       });
       // manage user pressing ctrl+C
       var sigIntSent = function(){
@@ -166,10 +165,10 @@ SSH2Utils.prototype.run = function(server,cmd,done){
 
       if( opts.pty ){
         sudoChallenge(stream, server['password'], function(success){
-          if (done) done(success, stream, stream.stderr);
+          if (done) done(!success, stream, stream.stderr, server, conn);
         });
       }else {
-        if (done) done(true, stream, stream.stderr);
+        if (done) done(false, stream, stream.stderr, server, conn);
       }
     });
   }).connect(server);
@@ -196,6 +195,8 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
     cmdComplete = null;
   }
 
+  server.userName = server.username || server.userName || server.user;
+
   var host = {
     server:server,
     idleTimeOut:15000,
@@ -206,7 +207,7 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
     msg: {
       send: function( message ) {
         if(message!=true ){
-          message = _.trim(message);
+          message = _s.trim(message);
           if(message) log.verbose(pkg.name, message );
         }
       }
@@ -217,7 +218,7 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
         response = response.split('\n');
         response.shift();
         response.pop();
-        response = _.trim(response.join('\n') )+'\n';
+        response = _s.trim(response.join('\n') )+'\n';
       }
       if(cmdComplete) cmdComplete(command, response, server);
     },
@@ -237,6 +238,9 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
  * @param then
  */
 SSH2Utils.prototype.readFile = function(server,remoteFile,localPath, then){
+
+  server.username = server.username || server.userName || server.user;
+
   log.verbose(pkg.name, '%s to %s',remoteFile,localPath);
   var conn = new Client();
   server.username = server.username || server.userName;
@@ -245,7 +249,7 @@ SSH2Utils.prototype.readFile = function(server,remoteFile,localPath, then){
       if (err) throw err;
       sftp.fastGet(remoteFile, localPath, function(err){
         conn.end();
-        then(err);
+        then(err, server);
       });
     });
   }).connect(server);
@@ -254,24 +258,29 @@ SSH2Utils.prototype.readFile = function(server,remoteFile,localPath, then){
 /**
  *
  * @param server
- * @param remotePath
  * @param localFile
+ * @param remotePath
  * @param then
  */
-SSH2Utils.prototype.putFile = function(server,remotePath,localFile, then){
+SSH2Utils.prototype.putFile = function(server,localFile,remotePath, then){
+
+  server.username = server.username || server.userName || server.user;
+
   throw 'Needs implementation';
 };
 
 /**
  * @param server
- * @param remotePath
  * @param localPath
+ * @param remotePath
  * @param then
  */
-SSH2Utils.prototype.putDir = function(server,remotePath,localPath, then){
+SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
+
+  server.username = server.username || server.userName || server.user;
+
   log.info(pkg.name, 'from %s to %s',localPath,remotePath);
   var conn = new Client();
-  server.username = server.username || server.userName;
   conn.on('ready', function() {
     conn.sftp(function(err, sftp){
       if (err) throw err;
@@ -331,10 +340,10 @@ SSH2Utils.prototype.putDir = function(server,remotePath,localPath, then){
           sftp.rmdir(remotePath, function(err){
             if(err) log.error(err);
             // then push the scanned files and directories
-            async.parallelLimit(dirs_, 4, function(){
-              async.parallelLimit(files_, 4, function(){
+            async.parallelLimit(dirHandlers, 4, function(){
+              async.parallelLimit(filesHandlers, 4, function(){
                 conn.end();
-                if(then)then(err);
+                if(then)then(err, server);
               });
             });
           });
@@ -354,6 +363,9 @@ SSH2Utils.prototype.putDir = function(server,remotePath,localPath, then){
  * @param then
  */
 SSH2Utils.prototype.getDir = function(server,remotePath,localPath, then){
+
+  server.username = server.username || server.userName || server.user;
+
   throw 'Needs implementation';
 };
 

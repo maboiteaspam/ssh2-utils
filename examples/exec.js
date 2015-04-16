@@ -1,0 +1,53 @@
+
+var fs = require('fs');
+var path = require('path');
+
+var Client = require('ssh2').Client;
+
+var pwd = require('./pwd.json');
+/*
+ var pwd = {
+   "localhost":{
+     "user":"some",
+     "pwd":"cred",
+     "privateKey":"/absolute/path/to/.ssh/id_dsa"
+   }
+ };
+*/
+
+var SSH2Utils = require('../index.js');
+var ssh = new SSH2Utils();
+ssh.log.level = 'verbose';
+
+// with password
+(function(){
+  var host = {
+    'host':'127.0.0.1',
+    port: 22,
+    username: pwd.localhost.user,
+    password: pwd.localhost.pwd
+  };
+
+  ssh.exec(host,'ls -alh', function(err, stdout, stderr, server){
+    if(err) return console.log(err)
+    console.log(stdout)
+    console.log(stderr)
+    console.log(server)
+  });
+})();
+
+// with key
+(function(){
+  var host = {
+    'host':'localhost',
+    username: pwd.localhost.user,
+    privateKey: fs.readFileSync(pwd.localhost.privateKey) // note that ~/ is not recognized
+  };
+
+  ssh.exec(host,'ls -alh', function(err, stdout, stderr, server){
+    if(err) return console.log(err)
+    console.log(stdout)
+    console.log(stderr)
+    console.log(server)
+  });
+})();
