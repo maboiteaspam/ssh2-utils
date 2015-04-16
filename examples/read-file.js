@@ -2,8 +2,6 @@
 var fs = require('fs');
 var path = require('path');
 
-var Client = require('ssh2').Client;
-
 var pwd = require('./pwd.json');
 /*
  var pwd = {

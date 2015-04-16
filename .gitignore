@@ -29,4 +29,7 @@ build/Release
 node_modules
 
 examples/pwd.json
-examples/fixture
+examples/fixture/dir2
+examples/fixture/dir3
+examples/fixture/w2d.json2
+examples/fixture/w2d.json3
