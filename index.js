@@ -185,7 +185,6 @@ SSH2Utils.prototype.run = function(server,cmd,done){
       }else {
         stream.on('close', function(){
           process.removeListener('SIGINT', sigIntSent);
-          conn.end();
         });
         if (done) done(false, stream, stream.stderr, server, conn);
       }
