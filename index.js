@@ -19,28 +19,27 @@ var pkg = require('./package.json');
  */
 var sudoChallenge = function(stream, pwd, then){
   log.info('ssh', 'waiting for sudo');
-  var inputPassword = function(data){
-    if(data.toString().match(/\[sudo\] password/) ){
+  var hasChallenge = false;
+  var checkPwdInput = function(data){
+    if(!hasChallenge && data.toString().match(/\[sudo\] password/) ){
+      hasChallenge = true;
       log.info('ssh', 'login...');
-      stream.on('data', checkFailLogin);
-      stream.removeListener('data', inputPassword);
       stream.write(pwd+'\n');
-    }
-  };
-  var checkFailLogin = function(data){
-    stream.removeListener('data', checkFailLogin);
-    if(data.toString().match(/Sorry, try again/) ){
-      log.error('ssh', 'login in failed');
-      if (then) then(true);
-    }else{
-      if (then) then(false);
+    } else if(hasChallenge){
+      if(data.toString().match(/Sorry, try again/) ){
+        log.error('ssh', 'login in failed');
+        if (then) then(true);
+      }else{
+        log.verbose('ssh', 'login in success');
+        if (then) then(false);
+      }
+      hasChallenge = false;
     }
   };
   stream.on('end', function(){
-    stream.removeListener('data', inputPassword);
-    stream.removeListener('data', checkFailLogin);
+    stream.removeListener('data', checkPwdInput);
   });
-  stream.on('data', inputPassword);
+  stream.on('data', checkPwdInput);
 };
 
 /**
@@ -89,18 +88,23 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
         log.error('exec', 'STDERR: %s', data);
         stderr += data.toString();
       });
-      stream.on('data', function(data){
-        stdout += data.toString();
-      });
       stream.on('close', function(){
         conn.end();
       });
 
       if( opts.pty ){
         sudoChallenge(stream, server['password'], function(success){
-          if (done) done(!success, stdout, stderr, server, conn);
+          stream.on('data', function(data){
+            stdout += data.toString();
+          });
+          stream.on('close', function(){
+            if (done) done(success, stdout, stderr, server, conn);
+          });
         });
       }else {
+        stream.on('data', function(data){
+          stdout += data.toString();
+        });
         stream.on('close', function(){
           if (done) done(false, stdout, stderr, server, conn);
         });
@@ -165,7 +169,7 @@ SSH2Utils.prototype.run = function(server,cmd,done){
 
       if( opts.pty ){
         sudoChallenge(stream, server['password'], function(success){
-          if (done) done(!success, stream, stream.stderr, server, conn);
+          if (done) done(success, stream, stream.stderr, server, conn);
         });
       }else {
         if (done) done(false, stream, stream.stderr, server, conn);
