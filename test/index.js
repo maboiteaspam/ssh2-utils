@@ -57,7 +57,7 @@ describe('run', function(){
       })
       setTimeout(function(){
         conn.end()
-      },500)
+      },1000)
     });
   })
 });
