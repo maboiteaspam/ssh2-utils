@@ -35,9 +35,13 @@ var sudoChallenge = function(stream, pwd, then){
       }
       hasChallenge = false;
     }else{
-      console.log(data)
+      console.log(""+data)
     }
   };
+  setTimeout(function(){
+    log.error('ssh', 'login in failed');
+    if (then) then(true);
+  },10000);
   stream.on('end', function(){
     stream.removeListener('data', checkPwdInput);
   });
