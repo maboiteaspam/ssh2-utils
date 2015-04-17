@@ -163,15 +163,19 @@ SSH2Utils.prototype.run = function(server,cmd,done){
         conn.end();
       };
       process.on('SIGINT', sigIntSent);
-      stream.on('close', function(){
-        process.removeListener('SIGINT', sigIntSent);
-      });
 
       if( opts.pty ){
         sudoChallenge(stream, server['password'], function(success){
+          stream.on('close', function(){
+            process.removeListener('SIGINT', sigIntSent);
+          });
           if (done) done(success, stream, stream.stderr, server, conn);
         });
       }else {
+        stream.on('close', function(){
+          process.removeListener('SIGINT', sigIntSent);
+          conn.end();
+        });
         if (done) done(false, stream, stream.stderr, server, conn);
       }
     });
