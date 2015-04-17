@@ -8,5 +8,5 @@ node_js:
   - "iojs"
   - "iojs-v1.0.4"
 script:
-  - ./.travis-ssh.sh
+  - sh ./.travis-ssh.sh
   - npm test
