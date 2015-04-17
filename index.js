@@ -20,6 +20,10 @@ var pkg = require('./package.json');
 var sudoChallenge = function(stream, pwd, then){
   log.info('ssh', 'waiting for sudo');
   var hasChallenge = false;
+  var tChallenge = setTimeout(function(){
+      log.error('ssh', 'login in failed');
+      if (then) then(true);
+    },10000);
   var checkPwdInput = function(data){
     if(!hasChallenge && data.toString().match(/\[sudo\] password/) ){
       hasChallenge = true;
@@ -33,15 +37,14 @@ var sudoChallenge = function(stream, pwd, then){
         log.verbose('ssh', 'login in success');
         if (then) then(false);
       }
+      clearTimeout(tChallenge)
       hasChallenge = false;
-    }else{
-      console.log("   " + data)
+    }else if(!hasChallenge){
+      log.verbose('ssh', 'login in success');
+      if (then) then(false);
+      clearTimeout(tChallenge)
     }
   };
-  setTimeout(function(){
-    log.error('ssh', 'login in failed');
-    if (then) then(true);
-  },10000);
   stream.on('end', function(){
     stream.removeListener('data', checkPwdInput);
   });
