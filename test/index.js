@@ -32,7 +32,12 @@ describe('exec', function(){
     });
   })
   it('can execute sudo command', function(done){
+    console.log('vvvvv')
+    console.log('vvvvv')
     ssh.exec(host,'sudo ls -alh', function(err, stdout, stderr, server){
+      console.log('ddddddddd')
+      console.log('ddddddddd')
+      console.log('ddddddddd')
       if(err) return console.log(err)
       stdout.should.match(/\.npm/)
       stderr.should.be.empty
@@ -45,7 +50,12 @@ describe('exec', function(){
 describe('run', function(){
   this.timeout(50000)
   it('can execute sudo command', function(done){
+    console.log('vvvvv')
+    console.log('vvvvv')
     ssh.run(host,'sudo tail -f /var/log/secure', function(err, stream, stderr, server, conn){
+      console.log('ddddddddd')
+      console.log('ddddddddd')
+      console.log('ddddddddd')
       if(err) return console.log(err)
       var stdout = '';
       stream.on('data', function(data){
