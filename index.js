@@ -34,6 +34,8 @@ var sudoChallenge = function(stream, pwd, then){
         if (then) then(false);
       }
       hasChallenge = false;
+    }else{
+      console.log(data)
     }
   };
   stream.on('end', function(){
