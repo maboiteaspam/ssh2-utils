@@ -26,9 +26,10 @@ var sudoChallenge = function(stream, pwd, then){
     },10000);
   var tChallengeS = setTimeout(function(){
     if(!hasChallenge){
+      clearTimeout(tChallenge)
+      stream.removeListener('data', checkPwdInput);
       log.verbose('ssh', 'login in success');
       if (then) then(false);
-      clearTimeout(tChallenge)
     }
   },1000);
   var checkPwdInput = function(data){
