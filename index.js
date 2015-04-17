@@ -104,20 +104,17 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
       stream.on('close', function(){
         conn.end();
       });
+      stream.on('data', function(data){
+        stdout += data.toString();
+      });
 
       if( opts.pty ){
         sudoChallenge(stream, server['password'], function(success){
-          stream.on('data', function(data){
-            stdout += data.toString();
-          });
           stream.on('close', function(){
             if (done) done(success, stdout, stderr, server, conn);
           });
         });
       }else {
-        stream.on('data', function(data){
-          stdout += data.toString();
-        });
         stream.on('close', function(){
           if (done) done(false, stdout, stderr, server, conn);
         });
