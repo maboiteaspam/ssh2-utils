@@ -35,7 +35,7 @@ var sudoChallenge = function(stream, pwd, then){
       }
       hasChallenge = false;
     }else{
-      console.log(""+data)
+      console.log("" + data)
     }
   };
   setTimeout(function(){
