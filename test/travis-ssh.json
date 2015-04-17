@@ -1,0 +1,6 @@
+{
+  "localhost":{
+    "user":"travis",
+    "privateKey":"/home/travis/.ssh/id_rsa"
+  }
+}
