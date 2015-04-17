@@ -1,5 +1,6 @@
 
 require('should');
+var fs = require('fs')
 
 var pwd = {};
 if( process.env['TRAVIS'] )
@@ -16,7 +17,7 @@ var host = {
   port: 22,
   username: pwd.localhost.user,
   password: pwd.localhost.pwd,
-  privateKey: pwd.localhost.privateKey
+  privateKey: pwd.localhost.privateKey?fs.readFileSync(pwd.localhost.privateKey):null
 };
 
 
@@ -58,5 +59,32 @@ describe('run', function(){
         conn.end()
       },500)
     });
+  })
+});
+
+
+describe('run multiple', function(){
+  this.timeout(50000)
+  it('can run multiple commands', function(done){
+
+    var cmds = [
+      'echo hello',
+      'time',
+      "`All done!`"
+    ];
+
+    var onDone = function(sessionText, sshObj){
+      console.log(sessionText)
+      console.log('All done')
+      sessionText.toString().should.match(/hello/)
+      done();
+    };
+
+    var onCommandComplete = function(command, response, server){
+
+    }
+
+    ssh.runMultiple(host, cmds, onCommandComplete, onDone);
+
   })
 });
