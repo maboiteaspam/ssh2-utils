@@ -7,6 +7,8 @@ node_js:
   - "0.6"
   - "iojs"
   - "iojs-v1.0.4"
+install:
+  - npm i mocha -g
 script:
   - sh ./.travis-ssh.sh
   - npm test
