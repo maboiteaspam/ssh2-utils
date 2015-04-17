@@ -13,3 +13,4 @@ install:
 script:
   - sh ./.travis-ssh.sh
   - npm test
+sudo:
