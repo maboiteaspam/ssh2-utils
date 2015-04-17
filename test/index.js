@@ -51,11 +51,9 @@ describe('run', function(){
       stream.on('data', function(data){
         stdout+=''+data;
       })
-      stream.on('close', function(){
+      setTimeout(function(){
         stdout.toString().should.match(/tail -f/)
         done();
-      })
-      setTimeout(function(){
         conn.end()
       },1000)
     });

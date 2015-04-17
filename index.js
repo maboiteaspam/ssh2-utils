@@ -109,6 +109,7 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
         conn.end();
       });
       stream.on('data', function(data){
+        log.verbose(data)
         stdout += data.toString();
       });
 
@@ -163,6 +164,9 @@ SSH2Utils.prototype.run = function(server,cmd,done){
 
       stream.stderr.on('data', function(data){
         log.error('exec', 'STDERR: %s', data);
+      });
+      stream.on('data', function(data){
+        log.verbose(data)
       });
       // manage user pressing ctrl+C
       var sigIntSent = function(){
