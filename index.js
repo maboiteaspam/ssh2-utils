@@ -24,6 +24,7 @@ var sudoChallenge = function(stream, pwd, then){
       log.error('ssh', 'login in failed');
       if (then) then(true);
     },10000);
+  var tChallengeSucess;
   var checkPwdInput = function(data){
     if(!hasChallenge && data.toString().match(/\[sudo\] password/) ){
       hasChallenge = true;
@@ -40,9 +41,14 @@ var sudoChallenge = function(stream, pwd, then){
       clearTimeout(tChallenge)
       hasChallenge = false;
     }else if(!hasChallenge){
-      log.verbose('ssh', 'login in success');
-      if (then) then(false);
-      clearTimeout(tChallenge)
+      if(!tChallengeSucess){
+        clearTimeout(tChallenge)
+        tChallengeSucess = setTimeout(function(){
+          log.verbose('ssh', 'login in success');
+          if (then) then(false);
+        },500);
+      }
+
     }
   };
   stream.on('end', function(){
