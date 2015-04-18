@@ -24,7 +24,7 @@ var host = {
 describe('exec', function(){
   this.timeout(50000)
   it('can execute command', function(done){
-    ssh.exec(host,'ls -alh', function(err, stdout, stderr, server){
+    ssh.exec(host,'ls -alh /var/log/', function(err, stdout, stderr, server){
       if(err) return console.log(err)
       stdout.should.match(/\.npm/)
       stderr.should.be.empty
@@ -36,7 +36,7 @@ describe('exec', function(){
     console.log('vvvvv')
     ssh.exec(host,'sudo ls -alh', function(err, stdout, stderr, server){
       console.log('ddddddddd')
-      console.log('ddddddddd')
+      console.log(stdout)
       console.log('ddddddddd')
       if(err) return console.log(err)
       stdout.should.match(/\.npm/)
