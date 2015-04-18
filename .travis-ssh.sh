@@ -20,16 +20,4 @@ ssh-keyscan -t rsa localhost >>~/.ssh/known_hosts
 cat << EOF >> ~/.ssh/config
 Host localhost
      IdentityFile ~/.ssh/id_rsa
-     PasswordAuthentication yes
 EOF
-
-sudo useradd --home /home/tpwd/ --gid travis --groups travis --password 123456tpwd -s /bin/bash tpwd
-
-sudo restart ssh
-
-sudo cat /etc/passwd
-echo '---------'
-sudo cat /etc/ssh/sshd_config
-echo '---------'
-sudo cat /etc/ssh/ssh_config
-echo '---------'
