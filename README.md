@@ -4,10 +4,13 @@ A library to ease use of excellent modules ssh2 and ssh2shell.
 
 Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 
+---------------------------------------
+
 # Install
 
 ```npm i ssh2-utils --save```
 
+---------------------------------------
 
 ### API
 
@@ -51,7 +54,6 @@ __Examples__
         console.log(stderr);
     });
 ```
-
 ---------------------------------------
 
 <a name="run" />
@@ -91,7 +93,6 @@ __Examples__
         });
     });
 ```
-
 ---------------------------------------
 
 <a name="runMultiple" />
@@ -125,7 +126,6 @@ __Examples__
         console.log(sessionText);
     });
 ```
-
 ---------------------------------------
 
 <a name="readFile" />
@@ -154,7 +154,6 @@ __Examples__
         if(err) console.log(err);
     });
 ```
-
 ---------------------------------------
 
 <a name="putDir" />
@@ -183,6 +182,7 @@ __Examples__
         if(err) console.log(err);
     });
 ```
+---------------------------------------
 
 # Status
 
