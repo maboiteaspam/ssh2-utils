@@ -64,6 +64,7 @@ describe('exec', function(){
     });
   });
   it('can execute sudo command', function(done){
+    this.timeout(50000)
     ssh.exec(host,'sudo ls -alh', function(err, stdout, stderr, server){
       (err).should.be.false;
       stdout.should.match(/\.npm/);
