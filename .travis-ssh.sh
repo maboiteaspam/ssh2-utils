@@ -24,6 +24,13 @@ EOF
 
 sudo useradd --home /home/tpwd/ --gid travis --groups travis --password 123456tpwd -s /bin/bash tpwd
 
+cat << EOF >> /etc/ssh/ssh_config
+
+PasswordAuthentication yes
+EOF
 sudo cat /etc/passwd
+echo '---------'
 sudo cat /etc/ssh/sshd_config
+echo '---------'
 sudo cat /etc/ssh/ssh_config
+echo '---------'
