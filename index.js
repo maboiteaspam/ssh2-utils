@@ -315,6 +315,7 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
       send: function( message ) {
         if(message!=true ){
           message = _s.trim(message);
+          allSessionText += message;
           if(message) log.verbose(pkg.name, message );
         }
       }
