@@ -53,10 +53,10 @@ __Arguments__
 * `server` - An object of ssh server credentials.
 * `cmd` - A command line to execute on remote.
 * `callback(err,stdout,stderr,server,conn)` - A callback called on command line completion. 
-    `err` isa Boolean.
-    `stdout` `stderr` are String.
-    `server` An ssh server credentials object.
-    `conn` An ssh Client object.
+    * `err` isa Boolean.
+    * `stdout` `stderr` are String.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
 
 __Examples__
 
@@ -84,10 +84,10 @@ __Arguments__
 * `server` - An object of ssh server credentials.
 * `cmd` - A command line to execute on remote.
 * `callback(err,stdout,stderr,server,conn)` - A callback called on command line sent. 
-    `err` isa Boolean.
-    `stdout` `stderr` are Streams.
-    `server` An ssh server credentials object.
-    `conn` An ssh Client object.
+    * `err` isa Boolean.
+    * `stdout` `stderr` are Streams.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
 
 __Examples__
 
@@ -155,7 +155,7 @@ __Arguments__
 * `remoteFile` - A remote file path to read.
 * `localPath` - A local file path to write.
 * `callback(err)` - A callback called on command line completion. 
-    `err` is an Error.
+    * `err` is an Error.
 
 __Examples__
 
@@ -182,7 +182,7 @@ __Arguments__
 * `localPath` - A local file path to write.
 * `remoteFile` - A remote file path to read.
 * `callback(err)` - A callback called on command line completion. 
-    `err` is an Error.
+    * `err` is an Error.
 
 __Examples__
 
