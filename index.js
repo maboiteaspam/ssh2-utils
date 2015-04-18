@@ -337,6 +337,7 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
   SSH.connect();
 
   SSH.on("close", function onError(err) {
+    log.error(err)
     log.silly(allSessionText)
     if(then) then(err, allSessionText, server);
   });
