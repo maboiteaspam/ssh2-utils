@@ -101,10 +101,11 @@ describe('run', function(){
         stdout+=''+data;
       });
       setTimeout(function(){
+        console.log(stdout)
         stdout.toString().should.match(/tail -f/)
         conn.end()
         done();
-      },1000)
+      },2000)
     });
   });
   it('run can fail properly', function(done){

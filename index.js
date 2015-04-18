@@ -21,7 +21,7 @@ var sudoChallenge = function(stream, pwd, then){
   log.info('ssh', 'waiting for sudo');
   var hasChallenge = false;
   var tChallenge = setTimeout(function(){
-      log.error('ssh', 'login in failed');
+      log.error('ssh', 'login in failed by timeout');
       if (then) then(true);
     },10000);
   var tChallengeS;
@@ -30,7 +30,7 @@ var sudoChallenge = function(stream, pwd, then){
       if(!hasChallenge){
         clearTimeout(tChallenge)
         stream.removeListener('data', checkPwdInput);
-        log.verbose('ssh', 'login in success');
+        log.verbose('ssh', 'login in success by timeout');
         if (then) then(false);
       }
     },100);
@@ -44,10 +44,10 @@ var sudoChallenge = function(stream, pwd, then){
     } else if(hasChallenge){
       clearTimeout(tChallenge);
       if(data.toString().match(/Sorry, try again/) ){
-        log.error('ssh', 'login in failed');
+        log.error('ssh', 'login in failed by password');
         if (then) then(true);
       }else{
-        log.verbose('ssh', 'login in success');
+        log.verbose('ssh', 'login in success by password');
         if (then) then(false);
       }
       hasChallenge = false;
@@ -115,6 +115,7 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
 
       if( opts.pty ){
         sudoChallenge(stream, server['password'], function(success){
+          log.verbose('challenge done, success:%j', success)
           stream.on('close', function(){
             if (done) done(success, stdout, stderr, server, conn);
           });
