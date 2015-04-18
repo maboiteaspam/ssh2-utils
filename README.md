@@ -113,8 +113,8 @@ __Examples__
 
 
 <a name="runMultiple" />
-### SSH2Utils.runMultiple(server, cmds, onCommandComplete, onDone)
-    SSH2Utils.runMultiple(server, cmds, onDone)
+### SSH2Utils.runMultiple(server, cmds, onComdComplete, onDone)
+##### SSH2Utils.runMultiple(server, cmds, onDone)
 
 Execute a series of command on remote server and returns their output.
 
@@ -122,7 +122,7 @@ __Arguments__
 
 * `server` - An object of ssh server credentials.
 * `cmds` - An array of commands line to execute on remote.
-* `onCommandComplete(command, response, server)` - A callback called on command line completion. 
+* `onComdComplete(command, response, server)` - A callback called on command line completion. 
     `command` the completed command line.
     `response` the completed command line response.
     `server` An ssh server credentials object.
