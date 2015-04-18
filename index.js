@@ -19,7 +19,7 @@ var pkg = require('./package.json');
  * @param then
  */
 var sudoChallenge = function(stream, pwd, then){
-  log.info('ssh', 'waiting for sudo');
+  log.verbose('ssh', 'waiting for sudo');
   var hasChallenge = false;
   var tChallenge = setTimeout(function(){
     log.error('ssh', 'login in failed by timeout');
@@ -29,7 +29,7 @@ var sudoChallenge = function(stream, pwd, then){
   var checkPwdInput = function(data){
     if(!hasChallenge && data.toString().match(/\[sudo\] password/) ){
       hasChallenge = true;
-      log.info('ssh', 'login...');
+      log.verbose('ssh', 'login...');
       stream.removeListener('data', checkPwdLessInput);
       stream.write(pwd+'\n');
     } else if(hasChallenge){
@@ -107,7 +107,7 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
         conn.end();
       });
       stream.on('data', function(data){
-        log.verbose(data)
+        log.silly(data)
         stdout += data.toString();
       });
 
@@ -179,7 +179,7 @@ SSH2Utils.prototype.run = function(server,cmd,done){
         stderr = ''+data;
       });
       stream.on('data', function(data){
-        log.verbose(data)
+        log.silly(data)
         stdout = ''+data;
       });
       // manage user pressing ctrl+C
@@ -200,9 +200,7 @@ SSH2Utils.prototype.run = function(server,cmd,done){
       });
 
       if( opts.pty ){
-        console.log('__________________')
         sudoChallenge(stream, server['password'], function(success){
-          console.log("-------------")
           var rstderr = through().pause();
           var rstdout = through().pause();
           if (done) done(success, rstdout, rstderr, server, conn);
@@ -346,13 +344,13 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
 
   server.username = server.username || server.userName || server.user;
 
-  log.info(pkg.name, 'from %s to %s',localPath,remotePath);
+  log.verbose(pkg.name, 'from %s to %s',localPath,remotePath);
   var conn = new Client();
   conn.on('ready', function() {
     conn.sftp(function(err, sftp){
       if (err) throw err;
 
-      log.info(pkg.name, 'ready');
+      log.verbose(pkg.name, 'ready');
       var options = {
         cwd: localPath
       };
@@ -364,7 +362,7 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
 
         // create root remote directory
         dirHandlers.push(function(done){
-          log.info(pkg.name, 'mkdir %s', remotePath);
+          log.verbose(pkg.name, 'mkdir %s', remotePath);
           sftp.mkdir(remotePath,function(err){
             if(err) log.error(err);
             done();
@@ -375,7 +373,7 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
         dirs.forEach(function(f){
           dirHandlers.push(function(done){
             var to = path.join(remotePath, f).replace(/[\\]/g,'/');
-            log.info(pkg.name, 'mkdir %s', to);
+            log.verbose(pkg.name, 'mkdir %s', to);
             sftp.mkdir(to,function(err){
               if(err) log.error(err);
               done();
@@ -394,7 +392,7 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
             filesHandlers.push(function(done){
               var from = path.join(localPath, f);
               var to = path.join(remotePath, f).replace(/[\\]/g,'/'); // windows needs this
-              log.info(pkg.name, 'put %s %s', from, to);
+              log.verbose(pkg.name, 'put %s %s', from, to);
               sftp.fastPut(from, to, function(err){
                 if(err) log.error(err);
                 if(done) done();
@@ -403,7 +401,7 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
           });
 
           // delete root remote directory if it exists
-          log.info(pkg.name, 'rmdir %s', remotePath);
+          log.verbose(pkg.name, 'rmdir %s', remotePath);
           sftp.rmdir(remotePath, function(err){
             if(err) log.error(err);
             // then push the scanned files and directories
