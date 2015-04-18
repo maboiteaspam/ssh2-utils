@@ -1,12 +1,12 @@
 
 require('should');
-var fs = require('fs')
+var fs = require('fs');
 
 var pwd = {};
 if( process.env['TRAVIS'] )
   pwd = require('./travis-ssh.json');
 else
-  pwd = require('../examples/pwd.json');
+  pwd = require('./vagrant-ssh.json');
 
 var SSH2Utils = require('../index.js');
 var ssh = new SSH2Utils();
@@ -14,7 +14,7 @@ ssh.log.level = 'silly';
 
 var hostKey = {
   'host':'127.0.0.1',
-  port: 22,
+  port: pwd.localhost.port || 22,
   username: pwd.localhost.user,
   password: pwd.localhost.pwd,
   privateKey: pwd.localhost.privateKey?fs.readFileSync(pwd.localhost.privateKey):null
@@ -22,12 +22,30 @@ var hostKey = {
 
 var hostPwd = {
   'host':'127.0.0.1',
-  port: 22,
+  port: pwd.localhostpwd.port || 22,
   username: pwd.localhostpwd.user,
   password: pwd.localhostpwd.pwd
 };
 if( process.env['TRAVIS'] ){
   hostPwd.privateKey = hostKey.privateKey;
+}
+
+
+if( !process.env['TRAVIS'] ){
+  before(function(done){
+    var vagrant = require('child_process').spawn('vagrant',['up'])
+    vagrant.stdout.on('data', function (data) {
+      console.log('stdout: ' + data);
+    });
+    vagrant.stderr.on('data', function (data) {
+      console.log('stderr: ' + data);
+    });
+    vagrant.on('close', function (code) {
+      console.log('child process exited with code ' + code);
+      done();
+    });
+    this.timeout(50000);
+  });
 }
 
 
@@ -85,12 +103,12 @@ describe('exec', function(){
     this.timeout(50000)
     ssh.exec(hostPwd,'sudo ls -alh', function(err, stdout, stderr, server,conn){
       (err).should.be.false;
-      stdout.should.match(/\.npm/);
+      stdout.should.match(new RegExp(server.username));
       stderr.should.be.empty;
       // re use connection
       ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
         (err).should.be.false;
-        stdout.should.match(/\.npm/);
+        stdout.should.match(new RegExp(server.username));
         stderr.should.be.empty;
         done();
       });
@@ -100,12 +118,12 @@ describe('exec', function(){
     this.timeout(50000)
     ssh.exec(hostKey,'sudo ls -alh', function(err, stdout, stderr, server,conn){
       (err).should.be.false;
-      stdout.should.match(/\.npm/);
+      stdout.should.match(new RegExp(server.username));
       stderr.should.be.empty;
       // re use connection
       ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
         (err).should.be.false;
-        stdout.should.match(/\.npm/);
+        stdout.should.match(new RegExp(server.username));
         stderr.should.be.empty;
         done();
       });

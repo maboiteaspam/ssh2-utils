@@ -1,0 +1,12 @@
+{
+  "localhost":{
+    "user":"vagrant",
+    "port":2222,
+    "pwd":"vagrant"
+  },
+  "localhostpwd":{
+    "user":"vagrant",
+    "port":2222,
+    "pwd":"vagrant"
+  }
+}
