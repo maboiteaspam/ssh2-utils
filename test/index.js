@@ -26,6 +26,9 @@ var hostPwd = {
   username: pwd.localhostpwd.user,
   password: pwd.localhostpwd.pwd
 };
+if( process.env['TRAVIS'] ){
+  hostPwd.private = hostKey.privateKey;
+}
 
 
 describe('ident', function(){
