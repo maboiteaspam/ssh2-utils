@@ -23,3 +23,6 @@ Host localhost
 EOF
 
 sudo useradd --home /home/tpwd/ --gid travis --groups travis --password 123456tpwd tpwd
+
+sudo cat /etc/passwd
+sudo cat /etc/sshd/sshd_config
