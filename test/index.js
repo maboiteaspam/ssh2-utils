@@ -65,26 +65,32 @@ describe('exec', function(){
   });
   it('can execute sudo command', function(done){
     this.timeout(50000)
-    ssh.exec(host,'sudo ls -alh', function(err, stdout, stderr, server){
+    ssh.exec(host,'sudo ls -alh', function(err, stdout, stderr, server,conn){
       (err).should.be.false;
       stdout.should.match(/\.npm/);
       stderr.should.be.empty;
-      done();
+      // re use connection
+      ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
+        (err).should.be.false;
+        stdout.should.match(/\.npm/);
+        stderr.should.be.empty;
+        done();
+      });
     });
   });
   it('can fail properly', function(done){
     ssh.exec(host,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
-      if(err) return console.log(err)
-      stderr.should.match(/No such file or directory/)
-      stdout.should.be.empty
+      (err).should.be.false;
+      stdout.should.match(/No such file or directory/)
+      stderr.should.be.empty
       done()
     });
   });
   it('can fail properly', function(done){
     ssh.exec(host,'dsscdc', function(err, stdout, stderr, server){
-      if(err) return console.log(err)
-      stderr.should.match(/command not found/)
-      stdout.should.be.empty
+      (err).should.be.false;
+      stdout.should.match(/command not found/)
+      stderr.should.be.empty
       done()
     });
   });
@@ -101,10 +107,16 @@ describe('run', function(){
         stdout+=''+data;
       });
       setTimeout(function(){
-        stdout.toString().should.match(/session/)
-        conn.end()
-        done();
-      },2000)
+        // re use connection
+        ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
+          stdout2.on('data', function(data){
+            data.toString().should.match(/root/)
+            stdout.toString().should.match(/session/)
+            conn.end()
+            done();
+          });
+        });
+      },2000);
     });
   });
   it('run can fail properly', function(done){
@@ -118,8 +130,6 @@ describe('run', function(){
         stderr+=''+data;
       });
       setTimeout(function(){
-        console.log(stdout)
-        console.log(stderr)
         stderr.should.match(/No such file or directory/)
         stdout.should.be.empty
         conn.end()

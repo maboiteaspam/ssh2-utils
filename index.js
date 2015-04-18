@@ -76,20 +76,18 @@ function SSH2Utils(){
  * - log errors to output
  * - remote program termination with ctrl+C
  *
- * @param server
+ * @param server Oject|Client
  * @param cmd
  * @param done
  */
 SSH2Utils.prototype.exec = function(server,cmd,done){
 
-  var conn = new Client();
-
-  server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
-
-  conn.on('ready', function() {
-
+  var execOnConn = function(conn){
     var opts = {};
     if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
+    opts.pty = true;
+
+    if(!conn.server) conn.server = server;
 
     log.verbose(pkg.name, cmd);
 
@@ -103,42 +101,71 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
         log.error('exec', 'STDERR: %s', data);
         stderr += data.toString();
       });
-      stream.on('close', function(){
-        conn.end();
-      });
       stream.on('data', function(data){
         log.silly(data)
         stdout += data.toString();
       });
 
       if( opts.pty ){
-        sudoChallenge(stream, server['password'], function(success){
-          log.verbose('challenge done, success:%j', success)
-          stream.on('close', function(){
-            if (done) done(success, stdout, stderr, server, conn);
-          });
+        sudoChallenge(stream, conn.server['password'], function(success){
+          log.verbose('challenge done, error:%j', success);
+          var tout;
+          var triggerOnceFinished = function(){
+            clearTimeout(tout)
+            tout = setTimeout(function(){
+              stream.removeListener('data',triggerOnceFinished);
+              stream.stderr.removeListener('data',triggerOnceFinished);
+              if (done) done(success, stdout, stderr, server, conn);
+            },250);
+          };
+          stream.on('data', triggerOnceFinished);
+          stream.stderr.on('data', triggerOnceFinished);
+          triggerOnceFinished();
         });
       }else {
-        stream.on('close', function(){
-          if (done) done(false, stdout, stderr, server, conn);
-        });
+        var tout;
+        var triggerOnceFinished = function(){
+          clearTimeout(tout)
+          tout = setTimeout(function(){
+            stream.removeListener('data',triggerOnceFinished);
+            stream.stderr.removeListener('data',triggerOnceFinished);
+            if (done) done(false, stdout, stderr, server, conn);
+          },250);
+        };
+        stream.on('data', triggerOnceFinished);
+        stream.stderr.on('data', triggerOnceFinished);
+        triggerOnceFinished();
       }
     });
-  });
+  };
 
-  try{
-    conn.connect(server);
+  if(server instanceof Client ){
+    execOnConn(server);
+  }else{
 
-    log.verbose(pkg.name, 'connecting');
+    var conn = new Client();
 
-    conn.on('error',function(stderr){
-      log.error(''+stderr)
-      done(true,null,''+stderr, server)
+    server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
+
+    conn.on('ready', function() {
+      execOnConn(conn);
     });
-  }catch(ex){
-    log.error(''+ex)
-    done(true,null,''+ex, server)
+
+    try{
+      conn.connect(server);
+
+      log.verbose(pkg.name, 'connecting');
+
+      conn.on('error',function(stderr){
+        log.error(''+stderr)
+        done(true,null,''+stderr, server)
+      });
+    }catch(ex){
+      log.error(''+ex)
+      done(true,null,''+ex, server)
+    }
   }
+
 
 };
 
@@ -158,12 +185,7 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
  */
 SSH2Utils.prototype.run = function(server,cmd,done){
 
-  var conn = new Client();
-
-  server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
-
-  conn.on('ready', function() {
-
+  var runOnConn = function(conn){
     var opts = {};
     if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
 
@@ -215,29 +237,41 @@ SSH2Utils.prototype.run = function(server,cmd,done){
         if (done) done(false, stream, stream.stderr, server, conn);
       }
     });
-  });
+  };
 
-  try{
-    conn.connect(server);
+  if( server instanceof Client ){
+    runOnConn(server)
+  } else {
+    var conn = new Client();
 
-    log.verbose(pkg.name, 'connecting');
+    server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
 
-    conn.on('error',function(stderr){
-      log.error('event '+stderr)
-      var Readable = require('stream').Readable;
-      var rs = new Readable;
-      done(true,null,''+stderr, server)
-      rs.push(stderr.toString());
-      rs.push(null);
+    conn.on('ready', function() {
+      runOnConn(conn)
     });
 
-  }catch(ex){
-    log.error('connect '+ex)
-    var Readable = require('stream').Readable;
-    var rs = new Readable;
-    done(true,null,''+ex, server)
-    rs.push(ex.toString());
-    rs.push(null);
+    try{
+      conn.connect(server);
+
+      log.verbose(pkg.name, 'connecting');
+
+      conn.on('error',function(stderr){
+        log.error('event '+stderr)
+        var Readable = require('stream').Readable;
+        var rs = new Readable;
+        done(true,null,''+stderr, server)
+        rs.push(stderr.toString());
+        rs.push(null);
+      });
+
+    }catch(ex){
+      log.error('connect '+ex)
+      var Readable = require('stream').Readable;
+      var rs = new Readable;
+      done(true,null,''+ex, server)
+      rs.push(ex.toString());
+      rs.push(null);
+    }
   }
 
 };
