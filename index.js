@@ -147,6 +147,8 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
 
     server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
 
+    log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
+
     conn.on('ready', function() {
       execOnConn(conn);
     });
@@ -246,6 +248,8 @@ SSH2Utils.prototype.run = function(server,cmd,done){
 
     server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
 
+    log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
+
     conn.on('ready', function() {
       runOnConn(conn)
     });
@@ -296,9 +300,13 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
 
   server.userName = server.username || server.userName || server.user;
 
+  log.silly(pkg.name, '%s@%s:%s',server.userName,server.host,server.port);
+
+  var allSessionText = '';
+
   var host = {
     server:server,
-    idleTimeOut:15000,
+    idleTimeOut:1000,
     connectedMessage:true,
     readyMessage:true,
     closedMessage:true,
@@ -322,11 +330,17 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
       if(cmdComplete) cmdComplete(command, response, server);
     },
     onEnd: function( sessionText, sshObj ) {
-      if(then) then(sessionText, server);
+      allSessionText = sessionText;
     }
   };
   var SSH = new SSH2Shell(host);
   SSH.connect();
+
+  SSH.on("close", function onError(err) {
+    log.silly(allSessionText)
+    if(then) then(err, allSessionText, server);
+  });
+
 };
 
 /**
@@ -339,6 +353,8 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
 SSH2Utils.prototype.readFile = function(server,remoteFile,localPath, then){
 
   server.username = server.username || server.userName || server.user;
+
+  log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
 
   log.verbose(pkg.name, '%s to %s',remoteFile,localPath);
   var conn = new Client();
@@ -377,6 +393,8 @@ SSH2Utils.prototype.putFile = function(server,localFile,remotePath, then){
 SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
 
   server.username = server.username || server.userName || server.user;
+
+  log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
 
   log.verbose(pkg.name, 'from %s to %s',localPath,remotePath);
   var conn = new Client();

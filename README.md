@@ -127,6 +127,7 @@ __Arguments__
     * `response` the completed command line response.
     * `server` An ssh server credentials object.
 * `onDone(sessionText, sshObj)` - A callback called on session completion. 
+    * `err` an Error.
     * `sessionText` a String.
     * `sshObj` An ssh Client object.
 

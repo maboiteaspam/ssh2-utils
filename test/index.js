@@ -46,6 +46,20 @@ if( !process.env['TRAVIS'] ){
     });
     this.timeout(50000);
   });
+  after(function(done){
+    var vagrant = require('child_process').spawn('vagrant',['halt'])
+    vagrant.stdout.on('data', function (data) {
+      console.log('stdout: ' + data);
+    });
+    vagrant.stderr.on('data', function (data) {
+      console.log('stderr: ' + data);
+    });
+    vagrant.on('close', function (code) {
+      console.log('child process exited with code ' + code);
+      done();
+    });
+    this.timeout(50000);
+  });
 }
 
 
@@ -241,9 +255,8 @@ describe('run multiple', function(){
       "`All done!`"
     ];
 
-    var onDone = function(sessionText, sshObj){
-      console.log(sessionText)
-      console.log('All done')
+    var onDone = function(err, sessionText, sshObj){
+      (!err).should.be.true;
       sessionText.toString().should.match(/hello/)
       done();
     };
