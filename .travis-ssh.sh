@@ -7,7 +7,7 @@
 # integration platform.
 
 # Make sure we are on Travis.
-if [[ ! $TRAVIS ]]; then
+if [ ! $TRAVIS ]; then
     echo "This script is made for travis-ci.org! It cannot run without \$TRAVIS."
     exit 1
 fi
