@@ -22,7 +22,8 @@ Host localhost
      IdentityFile ~/.ssh/id_rsa
 EOF
 
-sudo useradd --home /home/tpwd/ --gid travis --groups travis --password 123456tpwd tpwd
+sudo useradd --home /home/tpwd/ --gid travis --groups travis --password 123456tpwd -s /bin/bash tpwd
 
 sudo cat /etc/passwd
-sudo cat /etc/sshd/sshd_config
+sudo cat /etc/ssh/sshd_config
+sudo cat /etc/ssh/ssh_config
