@@ -1,4 +1,4 @@
-# SSH2Utils
+# SSH2Utils [![Build Status](https://travis-ci.org/maboiteaspam/ssh2-utils.svg?branch=master)](https://travis-ci.org/maboiteaspam/ssh2-utils)
 
 A library to ease use of excellent modules ssh2 and ssh2shell.
 
