@@ -6,11 +6,13 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 
 ---------------------------------------
 
+
 # Install
 
 ```npm i ssh2-utils --save```
 
 ---------------------------------------
+
 
 ### API
 
@@ -22,6 +24,7 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
     * [`putDir`](#putDir)
     * [`readDir`](#readDir)
     * [`putFile`](#putFile)
+    
 
 <a name="SSH2Utils" />
 ### new SSH2Utils()
@@ -38,7 +41,6 @@ __Examples__
     var ssh = new SSH2Utils();
 ```
 
----------------------------------------
 
 
 <a name="exec" />
@@ -70,7 +72,7 @@ __Examples__
         console.log(stderr);
     });
 ```
----------------------------------------
+
 
 <a name="run" />
 ### run(server, cmd, callback)
@@ -108,7 +110,7 @@ __Examples__
         });
     });
 ```
----------------------------------------
+
 
 <a name="runMultiple" />
 ### runMultiple(server, cmds, onCommandComplete, onDone)
@@ -140,7 +142,7 @@ __Examples__
         console.log(sessionText);
     });
 ```
----------------------------------------
+
 
 <a name="readFile" />
 ### readFile(server, remoteFile, localPath, callback)
@@ -167,7 +169,7 @@ __Examples__
         if(err) console.log(err);
     });
 ```
----------------------------------------
+
 
 <a name="putDir" />
 ### putDir(server, localPath, remoteFile, callback)
@@ -194,6 +196,8 @@ __Examples__
         if(err) console.log(err);
     });
 ```
+
+
 ---------------------------------------
 
 # Status
