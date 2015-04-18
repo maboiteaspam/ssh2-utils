@@ -14,15 +14,32 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 
 ### API
 
-* [`exec`](#exec)
-* [`run`](#run)
-* [`runMultiple`](#runMultiple)
-* [`readFile`](#readFile)
-* [`putDir`](#putDir)
-* [`readDir`](#readDir)
-* [`putFile`](#putFile)
+* [`SSH2Utils`]()
+    * [`exec`](#exec)
+    * [`run`](#run)
+    * [`runMultiple`](#runMultiple)
+    * [`readFile`](#readFile)
+    * [`putDir`](#putDir)
+    * [`readDir`](#readDir)
+    * [`putFile`](#putFile)
+
+<a name="SSH2Utils" />
+### new SSH2Utils()
+
+SSH2Utils constructor.
+
+__Arguments__
+
+
+__Examples__
+
+```js
+    var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
+```
 
 ---------------------------------------
+
 
 <a name="exec" />
 ### exec(server, cmd, callback)
@@ -43,10 +60,9 @@ __Examples__
 
 ```js
     var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
     
     var server = {host: "localhost", username:"user", password:"pwd" };
-    
-    var ssh = new SSH2Utils();
     
     ssh.exec(server, 'ls', function(err,stdout,stderr){
         if(err) console.log(err);
@@ -75,10 +91,9 @@ __Examples__
 
 ```js
     var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
     
     var server = {host: "localhost", username:"user", password:"pwd" };
-    
-    var ssh = new SSH2Utils();
     
     ssh.run(server, ['ls','time'], function(err,stdout,stderr,server,conn){
         if(err) console.log(err);
@@ -117,10 +132,9 @@ __Examples__
 
 ```js
     var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
     
     var server = {host: "localhost", username:"user", password:"pwd" };
-    
-    var ssh = new SSH2Utils();
     
     ssh.runMultiple(server, ['ls','time'], function(sessionText, sshObj){
         console.log(sessionText);
@@ -145,10 +159,9 @@ __Examples__
 
 ```js
     var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
     
     var server = {host: "localhost", username:"user", password:"pwd" };
-    
-    var ssh = new SSH2Utils();
         
     ssh.readFile(server,'/tmp/from_some_remote','/tmp/to_some_local', function(err){
         if(err) console.log(err);
@@ -173,10 +186,9 @@ __Examples__
 
 ```js
     var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
     
     var server = {host: "localhost", username:"user", password:"pwd" };
-    
-    var ssh = new SSH2Utils();
         
     ssh.putDir(server,'/tmp/from_some_local','/tmp/to_some_remote', function(err){
         if(err) console.log(err);
