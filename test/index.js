@@ -27,7 +27,7 @@ var hostPwd = {
   password: pwd.localhostpwd.pwd
 };
 if( process.env['TRAVIS'] ){
-  hostPwd.private = hostKey.privateKey;
+  hostPwd.privateKey = hostKey.privateKey;
 }
 
 
