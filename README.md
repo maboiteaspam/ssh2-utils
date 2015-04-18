@@ -201,6 +201,20 @@ __Examples__
 
 ---------------------------------------
 
+# Suggestions
+
+On linux you may want to edit `/etc/ssh/ssh_config` and append 
+```
+Host 127.0.0.1
+   CheckHostIP no
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+```
+
+This will help to have multiple vagrant box installed on the same machine.
+
+---------------------------------------
+
 # Status
 
 In development. It needs some tests. It misses putFile and readDir implementations.
