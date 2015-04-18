@@ -12,7 +12,7 @@ var SSH2Utils = require('../index.js');
 var ssh = new SSH2Utils();
 ssh.log.level = 'verbose';
 
-var host = {
+var hostKey = {
   'host':'127.0.0.1',
   port: 22,
   username: pwd.localhost.user,
@@ -20,13 +20,20 @@ var host = {
   privateKey: pwd.localhost.privateKey?fs.readFileSync(pwd.localhost.privateKey):null
 };
 
+var hostPwd = {
+  'host':'127.0.0.1',
+  port: 22,
+  username: pwd.localhostpwd.user,
+  password: pwd.localhostpwd.pwd
+};
+
 
 describe('ident', function(){
   this.timeout(50000)
-  it('exec can fail properly', function(done){
+  it('exec can fail properly with password', function(done){
     var wrongHost = {
-      'host':host.host,
-      port: host.port,
+      'host':hostPwd.host,
+      port: hostPwd.port,
       username: 'wrong',
       password: 'credentials'
     };
@@ -37,12 +44,12 @@ describe('ident', function(){
       done();
     });
   });
-  it('run can fail properly', function(done){
+  it('run can fail properly with private key', function(done){
     var wrongHost = {
-      'host':host.host,
-      port: host.port,
+      'host':hostKey.host,
+      port: hostKey.port,
       username: 'wrong',
-      privateKey: host.privateKey
+      privateKey: hostKey.privateKey
     };
     ssh.run(wrongHost,'ls -alh', function(err, stdout, stderr, server){
       (err).should.be.true;
@@ -56,7 +63,15 @@ describe('ident', function(){
 describe('exec', function(){
   this.timeout(50000)
   it('can execute command', function(done){
-    ssh.exec(host,'ls -alh /var/log/', function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,'ls -alh /var/log/', function(err, stdout, stderr, server){
+      (err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
+      done()
+    });
+  });
+  it('can execute command with private key', function(done){
+    ssh.exec(hostKey,'ls -alh /var/log/', function(err, stdout, stderr, server){
       (err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
@@ -65,7 +80,22 @@ describe('exec', function(){
   });
   it('can execute sudo command', function(done){
     this.timeout(50000)
-    ssh.exec(host,'sudo ls -alh', function(err, stdout, stderr, server,conn){
+    ssh.exec(hostPwd,'sudo ls -alh', function(err, stdout, stderr, server,conn){
+      (err).should.be.false;
+      stdout.should.match(/\.npm/);
+      stderr.should.be.empty;
+      // re use connection
+      ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
+        (err).should.be.false;
+        stdout.should.match(/\.npm/);
+        stderr.should.be.empty;
+        done();
+      });
+    });
+  });
+  it('can connect with private key and execute sudo command', function(done){
+    this.timeout(50000)
+    ssh.exec(hostKey,'sudo ls -alh', function(err, stdout, stderr, server,conn){
       (err).should.be.false;
       stdout.should.match(/\.npm/);
       stderr.should.be.empty;
@@ -79,7 +109,7 @@ describe('exec', function(){
     });
   });
   it('can fail properly', function(done){
-    ssh.exec(host,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
       (err).should.be.false;
       stdout.should.match(/No such file or directory/)
       stderr.should.be.empty
@@ -87,7 +117,7 @@ describe('exec', function(){
     });
   });
   it('can fail properly', function(done){
-    ssh.exec(host,'dsscdc', function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,'dsscdc', function(err, stdout, stderr, server){
       (err).should.be.false;
       stdout.should.match(/command not found/)
       stderr.should.be.empty
@@ -99,8 +129,28 @@ describe('exec', function(){
 
 describe('run', function(){
   this.timeout(50000)
-  it('can run sudo command', function(done){
-    ssh.run(host,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
+  it('can run sudo command with password', function(done){
+    ssh.run(hostPwd,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
+      (err).should.be.false;
+      var stdout = '';
+      stdouts.on('data', function(data){
+        stdout+=''+data;
+      });
+      setTimeout(function(){
+        // re use connection
+        ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
+          stdout2.on('data', function(data){
+            data.toString().should.match(/root/)
+            stdout.toString().should.match(/session/)
+            conn.end()
+            done();
+          });
+        });
+      },2000);
+    });
+  });
+  it('can connect with private key and run sudo command with password', function(done){
+    ssh.run(hostKey,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
       (err).should.be.false;
       var stdout = '';
       stdouts.on('data', function(data){
@@ -120,7 +170,7 @@ describe('run', function(){
     });
   });
   it('run can fail properly', function(done){
-    ssh.run(host,'ls -alh /var/log/nofile', function(err, stdouts, stderrs, server, conn){
+    ssh.run(hostPwd,'ls -alh /var/log/nofile', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
       stdouts.on('data', function(data){
@@ -139,7 +189,7 @@ describe('run', function(){
     });
   });
   it('run can fail properly', function(done){
-    ssh.run(host,'dsscdc', function(err, stdouts, stderrs, server, conn){
+    ssh.run(hostPwd,'dsscdc', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
       stdouts.on('data', function(data){
@@ -181,7 +231,7 @@ describe('run multiple', function(){
 
     }
 
-    ssh.runMultiple(host, cmds, onCommandComplete, onDone);
+    ssh.runMultiple(hostPwd, cmds, onCommandComplete, onDone);
 
   })
 });

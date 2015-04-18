@@ -2,5 +2,9 @@
   "localhost":{
     "user":"travis",
     "privateKey":"/home/travis/.ssh/id_rsa"
+  },
+  "localhostpwd":{
+    "user":"travis",
+    "pwd":"123456tpwd"
   }
 }

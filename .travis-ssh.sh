@@ -21,3 +21,5 @@ cat << EOF >> ~/.ssh/config
 Host localhost
      IdentityFile ~/.ssh/id_rsa
 EOF
+
+sudo useradd --home /home/tpwd/ --gid travis --groups travis --password 123456tpwd tpwd
