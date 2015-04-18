@@ -92,7 +92,7 @@ describe('exec', function(){
 
 describe('run', function(){
   this.timeout(50000)
-  it('can execute sudo command', function(done){
+  it('can run sudo command', function(done){
     ssh.run(host,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
       (err).should.be.false;
       var stdout = '';
@@ -106,7 +106,7 @@ describe('run', function(){
       },1000)
     });
   });
-  it('can fail properly', function(done){
+  it('run can fail properly', function(done){
     ssh.run(host,'ls -alh /var/log/nofile', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
@@ -127,7 +127,7 @@ describe('run', function(){
       (err).should.be.false;
     });
   });
-  it('can fail properly', function(done){
+  it('run can fail properly', function(done){
     ssh.run(host,'dsscdc', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
