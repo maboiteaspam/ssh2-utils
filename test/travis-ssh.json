@@ -4,7 +4,7 @@
     "privateKey":"/home/travis/.ssh/id_rsa"
   },
   "localhostpwd":{
-    "user":"travis",
+    "user":"tpwd",
     "pwd":"123456tpwd"
   }
 }
