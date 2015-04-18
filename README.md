@@ -44,7 +44,7 @@ __Examples__
 
 
 <a name="exec" />
-### exec(server, cmd, callback)
+### SSH2Utils.exec(server, cmd, callback)
 
 Execute a command on remote server and return its output.
 
@@ -75,7 +75,7 @@ __Examples__
 
 
 <a name="run" />
-### run(server, cmd, callback)
+### SSH2Utils.run(server, cmd, callback)
 
 Execute a command on remote server and return its streams.
 
@@ -113,8 +113,8 @@ __Examples__
 
 
 <a name="runMultiple" />
-### runMultiple(server, cmds, onCommandComplete, onDone)
-### runMultiple(server, cmds, onDone)
+### SSH2Utils.runMultiple(server, cmds, onCommandComplete, onDone)
+    SSH2Utils.runMultiple(server, cmds, onDone)
 
 Execute a series of command on remote server and returns their output.
 
@@ -145,7 +145,7 @@ __Examples__
 
 
 <a name="readFile" />
-### readFile(server, remoteFile, localPath, callback)
+### SSH2Utils.readFile(server, remoteFile, localPath, callback)
 
 Download a file from remote to local.
 
@@ -172,7 +172,7 @@ __Examples__
 
 
 <a name="putDir" />
-### putDir(server, localPath, remoteFile, callback)
+### SSH2Utils.putDir(server, localPath, remoteFile, callback)
 
 Put a local directory contents to a remote path.
 
