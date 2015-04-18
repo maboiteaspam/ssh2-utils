@@ -1,6 +1,7 @@
 
 var path = require('path');
 var async = require('async');
+var through = require('through');
 var log = require('npmlog');
 var Client = require('ssh2').Client;
 var SSH2Shell = require ('ssh2shell');
@@ -21,28 +22,20 @@ var sudoChallenge = function(stream, pwd, then){
   log.info('ssh', 'waiting for sudo');
   var hasChallenge = false;
   var tChallenge = setTimeout(function(){
-      log.error('ssh', 'login in failed by timeout');
-      if (then) then(true);
-    },10000);
-  var tChallengeS;
-  stream.once('data', function(){
-    tChallengeS = setTimeout(function(){
-      if(!hasChallenge){
-        clearTimeout(tChallenge)
-        stream.removeListener('data', checkPwdInput);
-        log.verbose('ssh', 'login in success by timeout');
-        if (then) then(false);
-      }
-    },100);
-  });
+    log.error('ssh', 'login in failed by timeout');
+    stream.removeListener('data', checkPwdInput);
+    if (then) then(true);
+  },10000);
   var checkPwdInput = function(data){
     if(!hasChallenge && data.toString().match(/\[sudo\] password/) ){
       hasChallenge = true;
       log.info('ssh', 'login...');
-      clearTimeout(tChallengeS);
+      stream.removeListener('data', checkPwdLessInput);
       stream.write(pwd+'\n');
     } else if(hasChallenge){
       clearTimeout(tChallenge);
+      stream.removeListener('data', checkPwdInput);
+      hasChallenge = false;
       if(data.toString().match(/Sorry, try again/) ){
         log.error('ssh', 'login in failed by password');
         if (then) then(true);
@@ -50,13 +43,18 @@ var sudoChallenge = function(stream, pwd, then){
         log.verbose('ssh', 'login in success by password');
         if (then) then(false);
       }
-      hasChallenge = false;
     }
   };
-  stream.on('end', function(){
-    stream.removeListener('data', checkPwdInput);
-  });
+  var checkPwdLessInput = function(){
+      if(!hasChallenge){
+        clearTimeout(tChallenge)
+        stream.removeListener('data', checkPwdInput);
+        log.verbose('ssh', 'login in success by timeout');
+        if (then) then(false);
+      }
+  };
   stream.on('data', checkPwdInput);
+  stream.once('data', checkPwdLessInput);
 };
 
 /**
@@ -174,12 +172,15 @@ SSH2Utils.prototype.run = function(server,cmd,done){
     conn.exec(cmd, opts, function(err, stream) {
 
       if (err) throw err;
-
+      var stderr = '';
+      var stdout = '';
       stream.stderr.on('data', function(data){
         log.error('exec', 'STDERR: %s', data);
+        stderr = ''+data;
       });
       stream.on('data', function(data){
         log.verbose(data)
+        stdout = ''+data;
       });
       // manage user pressing ctrl+C
       var sigIntSent = function(){
@@ -194,18 +195,25 @@ SSH2Utils.prototype.run = function(server,cmd,done){
         conn.end();
       };
       process.on('SIGINT', sigIntSent);
+      stream.on('close', function(){
+        process.removeListener('SIGINT', sigIntSent);
+      });
 
       if( opts.pty ){
+        console.log('__________________')
         sudoChallenge(stream, server['password'], function(success){
-          stream.on('close', function(){
-            process.removeListener('SIGINT', sigIntSent);
-          });
-          if (done) done(success, stream, stream.stderr, server, conn);
+          console.log("-------------")
+          var rstderr = through().pause();
+          var rstdout = through().pause();
+          if (done) done(success, rstdout, rstderr, server, conn);
+          if(stderr) rstderr.queue(''+stderr+'');
+          if(stdout) rstdout.queue(''+stdout+'');
+          stream.stderr.pipe(rstderr);
+          stream.pipe(rstdout);
+          rstdout.resume()
+          rstderr.resume()
         });
       }else {
-        stream.on('close', function(){
-          process.removeListener('SIGINT', sigIntSent);
-        });
         if (done) done(false, stream, stream.stderr, server, conn);
       }
     });

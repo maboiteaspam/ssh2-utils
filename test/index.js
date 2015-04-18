@@ -101,8 +101,7 @@ describe('run', function(){
         stdout+=''+data;
       });
       setTimeout(function(){
-        console.log(stdout)
-        stdout.toString().should.match(/tail -f/)
+        stdout.toString().should.match(/session/)
         conn.end()
         done();
       },2000)
