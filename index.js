@@ -125,9 +125,21 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
         });
       }
     });
-  }).connect(server);
+  });
 
-  log.verbose(pkg.name, 'connecting %j', server);
+  try{
+    conn.connect(server);
+
+    log.verbose(pkg.name, 'connecting');
+
+    conn.on('error',function(stderr){
+      log.error(''+stderr)
+      done(true,null,''+stderr, server)
+    });
+  }catch(ex){
+    log.error(''+ex)
+    done(true,null,''+ex, server)
+  }
 
 };
 
@@ -196,9 +208,30 @@ SSH2Utils.prototype.run = function(server,cmd,done){
         if (done) done(false, stream, stream.stderr, server, conn);
       }
     });
-  }).connect(server);
+  });
 
-  log.verbose(pkg.name, 'connecting');
+  try{
+    conn.connect(server);
+
+    log.verbose(pkg.name, 'connecting');
+
+    conn.on('error',function(stderr){
+      log.error('event '+stderr)
+      var Readable = require('stream').Readable;
+      var rs = new Readable;
+      done(true,null,''+stderr, server)
+      rs.push(stderr.toString());
+      rs.push(null);
+    });
+
+  }catch(ex){
+    log.error('connect '+ex)
+    var Readable = require('stream').Readable;
+    var rs = new Readable;
+    done(true,null,''+ex, server)
+    rs.push(ex.toString());
+    rs.push(null);
+  }
 
 };
 

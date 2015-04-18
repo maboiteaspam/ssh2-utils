@@ -21,53 +21,131 @@ var host = {
 };
 
 
+describe('ident', function(){
+  this.timeout(50000)
+  it('exec can fail properly', function(done){
+    var wrongHost = {
+      'host':host.host,
+      port: host.port,
+      username: 'wrong',
+      password: 'credentials'
+    };
+    ssh.exec(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+      (err).should.be.true;
+      (stdout===null).should.be.true;
+      (stderr).should.match(/failed/);
+      done();
+    });
+  });
+  it('run can fail properly', function(done){
+    var wrongHost = {
+      'host':host.host,
+      port: host.port,
+      username: 'wrong',
+      privateKey: host.privateKey
+    };
+    ssh.run(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+      (err).should.be.true;
+      (stdout===null).should.be.true;
+      (stderr).should.match(/failed/);
+      done();
+    });
+  });
+});
+
 describe('exec', function(){
   this.timeout(50000)
   it('can execute command', function(done){
     ssh.exec(host,'ls -alh /var/log/', function(err, stdout, stderr, server){
-      if(err) return console.log(err)
-      stdout.should.match(/\.npm/)
-      stderr.should.be.empty
+      (err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
       done()
     });
-  })
+  });
   it('can execute sudo command', function(done){
-    console.log('vvvvv')
-    console.log('vvvvv')
     ssh.exec(host,'sudo ls -alh', function(err, stdout, stderr, server){
-      console.log('ddddddddd')
-      console.log(stdout)
-      console.log('ddddddddd')
+      (err).should.be.false;
+      stdout.should.match(/\.npm/);
+      stderr.should.be.empty;
+      done();
+    });
+  });
+  it('can fail properly', function(done){
+    ssh.exec(host,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
       if(err) return console.log(err)
-      stdout.should.match(/\.npm/)
-      stderr.should.be.empty
+      stderr.should.match(/No such file or directory/)
+      stdout.should.be.empty
       done()
     });
-  })
+  });
+  it('can fail properly', function(done){
+    ssh.exec(host,'dsscdc', function(err, stdout, stderr, server){
+      if(err) return console.log(err)
+      stderr.should.match(/command not found/)
+      stdout.should.be.empty
+      done()
+    });
+  });
 });
 
 
 describe('run', function(){
   this.timeout(50000)
   it('can execute sudo command', function(done){
-    console.log('vvvvv')
-    console.log('vvvvv')
-    ssh.run(host,'sudo tail -f /var/log/secure', function(err, stream, stderr, server, conn){
-      console.log('ddddddddd')
-      console.log('ddddddddd')
-      console.log('ddddddddd')
-      if(err) return console.log(err)
+    ssh.run(host,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
+      (err).should.be.false;
       var stdout = '';
-      stream.on('data', function(data){
+      stdouts.on('data', function(data){
         stdout+=''+data;
-      })
+      });
       setTimeout(function(){
         stdout.toString().should.match(/tail -f/)
-        done();
         conn.end()
+        done();
       },1000)
     });
-  })
+  });
+  it('can fail properly', function(done){
+    ssh.run(host,'ls -alh /var/log/nofile', function(err, stdouts, stderrs, server, conn){
+      var stdout = '';
+      var stderr = '';
+      stdouts.on('data', function(data){
+        stdout+=''+data;
+      });
+      stderrs.on('data', function(data){
+        stderr+=''+data;
+      });
+      setTimeout(function(){
+        console.log(stdout)
+        console.log(stderr)
+        stderr.should.match(/No such file or directory/)
+        stdout.should.be.empty
+        conn.end()
+        done();
+      },1000);
+      (err).should.be.false;
+    });
+  });
+  it('can fail properly', function(done){
+    ssh.run(host,'dsscdc', function(err, stdouts, stderrs, server, conn){
+      var stdout = '';
+      var stderr = '';
+      stdouts.on('data', function(data){
+        stdout+=''+data;
+      });
+      stderrs.on('data', function(data){
+        stderr+=''+data;
+      });
+      setTimeout(function(){
+        stderr.should.match(/command not found/)
+        stdout.should.be.empty
+        conn.end()
+        done();
+      },1000);
+      (err).should.be.false;
+    });
+  });
 });
 
 
