@@ -123,12 +123,12 @@ __Arguments__
 * `server` - An object of ssh server credentials.
 * `cmds` - An array of commands line to execute on remote.
 * `onCmdCplt(command, response, server)` - A callback called on command line completion. 
-    `command` the completed command line.
-    `response` the completed command line response.
-    `server` An ssh server credentials object.
+    * `command` the completed command line.
+    * `response` the completed command line response.
+    * `server` An ssh server credentials object.
 * `onDone(sessionText, sshObj)` - A callback called on session completion. 
-    `sessionText` a String.
-    `sshObj` An ssh Client object.
+    * `sessionText` a String.
+    * `sshObj` An ssh Client object.
 
 __Examples__
 
