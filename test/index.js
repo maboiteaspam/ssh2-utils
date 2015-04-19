@@ -16,7 +16,7 @@ var hostKey = {
   'host':'127.0.0.1',
   port: pwd.localhost.port || 22,
   username: pwd.localhost.user,
-  password: pwd.localhost.pwd || '',
+  password: pwd.localhost.pwd || undefined,
   privateKey: pwd.localhost.privateKey?fs.readFileSync(pwd.localhost.privateKey):null
 };
 
@@ -24,7 +24,7 @@ var hostPwd = {
   'host':'127.0.0.1',
   port: pwd.localhostpwd.port || 22,
   username: pwd.localhostpwd.user,
-  password: pwd.localhostpwd.pwd || ''
+  password: pwd.localhostpwd.pwd || undefined
 };
 if( process.env['TRAVIS'] ){
   hostPwd.privateKey = hostKey.privateKey;
