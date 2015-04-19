@@ -11,6 +11,8 @@ var _s = require("underscore.string");
 
 var pkg = require('./package.json');
 
+log.level = process.env['NPM_LOG'] || 'info';
+
 /**
  * sudo challenge completion over ssh
  *
@@ -203,7 +205,7 @@ SSH2Utils.prototype.run = function(server,cmd,done){
         stderr = ''+data;
       });
       stream.on('data', function(data){
-        log.silly(pkg.name, data)
+        log.silly(pkg.name, '%s', data)
         stdout = ''+data;
       });
       // manage user pressing ctrl+C
@@ -301,6 +303,7 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
   server.userName = server.username || server.userName || server.user;
 
   log.silly(pkg.name, '%s@%s:%s',server.userName,server.host,server.port);
+  log.silly(pkg.name, '%j',cmds);
 
   var allSessionText = '';
 
@@ -316,22 +319,28 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
         if(message!=true ){
           message = _s.trim(message);
           allSessionText += message;
-          if(message) log.verbose(pkg.name, message );
+          if(message) log.verbose(pkg.name, 'send '+message );
         }
       }
     },
     onCommandComplete: function( command, response, sshObj ) {
+      command = _s.trim(command)
+      response = _s.trim(response)
       if(response&&command){
         // trim the command of redundant output
         response = response.split('\n');
         response.shift();
         response.pop();
-        response = _s.trim(response.join('\n') )+'\n';
+        response = response.join('\n');
+      }
+      if(command){
+        allSessionText += server.userName+'@'+server.host;
+        allSessionText += '> '+command+'\n';
+        if(response) allSessionText += ''+response+'\n';
       }
       if(cmdComplete) cmdComplete(command, response, server);
     },
     onEnd: function( sessionText, sshObj ) {
-      allSessionText = sessionText;
     }
   };
   var SSH = new SSH2Shell(host);
@@ -399,7 +408,7 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
 
   log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
 
-  log.verbose(pkg.name, 'from %s to %s',localPath,remotePath);
+  log.verbose(pkg.name, 'from %s to %s',path.relative(__dirname,localPath),remotePath);
 
   var conn = new Client();
   conn.on('ready', function() {
@@ -420,7 +429,7 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
         dirHandlers.push(function(done){
           log.verbose(pkg.name, 'mkdir %s', remotePath);
           sftp.mkdir(remotePath,function(err){
-            if(err) log.error(pkg.name, err);
+            if(err) log.error(pkg.name, 'mkdir '+err);
             done();
           });
         });
@@ -431,7 +440,7 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
             var to = path.join(remotePath, f).replace(/[\\]/g,'/');
             log.verbose(pkg.name, 'mkdir %s', to);
             sftp.mkdir(to,function(err){
-              if(err) log.error(pkg.name,err);
+              if(err) log.error(pkg.name,'mkdir '+err);
               done();
             });
           })
@@ -448,9 +457,10 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
             filesHandlers.push(function(done){
               var from = path.join(localPath, f);
               var to = path.join(remotePath, f).replace(/[\\]/g,'/'); // windows needs this
-              log.verbose(pkg.name, 'put %s %s', from, to);
+              log.verbose(pkg.name, 'put %s %s',
+                path.relative(process.cwd(),from), path.relative(remotePath,to));
               sftp.fastPut(from, to, function(err){
-                if(err) log.error(pkg.name,err);
+                if(err) log.error(pkg.name, 'fastPut '+err);
                 if(done) done();
               });
             })
@@ -459,12 +469,12 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
           // delete root remote directory if it exists
           log.verbose(pkg.name, 'rmdir %s', remotePath);
           sftp.rmdir(remotePath, function(err){
-            if(err) log.error(pkg.name,err);
+            if(err) log.error(pkg.name,'rmdir '+err);
             // then push the scanned files and directories
             async.parallelLimit(dirHandlers, 4, function(){
               async.parallelLimit(filesHandlers, 4, function(){
                 conn.end();
-                if(then)then(err, server);
+                if(then)then(err, server, conn);
               });
             });
           });
