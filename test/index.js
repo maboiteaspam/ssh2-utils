@@ -1,6 +1,7 @@
 
 require('should');
 var fs = require('fs');
+var Vagrant = require('node-vagrant-bin');
 
 var pwd = {};
 if( process.env['TRAVIS'] )
@@ -33,41 +34,39 @@ if( process.env['TRAVIS'] ){
 
 if( !process.env['TRAVIS'] ){
 
+  var vagrant = new Vagrant();
+
   var hasBooted = true;
 
   before(function(done){
-    var vagrant = require('child_process').spawn('vagrant',['up'])
-    vagrant.stdout.on('data', function (data) {
-      console.log('stdout: ' + data);
-      if(hasBooted && data.toString().match(/already running/) ) hasBooted = false;
-    });
-    vagrant.stderr.on('data', function (data) {
-      console.log('stderr: ' + data);
-    });
-    vagrant.on('close', function (code) {
-      console.log('child process exited with code ' + code);
-      done();
-    });
     this.timeout(50000);
+    vagrant.isRunning(function(running){
+      if(running===false){
+        vagrant.up('precise64',function(err,booted){
+          hasBooted = booted;
+          done();
+        });
+      }else{
+        console.log('running machine '+running);
+        hasBooted = false;
+        done();
+      }
+    });
   });
 
   after(function(done){
-    if(hasBooted){
-      var vagrant = require('child_process').spawn('vagrant',['halt'])
-      vagrant.stdout.on('data', function (data) {
-        console.log('stdout: ' + data);
-      });
-      vagrant.stderr.on('data', function (data) {
-        console.log('stderr: ' + data);
-      });
-      vagrant.on('close', function (code) {
-        console.log('child process exited with code ' + code);
+    this.timeout(50000);
+    vagrant.isRunning(function(running){
+      console.log('running machine '+running);
+      if(hasBooted){
+        vagrant.halt(function(){
+          console.log('halted');
+          done();
+        });
+      } else {
         done();
-      });
-      this.timeout(50000);
-    } else {
-      done();
-    }
+      }
+    });
   });
 
 }
