@@ -10,13 +10,19 @@ Vagrant.configure(2) do |config|
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
 
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "centos"
+  config.vm.define "centos", primary: true do |centos|
+    centos.vm.box = "centos"
+    centos.vm.box_url = "https://github.com/2creatives/vagrant-centos/releases/download/v6.4.2/centos64-x86_64-20140116.box"
+    centos.vm.box_url = "/mnt/5c7cd16a-515f-4852-b14a-d045ef5e74ee/vagrant-box/centos64-x86_64-20140116.box"
+    config.vm.provider :virtualbox
+  end
 
-  # The url from where the 'config.vm.box' box will be fetched if it
-  # doesn't already exist on the user's system.
-  config.vm.box_url = "https://github.com/2creatives/vagrant-centos/releases/download/v6.4.2/centos64-x86_64-20140116.box"
+  config.vm.define "precise64" do |precise64|
+    precise64.vm.box = "ubuntu/precise64"
+    precise64.vm.box_url = "https://atlas.hashicorp.com/ubuntu/precise64"
+    precise64.vm.box_url = "/mnt/5c7cd16a-515f-4852-b14a-d045ef5e74ee/vagrant-box/precise-server-cloudimg-amd64-vagrant.box"
+    config.vm.provider :virtualbox
+  end
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
