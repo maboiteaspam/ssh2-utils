@@ -213,6 +213,29 @@ Host 127.0.0.1
 
 This will help to have multiple vagrant box installed on the same machine.
 
+------
+
+On fedora you may want to create `/etc/polkit-1/rules.d/10.virt.rules` and add
+```
+polkit.addRule(function(action, subject) {
+  polkit.log("action=" + action);
+  polkit.log("subject=" + subject);
+  var now = new Date();
+  polkit.log("now=" + now)
+  if ((action.id == "org.libvirt.unix.manage"
+        || action.id == "org.libvirt.unix.monitor")
+        
+        && subject.isInGroup("~~your username group~~") // <--- change HERE
+        
+      ) {
+    return polkit.Result.YES;
+  }
+  return null;
+});
+```
+
+This will help to prevent the system from asking the password.
+
 ---------------------------------------
 
 # Status
