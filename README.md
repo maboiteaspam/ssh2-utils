@@ -24,6 +24,9 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
     * [`putDir`](#putDir)
     * [`readDir`](#readDir)
     * [`putFile`](#putFile)
+    * [`mkdir`](#mkdir)
+    * [`rmdir`](#rmdir)
+    * [`fileExists`](#fileExists)
     
 
 <a name="SSH2Utils" />
@@ -157,6 +160,8 @@ __Arguments__
 * `localPath` - A local file path to write.
 * `callback(err)` - A callback called on command line completion. 
     * `err` is an Error.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
 
 __Examples__
 
@@ -167,6 +172,35 @@ __Examples__
     var server = {host: "localhost", username:"user", password:"pwd" };
         
     ssh.readFile(server,'/tmp/from_some_remote','/tmp/to_some_local', function(err){
+        if(err) console.log(err);
+    });
+```
+
+
+<a name="readFile" />
+### SSH2Utils.putFile(server, localFile, remoteFile, callback)
+
+Put a file from local to remote
+
+__Arguments__
+
+* `server` - An object of ssh server credentials.
+* `localFile` - A local file path to write.
+* `remoteFile` - A remote file path to read.
+* `callback(err)` - A callback called on command line completion. 
+    * `err` is an Error.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
+
+__Examples__
+
+```js
+    var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
+    
+    var server = {host: "localhost", username:"user", password:"pwd" };
+        
+    ssh.putFile(server,'/tmp/to_some_local','/tmp/from_some_remote', function(err){
         if(err) console.log(err);
     });
 ```
@@ -184,6 +218,8 @@ __Arguments__
 * `remoteFile` - A remote file path to read.
 * `callback(err)` - A callback called on command line completion. 
     * `err` is an Error.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
 
 __Examples__
 
@@ -194,6 +230,92 @@ __Examples__
     var server = {host: "localhost", username:"user", password:"pwd" };
         
     ssh.putDir(server,'/tmp/from_some_local','/tmp/to_some_remote', function(err){
+        if(err) console.log(err);
+    });
+```
+
+
+<a name="mkdir" />
+### SSH2Utils.mkdir(server, remotePath, callback)
+
+Create a directory at remote path.
+
+__Arguments__
+
+* `server` - An object of ssh server credentials.
+* `remotePath` - A remote path to create.
+* `callback(err)` - A callback called on command line completion. 
+    * `err` is an Error.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
+
+__Examples__
+
+```js
+    var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
+    
+    var server = {host: "localhost", username:"user", password:"pwd" };
+        
+    ssh.mkdir(server,'/tmp/to_some_remote', function(err){
+        if(err) console.log(err);
+    });
+```
+
+
+<a name="rmdir" />
+### SSH2Utils.rmdir(server, remotePath, callback)
+
+Deletes a directory at remote path.
+
+Effectively performs ``rm -fr remotePath``.
+
+__Arguments__
+
+* `server` - An object of ssh server credentials.
+* `remotePath` - A remote path to delete.
+* `callback(err)` - A callback called on command line completion. 
+    * `err` is an Error.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
+
+__Examples__
+
+```js
+    var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
+    
+    var server = {host: "localhost", username:"user", password:"pwd" };
+        
+    ssh.rmdir(server,'/tmp/to_some_remote', function(err){
+        if(err) console.log(err);
+    });
+```
+
+
+<a name="fileExists" />
+### SSH2Utils.fileExists(server, remotePath, callback)
+
+Tests a path on remote.
+
+__Arguments__
+
+* `server` - An object of ssh server credentials.
+* `remotePath` - A remote path to tests.
+* `callback(err)` - A callback called on command line completion. 
+    * `err` is an Error if file does not exists.
+    * `server` An ssh server credentials object.
+    * `conn` An ssh Client object.
+
+__Examples__
+
+```js
+    var SSH2Utils = require('ssh2-utils');
+    var ssh = new SSH2Utils();
+    
+    var server = {host: "localhost", username:"user", password:"pwd" };
+        
+    ssh.fileExists(server,'/tmp/to_some_remote', function(err){
         if(err) console.log(err);
     });
 ```
@@ -240,4 +362,4 @@ This will help to prevent the system from asking the password.
 
 # Status
 
-In development. It needs some tests. It misses putFile and readDir implementations.
+In development. It needs some tests. some more methods implementation.
