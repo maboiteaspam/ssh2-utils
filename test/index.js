@@ -109,7 +109,7 @@ describe('exec', function(){
   this.timeout(50000)
   it('can execute command', function(done){
     ssh.exec(hostPwd,'ls -alh /var/log/', function(err, stdout, stderr, server){
-      (err).should.be.false;
+      if(err!==undefined) (err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
       done()
@@ -117,7 +117,7 @@ describe('exec', function(){
   });
   it('can execute command with private key', function(done){
     ssh.exec(hostKey,'ls -alh /var/log/', function(err, stdout, stderr, server){
-      (err).should.be.false;
+      if(err!==undefined) (err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
       done()
@@ -126,12 +126,12 @@ describe('exec', function(){
   it('can execute sudo command', function(done){
     this.timeout(50000)
     ssh.exec(hostPwd,'sudo ls -alh', function(err, stdout, stderr, server,conn){
-      (err).should.be.false;
+      if(err!==undefined) (err).should.be.false;
       stdout.should.match(new RegExp(server.username));
       stderr.should.be.empty;
       // re use connection
       ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
-        (err).should.be.false;
+        if(err!==undefined) (err).should.be.false;
         stdout.should.match(new RegExp(server.username));
         stderr.should.be.empty;
         done();
@@ -141,12 +141,12 @@ describe('exec', function(){
   it('can connect with private key and execute sudo command', function(done){
     this.timeout(50000)
     ssh.exec(hostKey,'sudo ls -alh', function(err, stdout, stderr, server,conn){
-      (err).should.be.false;
+      if(err!==undefined) (err).should.be.false;
       stdout.should.match(new RegExp(server.username));
       stderr.should.be.empty;
       // re use connection
       ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
-        (err).should.be.false;
+        if(err!==undefined) (err).should.be.false;
         stdout.should.match(new RegExp(server.username));
         stderr.should.be.empty;
         done();
@@ -155,7 +155,7 @@ describe('exec', function(){
   });
   it('can fail properly', function(done){
     ssh.exec(hostPwd,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
-      (err).should.be.false;
+      if(err!==undefined) (err).should.be.false;
       stdout.should.match(/No such file or directory/)
       stderr.should.be.empty
       done()
@@ -163,7 +163,7 @@ describe('exec', function(){
   });
   it('can fail properly', function(done){
     ssh.exec(hostPwd,'dsscdc', function(err, stdout, stderr, server){
-      (err).should.be.false;
+      if(err!==undefined) (err).should.be.false;
       stdout.should.match(/command not found/)
       stderr.should.be.empty
       done()
@@ -266,7 +266,7 @@ describe('run multiple', function(){
     ];
 
     var onDone = function(err, sessionText, sshObj){
-      (!err).should.be.true;
+      if(err!==undefined) (err).should.be.true;
       sessionText.toString().should.match(/hello/)
       done();
     };
@@ -278,4 +278,62 @@ describe('run multiple', function(){
     ssh.runMultiple(hostPwd, cmds, onCommandComplete, onDone);
 
   })
+});
+
+
+describe('sftp', function(){
+  this.timeout(50000);
+  var t = (new Date()).getTime();
+  it('can test file exists', function(done){
+    ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err){
+      if(err!==undefined) (err).should.be.true;
+      done();
+    });
+  });
+  it('can write a file', function(done){
+    fs.writeFileSync('/tmp/local'+t, t);
+    ssh.putFile(hostPwd, '/tmp/local'+t, '/tmp/remote'+t, function(err){
+      if(err!==undefined) (err).should.be.true;
+      ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err){
+        if(err!==undefined) (err).should.be.true;
+        done();
+      });
+    });
+  });
+  it('can download a file', function(done){
+    ssh.readFile(hostPwd, '/tmp/remote'+t, '/tmp/local'+t, function(err){
+      if(err!==undefined) (err).should.be.true;
+      fs.readFileSync('/tmp/local'+t,'utf-8').should.eql(''+t);
+      done();
+    });
+  });
+  it('can create a directory', function(done){
+    ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err){
+      if(err!==undefined) (err).should.be.true;
+      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
+        if(err!==undefined) (err).should.be.true;
+        done();
+      });
+    });
+  });
+  it('can put a directory', function(done){
+    ssh.putDir(hostPwd, __dirname+'/../examples', '/home/vagrant/examples', function(err, server, conn){
+      if(err!==undefined) (err).should.be.true;
+      conn.end();
+      ssh.fileExists(hostPwd, '/home/vagrant/examples/exec.js', function(err){
+        if(err!==undefined) (err).should.be.true;
+        done();
+      });
+    });
+  });
+  it('can delete a directory', function(done){
+    ssh.rmdir(hostPwd, '/home/vagrant/examples', function(err){
+      if(err!==undefined) (err).should.be.true;
+      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
+        if(err!==undefined) (''+err).should.match(/error/i);
+          (!err).should.be.false;
+        done();
+      });
+    });
+  });
 });
