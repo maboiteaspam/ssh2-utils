@@ -68,6 +68,87 @@ function SSH2Utils(){
 }
 
 /**
+ *
+ * @param server
+ * @param done
+ */
+var connect = function(server, done){
+
+  server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
+
+  log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
+
+  if( server instanceof Client ){
+    done(false,server);
+  }else{
+
+    var conn = new Client();
+    conn.on('ready', function() {
+      done(null,conn);
+    });
+
+    try{
+      conn.connect(server);
+
+      log.verbose(pkg.name, 'connecting');
+
+      conn.on('error',function(stderr){
+        if(stderr) log.error(pkg.name, ''+stderr);
+        done(stderr,null);
+      });
+    }catch(ex){
+      log.error(pkg.name,''+ex);
+      done(ex,null);
+    }
+  }
+};
+
+/**
+ *
+ * @param conn
+ * @param server
+ * @param cmd
+ * @param done
+ */
+var sudoExec = function(conn, server, cmd, done){
+
+  var opts = {};
+  if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
+  opts.pty = true;
+
+  conn.exec(cmd, opts, function(err, stream) {
+
+    if (err) return done(err);
+
+    done(null, stream);
+
+    if( opts.pty ){
+      sudoChallenge(stream, server['password'], function(hasLoginError){
+        if(hasLoginError) log.error(pkg.name,
+          'login failure, hasLoginError:%j', hasLoginError);
+      });
+    }
+
+    // manage user pressing ctrl+C
+    var sigIntSent = function(){
+      // this is supposed to be compatible : /
+      try{
+        stream.signal('SIGINT');
+      }catch(ex){ console.log(ex) }
+      // but only this works with openssh@centos
+      try{
+        stream.write("\x03");
+      }catch(ex){ console.log(ex) }
+      conn.end();
+    };
+    process.on('SIGINT', sigIntSent);
+    stream.on('close', function(){
+      process.removeListener('SIGINT', sigIntSent);
+    });
+  });
+};
+
+/**
  * Executes a command and return its output
  *  like child_process.exec.
  * non-interactive
@@ -84,92 +165,34 @@ function SSH2Utils(){
  */
 SSH2Utils.prototype.exec = function(server,cmd,done){
 
-  var execOnConn = function(conn){
-    var opts = {};
-    if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
-    opts.pty = true;
+  connect(server, function(err,conn){
+    if( err ) {
+      log.error(pkg.name,err);
+      done(true,null,''+err, server)
+    } else {
+      log.verbose(pkg.name, cmd);
 
-    if(!conn.server) conn.server = server;
+      sudoExec(conn, server, cmd, function(err, stream){
+        if (err) throw err;
 
-    log.verbose(pkg.name, cmd);
-
-    conn.exec(cmd, opts, function(err, stream) {
-
-      if (err) throw err;
-
-      var stderr = '';
-      var stdout = '';
-      stream.stderr.on('data', function(data){
-        log.error(pkg.name, 'STDERR: %s', data);
-        stderr += data.toString();
-      });
-      stream.on('data', function(data){
-        log.silly(pkg.name, data)
-        stdout += data.toString();
-      });
-
-      if( opts.pty ){
-        sudoChallenge(stream, conn.server['password'], function(success){
-          log.verbose(pkg.name, 'challenge done, error:%j', success);
-          var tout;
-          var triggerOnceFinished = function(){
-            clearTimeout(tout)
-            tout = setTimeout(function(){
-              stream.removeListener('data',triggerOnceFinished);
-              stream.stderr.removeListener('data',triggerOnceFinished);
-              if (done) done(success, stdout, stderr, server, conn);
-            },250);
-          };
-          stream.on('data', triggerOnceFinished);
-          stream.stderr.on('data', triggerOnceFinished);
-          triggerOnceFinished();
+        var stderr = '';
+        var stdout = '';
+        stream.stderr.on('data', function(data){
+          log.error(pkg.name, 'STDERR: %s', data);
+          stderr += data.toString();
         });
-      }else {
-        var tout;
-        var triggerOnceFinished = function(){
-          clearTimeout(tout);
-          tout = setTimeout(function(){
-            stream.removeListener('data',triggerOnceFinished);
-            stream.stderr.removeListener('data',triggerOnceFinished);
-            if (done) done(false, stdout, stderr, server, conn);
-          },250);
-        };
-        stream.on('data', triggerOnceFinished);
-        stream.stderr.on('data', triggerOnceFinished);
-        triggerOnceFinished();
-      }
-    });
-  };
+        stream.on('data', function(data){
+          log.silly(pkg.name, data)
+          stdout += data.toString();
+        });
 
-  if(server instanceof Client ){
-    execOnConn(server);
-  }else{
+        stream.on('close', function(){
+          if (done) done(!!stderr, stdout, stderr, server, conn);
+        });
 
-    var conn = new Client();
-
-    server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
-
-    log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
-
-    conn.on('ready', function() {
-      execOnConn(conn);
-    });
-
-    try{
-      conn.connect(server);
-
-      log.verbose(pkg.name, 'connecting');
-
-      conn.on('error',function(stderr){
-        if(stderr) log.error(pkg.name, ''+stderr)
-        done(true,null,''+stderr, server)
       });
-    }catch(ex){
-      log.error(pkg.name,''+ex)
-      done(true,null,''+ex, server)
     }
-  }
-
+  });
 
 };
 
@@ -189,96 +212,20 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
  */
 SSH2Utils.prototype.run = function(server,cmd,done){
 
-  var runOnConn = function(conn){
-    var opts = {};
-    if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
+  connect(server, function(err,conn){
+    if( err ) {
+      log.error(pkg.name,err);
+      done(true,null,''+err, server)
+    } else {
+      sudoExec(conn, server, cmd, function(err, stream){
 
-    log.verbose(pkg.name, cmd);
+        if (err) throw err;
 
-    conn.exec(cmd, opts, function(err, stream) {
-
-      if (err) throw err;
-      var stderr = '';
-      var stdout = '';
-      stream.stderr.on('data', function(data){
-        if(data) log.error(pkg.name, 'STDERR: %s', data);
-        stderr = ''+data;
-      });
-      stream.on('data', function(data){
-        log.silly(pkg.name, '%s', data)
-        stdout = ''+data;
-      });
-      // manage user pressing ctrl+C
-      var sigIntSent = function(){
-        // this is supposed to be compatible : /
-        try{
-          stream.signal('SIGINT');
-        }catch(ex){ console.log(ex) }
-        // but only this works with openssh@centos
-        try{
-          stream.write("\x03");
-        }catch(ex){ console.log(ex) }
-        conn.end();
-      };
-      process.on('SIGINT', sigIntSent);
-      stream.on('close', function(){
-        process.removeListener('SIGINT', sigIntSent);
-      });
-
-      if( opts.pty ){
-        sudoChallenge(stream, server['password'], function(success){
-          var rstderr = through().pause();
-          var rstdout = through().pause();
-          if (done) done(success, rstdout, rstderr, server, conn);
-          if(stderr) rstderr.queue(''+stderr+'');
-          if(stdout) rstdout.queue(''+stdout+'');
-          stream.stderr.pipe(rstderr);
-          stream.pipe(rstdout);
-          rstdout.resume();
-          rstderr.resume();
-        });
-      }else {
         if (done) done(false, stream, stream.stderr, server, conn);
-      }
-    });
-  };
 
-  if( server instanceof Client ){
-    runOnConn(server)
-  } else {
-    var conn = new Client();
-
-    server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
-
-    log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
-
-    conn.on('ready', function() {
-      runOnConn(conn)
-    });
-
-    try{
-      conn.connect(server);
-
-      log.verbose(pkg.name, 'connecting');
-
-      conn.on('error',function(stderr){
-        if(stderr) log.error(pkg.name, 'event '+stderr);
-        var Readable = require('stream').Readable;
-        var rs = new Readable;
-        done(true,null,''+stderr, server);
-        rs.push(stderr.toString());
-        rs.push(null);
       });
-
-    }catch(ex){
-      log.error(pkg.name,'connect '+ex);
-      var Readable = require('stream').Readable;
-      var rs = new Readable;
-      done(true,null,''+ex, server);
-      rs.push(ex.toString());
-      rs.push(null);
     }
-  }
+  });
 
 };
 

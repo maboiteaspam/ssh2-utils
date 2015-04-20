@@ -1,6 +1,7 @@
 
 require('should');
 var fs = require('fs');
+var _ = require('underscore');
 var Vagrant = require('node-vagrant-bin');
 
 var pwd = {};
@@ -183,14 +184,14 @@ describe('run', function(){
       setTimeout(function(){
         // re use connection
         ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
-          stdout2.on('data', function(data){
+          stdout2.on('data', _.debounce(function(data){
             data.toString().should.match(/root/)
             stdout.toString().should.match(/session/)
             conn.end()
             done();
-          });
+          },500));
         });
-      },2000);
+      },500);
     });
   });
   it('can connect with private key and run sudo command with password', function(done){
@@ -203,14 +204,14 @@ describe('run', function(){
       setTimeout(function(){
         // re use connection
         ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
-          stdout2.on('data', function(data){
-            data.toString().should.match(/root/)
-            stdout.toString().should.match(/session/)
-            conn.end()
+          stdout2.on('data', _.debounce(function(data){
+            data.toString().should.match(/root/);
+            stdout.toString().should.match(/session/);
+            conn.end();
             done();
-          });
+          }, 500 ) );
         });
-      },2000);
+      },500);
     });
   });
   it('run can fail properly', function(done){
@@ -223,17 +224,17 @@ describe('run', function(){
       stderrs.on('data', function(data){
         stderr+=''+data;
       });
-      setTimeout(function(){
-        stderr.should.match(/No such file or directory/)
-        stdout.should.be.empty
+      stdouts.on('close', function(){
+        stdout.should.match(/No such file or directory/)
+        stderr.should.be.empty
         conn.end()
         done();
-      },1000);
+      });
       (err).should.be.false;
     });
   });
   it('run can fail properly', function(done){
-    ssh.run(hostPwd,'dsscdc', function(err, stdouts, stderrs, server, conn){
+    ssh.run(hostPwd, 'dsscdc', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
       stdouts.on('data', function(data){
@@ -242,12 +243,12 @@ describe('run', function(){
       stderrs.on('data', function(data){
         stderr+=''+data;
       });
-      setTimeout(function(){
-        stderr.should.match(/command not found/)
-        stdout.should.be.empty
+      stdouts.on('close', function(){
+        stdout.should.match(/command not found/);
+        stderr.should.be.empty;
         conn.end()
         done();
-      },1000);
+      });
       (err).should.be.false;
     });
   });
