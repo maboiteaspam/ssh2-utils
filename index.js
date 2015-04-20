@@ -51,7 +51,7 @@ var sudoChallenge = function(stream, pwd, then){
       if(!hasChallenge){
         clearTimeout(tChallenge)
         stream.removeListener('data', checkPwdInput);
-        log.verbose(pkg.name, 'login in success by timeout');
+        log.verbose(pkg.name, 'login without a challenge');
         if (then) then(false);
       }
   };
