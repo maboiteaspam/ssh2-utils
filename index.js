@@ -120,6 +120,13 @@ var sudoExec = function(conn, server, cmd, done){
 
     if (err) return done(err);
 
+    stream.stderr.on('data', function(data){
+      log.error(pkg.name, 'STDERR %s', data);
+    });
+    stream.on('data', function(data){
+      log.silly(pkg.name, 'STDOUT %s', data)
+    });
+
     done(null, stream);
 
     if( opts.pty ){
@@ -178,11 +185,9 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
         var stderr = '';
         var stdout = '';
         stream.stderr.on('data', function(data){
-          log.error(pkg.name, 'STDERR: %s', data);
           stderr += data.toString();
         });
         stream.on('data', function(data){
-          log.silly(pkg.name, data)
           stdout += data.toString();
         });
 
