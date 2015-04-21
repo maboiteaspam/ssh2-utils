@@ -74,17 +74,16 @@ function SSH2Utils(){
  */
 var connect = function(server, done){
 
-  server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
-
-  log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
-
   if( server instanceof Client ){
-    done(false,server);
+    log.silly(pkg.name, 'already connected');
+    done(false, server);
   }else{
+    server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
+    log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
 
     var conn = new Client();
     conn.on('ready', function() {
-      done(null,conn);
+      done(null, conn);
     });
 
     try{
@@ -121,10 +120,10 @@ var sudoExec = function(conn, server, cmd, done){
     if (err) return done(err);
 
     stream.stderr.on('data', function(data){
-      log.error(pkg.name, 'STDERR %s', data);
+      log.error(pkg.name, '%s', _s.trim(''+data))
     });
     stream.on('data', function(data){
-      log.silly(pkg.name, 'STDOUT %s', data)
+      log.silly(pkg.name, '%s', _s.trim(''+data))
     });
 
     done(undefined, stream);
@@ -154,6 +153,13 @@ var sudoExec = function(conn, server, cmd, done){
     });
   });
 };
+
+/**
+ *
+ * @param server Oject|Client
+ * @param done
+ */
+SSH2Utils.prototype.getConnReady = connect;
 
 /**
  * Executes a command and return its output
