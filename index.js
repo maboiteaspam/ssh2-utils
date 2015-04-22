@@ -1,7 +1,6 @@
 
 var path = require('path');
 var async = require('async');
-var through = require('through');
 var log = require('npmlog');
 var Client = require('ssh2').Client;
 var SSH2Shell = require ('ssh2shell');
@@ -78,7 +77,7 @@ var connect = function(server, done){
     log.silly(pkg.name, 'already connected');
     done(false, server);
   }else{
-    server.username = server.username || server.userName; // it is acceptable in order to be config compliant with ssh2shell
+    server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
     log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
 
     var conn = new Client();
