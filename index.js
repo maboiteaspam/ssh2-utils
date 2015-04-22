@@ -74,7 +74,7 @@ function SSH2Utils(){
 var connect = function(server, done){
 
   if( server instanceof Client ){
-    log.silly(pkg.name, 'already connected');
+    log.silly(pkg.name, 're using existing connection');
     done(false, server);
   }else{
     server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
