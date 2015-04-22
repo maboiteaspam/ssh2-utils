@@ -20,22 +20,43 @@ log.level = process.env['NPM_LOG'] || 'info';
  * @param then
  */
 var sudoChallenge = function(stream, pwd, then){
+
   log.verbose(pkg.name, 'waiting for sudo');
+
+  var hasReceivedData = false;
   var hasChallenge = false;
   var tChallenge = setTimeout(function(){
-    log.error(pkg.name, 'login in failed by timeout');
+    log.error(pkg.name, 'login in failed by timeout '+tChallenge);
     stream.removeListener('data', checkPwdInput);
     if (then) then(true);
-  },10000);
+  }, 10000);
+
   var checkPwdInput = function(data){
-    if(!hasChallenge && data.toString().match(/\[sudo\] password/) ){
-      hasChallenge = true;
-      log.verbose(pkg.name, 'login...');
-      stream.removeListener('data', checkPwdLessInput);
-      stream.write(pwd+'\n');
+
+    data = ''+data;
+    hasReceivedData = true;
+
+    if(!hasChallenge ){
+
+      if( data.match(/\[sudo\] password/) ){
+        hasChallenge = true;
+        log.verbose(pkg.name, 'login...');
+        stream.write(pwd+'\n');
+
+      }else{
+
+        clearTimeout(tChallenge);
+        stream.removeListener('data', checkPwdInput);
+        log.verbose(pkg.name, 'login success without a challenge');
+        if (then) then(false);
+
+      }
+
     } else if(hasChallenge){
+
       clearTimeout(tChallenge);
       stream.removeListener('data', checkPwdInput);
+
       hasChallenge = false;
       if(data.toString().match(/Sorry, try again/) ){
         log.error(pkg.name, 'login in failed by password');
@@ -46,16 +67,18 @@ var sudoChallenge = function(stream, pwd, then){
       }
     }
   };
-  var checkPwdLessInput = function(){
-      if(!hasChallenge){
-        clearTimeout(tChallenge)
-        stream.removeListener('data', checkPwdInput);
-        log.verbose(pkg.name, 'login without a challenge');
-        if (then) then(false);
-      }
-  };
   stream.on('data', checkPwdInput);
-  stream.once('data', checkPwdLessInput);
+
+  var checkEmptyOutputCommands = function(){
+    if(!hasReceivedData && !hasChallenge){
+      clearTimeout(tChallenge);
+      stream.removeListener('data', checkPwdInput);
+      stream.removeListener('data', checkEmptyOutputCommands);
+      log.verbose(pkg.name, 'login in success, without a challenge, without a data');
+      if (then) then(false);
+    }
+  };
+  stream.on('close', checkEmptyOutputCommands);
 };
 
 /**
