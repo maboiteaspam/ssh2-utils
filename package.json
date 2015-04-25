@@ -14,6 +14,7 @@
   "license": "WTF",
   "dependencies": {
     "async": "^0.9.0",
+    "fs-extra": "^0.18.2",
     "glob": "^5.0.5",
     "npmlog": "^1.2.0",
     "path": "^0.11.14",

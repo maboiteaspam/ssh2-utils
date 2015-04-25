@@ -12,7 +12,7 @@ else
 
 var SSH2Utils = require('../index.js');
 var ssh = new SSH2Utils();
-ssh.log.level = 'silly';
+ssh.log.level = 'verbose';
 
 var hostKey = {
   'host':'127.0.0.1',

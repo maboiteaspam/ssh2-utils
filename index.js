@@ -5,6 +5,7 @@ var log = require('npmlog');
 var Client = require('ssh2').Client;
 var SSH2Shell = require ('ssh2shell');
 var glob = require("glob");
+var fs = require("fs-extra");
 var _ = require("underscore");
 var _s = require("underscore.string");
 
@@ -347,6 +348,7 @@ SSH2Utils.prototype.readFile = function(server,remoteFile,localPath, then){
     conn.sftp(function(err, sftp){
       if (err) throw err;
       sftp.fastGet(remoteFile, localPath, function(err){
+        if (err) throw err;
         if(then) then(err, server, conn);
       });
     });
@@ -380,6 +382,7 @@ SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
         log.verbose(pkg.name, 'put %s %s',
           path.relative(process.cwd(),localFile), path.relative(remotePath,remoteFile));
         sftp.fastPut(localFile, remoteFile, function(err){
+          if (err) throw err;
           if(err) log.error(pkg.name, 'fastPut '+err);
           if(then) then(err, server, conn);
         });
@@ -460,7 +463,7 @@ SSH2Utils.prototype.mkdir = function(server, remotePath, then){
  */
 SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
 
-  connect(server, function(err,conn){
+  connect(server, function sshPutDir(err,conn){
     conn.sftp(function(err, sftp){
       if (err) throw err;
 
@@ -539,13 +542,67 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
  * @param server
  * @param remotePath
  * @param localPath
- * @param then
+ * @param allDone
  */
-SSH2Utils.prototype.getDir = function(server,remotePath,localPath, then){
+SSH2Utils.prototype.getDir = function(server,remotePath,localPath, allDone){
 
+  var that = this;
   server.username = server.username || server.userName || server.user;
 
-  throw 'Needs implementation';
+  connect(server, function(err,conn){
+    conn.sftp(function(err, sftp){
+      if (err) throw err;
+
+      log.verbose(pkg.name, 'ready');
+
+      var files = [];
+      var dirs = [];
+      function readdir(p, then){
+        sftp.readdir(p, function sftpReaddir(err,list){
+          if (err) throw err;
+          var toRead = [];
+          list.forEach(function(item){
+            var fpath = p+'/'+item.filename;
+            toRead.push(function(done){
+              sftp.stat(fpath, function sftpStats(err,stat){
+                if (err) throw err;
+                if(stat.isDirectory()){
+                  dirs.push(fpath.replace(remotePath, '' ) );
+                  readdir(fpath,done);
+                }else if(stat.isFile()){
+                  files.push(fpath.replace(remotePath, '' ) );
+                  done();
+                }
+              });
+            });
+          });
+          async.parallelLimit(toRead,4, function(){
+            if(then) then(dirs,files);
+          });
+        });
+      }
+
+      readdir(remotePath, function(dirs,files){
+        var todoDirs = [];
+        var todoFiles = [];
+        dirs.forEach(function(dir){
+          todoDirs.push(function(done){
+            fs.mkdirs(localPath+dir,done);
+          });
+        });
+        files.forEach(function(file){
+          todoFiles.push(function(done){
+            that.readFile(server, remotePath+file, localPath+file, done);
+          });
+        });
+
+        async.parallelLimit(todoDirs,4, function(){
+          async.parallelLimit(todoFiles,4, allDone);
+        });
+      });
+
+    });
+  });
 };
 
 module.exports = SSH2Utils;
