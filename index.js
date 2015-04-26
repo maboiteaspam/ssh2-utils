@@ -27,7 +27,7 @@ var sudoChallenge = function(stream, pwd, then){
   var hasReceivedData = false;
   var hasChallenge = false;
   var tChallenge = setTimeout(function(){
-    log.error(pkg.name, 'login in failed by timeout '+tChallenge);
+    log.error(pkg.name, 'login in failed by timeout');
     stream.removeListener('data', checkPwdInput);
     if (then) then(true);
   }, 10000);
