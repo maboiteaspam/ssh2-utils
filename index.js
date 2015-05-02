@@ -168,7 +168,9 @@ var sudoExec = function(conn, server, cmd, done){
       try{
         stream.write("\x03");
       }catch(ex){ console.log(ex) }
-      conn.end();
+      setTimeout(function(){
+        conn.end();
+      },2000);
     };
     process.on('SIGINT', sigIntSent);
     stream.on('close', function(){
