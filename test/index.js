@@ -284,6 +284,9 @@ describe('run multiple', function(){
 describe('sftp', function(){
   this.timeout(50000);
   var t = (new Date()).getTime();
+  before(function(){
+
+  });
   it('can test file exists', function(done){
     ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err){
       if(err!==undefined) (err).should.be.true;
@@ -294,7 +297,7 @@ describe('sftp', function(){
     fs.writeFileSync('/tmp/local'+t, t);
     ssh.putFile(hostPwd, '/tmp/local'+t, '/tmp/remote'+t, function(err){
       if(err!==undefined) (err).should.be.true;
-      ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err){
+      ssh.fileExists(hostPwd, '/tmp/remote'+t, function(err){
         if(err!==undefined) (err).should.be.true;
         done();
       });
@@ -305,6 +308,19 @@ describe('sftp', function(){
       if(err!==undefined) (err).should.be.true;
       fs.readFileSync('/tmp/local'+t,'utf-8').should.eql(''+t);
       done();
+    });
+  });
+  it('can write a file content', function(done){
+    ssh.writeFile(hostPwd, '/tmp/remote2'+t, t, function(err){
+      if(err!==undefined) (err).should.be.true;
+      ssh.fileExists(hostPwd, '/tmp/remote2'+t, function(err){
+        if(err!==undefined) (err).should.be.true;
+        ssh.readFile(hostPwd, '/tmp/remote2'+t, '/tmp/local2'+t, function(err){
+          if(err!==undefined) (err).should.be.true;
+          fs.readFileSync('/tmp/local2'+t,'utf-8').should.eql(''+t);
+          done();
+        });
+      });
     });
   });
   it('can create a directory', function(done){

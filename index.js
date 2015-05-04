@@ -398,6 +398,42 @@ SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
  *
  * @param server
  * @param remoteFile
+ * @param content
+ * @param then
+ */
+SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
+
+  log.verbose(pkg.name, 'write to %s',remoteFile);
+
+  connect(server, function(err,conn){
+
+    conn.sftp(function(err, sftp){
+      if (err) throw err;
+
+      log.verbose(pkg.name, 'ready');
+
+      var remotePath = path.dirname(remoteFile);
+      log.verbose(pkg.name, 'mkdir %s', remotePath);
+      sftp.mkdir(remotePath,function(err){
+        if(err) log.error(pkg.name, 'mkdir '+err);
+
+        remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
+        log.verbose(pkg.name, 'write %s',
+          path.relative(remotePath,remoteFile));
+        var wStream = sftp.createWriteStream(remoteFile, {encoding: null});
+        wStream.end(''+content);
+        wStream.on('finish', function () {
+          if(then) then();
+        });
+      });
+    });
+  });
+};
+
+/**
+ *
+ * @param server
+ * @param remoteFile
  * @param then
  */
 SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
