@@ -1,8 +1,12 @@
 {
   "name": "ssh2-utils",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "ssh2 utilities around mscdex/ssh2 and cmp-202/ssh2shell module to make it more easy to use",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/maboiteaspam/ssh2-utils.git"
+  },
   "scripts": {
     "test": "mocha"
   },
@@ -24,7 +28,10 @@
     "underscore.string": "^3.0.3"
   },
   "devDependencies": {
+    "cluc": "^1.0.19",
+    "inquirer": "^0.8.3",
     "node-vagrant-bin": "^1.0.1",
+    "semver": "^4.3.4",
     "should": "^6.0.1"
   }
 }

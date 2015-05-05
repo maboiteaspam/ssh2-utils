@@ -528,9 +528,9 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
         dirs.forEach(function(f){
           dirHandlers.push(function(done){
             var to = path.join(remotePath, f).replace(/[\\]/g,'/');
-            log.verbose(pkg.name, 'mkdir %s', to);
-            sftp.mkdir(to,function(err){
-              if(err) log.error(pkg.name,'mkdir '+err);
+            log.info(pkg.name, 'mkdir %s', to);
+            sftp.mkdir(to, function(err){
+              if(err) log.error(pkg.name, 'mkdir %s %s', to, err.message);
               done();
             });
           })
@@ -547,10 +547,10 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
             filesHandlers.push(function(done){
               var from = path.join(localPath, f);
               var to = path.join(remotePath, f).replace(/[\\]/g,'/'); // windows needs this
-              log.verbose(pkg.name, 'put %s %s',
+              log.info(pkg.name, 'put %s %s',
                 path.relative(process.cwd(),from), path.relative(remotePath,to));
               sftp.fastPut(from, to, function(err){
-                if(err) log.error(pkg.name, 'fastPut '+err);
+                if(err) log.error(pkg.name, 'fastPut %s %s %s', from, to, err.message);
                 if(done) done();
               });
             })
@@ -559,9 +559,9 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
           // delete root remote directory if it exists
           log.verbose(pkg.name, 'rmdir %s', remotePath);
           sftp.rmdir(remotePath, function(err){
-            if(err) log.error(pkg.name,'rmdir '+err);
+            if(err) log.error(pkg.name, 'rmdir %s %s', remotePath, err.message);
             // then push the scanned files and directories
-            async.parallelLimit(dirHandlers, 4, function(){
+            async.series(dirHandlers, function(){
               async.parallelLimit(filesHandlers, 4, function(){
                 if(then)then(err, server, conn);
               });
@@ -644,4 +644,3 @@ SSH2Utils.prototype.getDir = function(server,remotePath,localPath, allDone){
 };
 
 module.exports = SSH2Utils;
-
