@@ -180,6 +180,9 @@ inquirer.prompt([{
 
     gitClone(' '+sshUrl+' .');
     gitCheckout('-b '+branch+' ');
+    streamOrDie('rm -fr ./*');
+    streamOrDie('rm -fr ./.giti*');
+    streamOrDie('rm -fr ./.tr*');
     streamOrDie('ls -alh');
     gitStatus();
 
