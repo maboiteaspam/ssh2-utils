@@ -110,7 +110,7 @@ inquirer.prompt([{
   var gitPreferCleanTree = function(){
     var cmd = 'git status';
     return line.stream(cmd, function(){
-      this.mustnot(/(est propre|is clean)/i,'Tree is unclean')
+      this.must(/(est propre|is clean)/i,'Tree is unclean')
         .or(line.confirmToStop('%s, stop now ?', true));
     });
   };
@@ -179,7 +179,7 @@ inquirer.prompt([{
     streamOrDie('cd /tmp/'+pkg.name);
 
     gitClone(' '+sshUrl+' .');
-    gitClone('-b '+branch+' ');
+    gitCheckout('-b '+branch+' ');
     streamOrDie('ls -alh');
     gitStatus();
 
