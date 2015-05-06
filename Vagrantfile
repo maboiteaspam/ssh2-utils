@@ -13,6 +13,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "centos", primary: true do |centos|
     centos.vm.box = "centos"
     centos.vm.box_url = "https://github.com/2creatives/vagrant-centos/releases/download/v6.4.2/centos64-x86_64-20140116.box"
+    centos.vm.box_url = "file://D:/centos64-x86_64-20140116.box"
     centos.vm.box_url = "/mnt/5c7cd16a-515f-4852-b14a-d045ef5e74ee/vagrant-box/centos64-x86_64-20140116.box"
     config.vm.provider :virtualbox
   end
