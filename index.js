@@ -499,7 +499,7 @@ SSH2Utils.prototype.mkdir = function(server, remotePath, then){
  * @param remotePath
  * @param then
  */
-SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
+SSH2Utils.prototype.putDir = function(server, localPath, remotePath, then){
 
   connect(server, function sshPutDir(err,conn){
     conn.sftp(function(err, sftp){
@@ -518,9 +518,9 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
         // create root remote directory
         dirHandlers.push(function(done){
           log.verbose(pkg.name, 'mkdir %s', remotePath);
-          sftp.mkdir(remotePath,function(err){
+          conn.exec("mkdir -p "+remotePath, function(err){
             if(err) log.error(pkg.name, 'mkdir '+err);
-            done();
+            setTimeout(done, 500); // this is weird, to be checked later.
           });
         });
 
@@ -551,14 +551,14 @@ SSH2Utils.prototype.putDir = function(server,localPath,remotePath, then){
                 path.relative(process.cwd(),from), path.relative(remotePath,to));
               sftp.fastPut(from, to, function(err){
                 if(err) log.error(pkg.name, 'fastPut %s %s %s', from, to, err.message);
-                if(done) done();
+                done();
               });
             })
           });
 
           // delete root remote directory if it exists
           log.verbose(pkg.name, 'rmdir %s', remotePath);
-          sftp.rmdir(remotePath, function(err){
+          conn.exec("rm -fr "+remotePath, function(err){
             if(err) log.error(pkg.name, 'rmdir %s %s', remotePath, err.message);
             // then push the scanned files and directories
             async.series(dirHandlers, function(){
