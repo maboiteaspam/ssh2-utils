@@ -16,12 +16,18 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 
 # Documentation
 
-Automatic documentation generation 
+Automatic source code documentation generation 
+
 is supported by jsdoc at http://maboiteaspam.github.io/ssh2-utils/docs/
+
+Automatic tests documentation  generation 
+
+is support by mocha http://maboiteaspam.github.io/ssh2-utils/mocha-tests
+
 
 ### API
 
-* [`SSH2Utils`]()
+* [`SSH2Utils`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html)
     * [`open`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#open)
     * [`exec`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#exec)
     * [`run`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#run)
