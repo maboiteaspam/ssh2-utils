@@ -72,7 +72,7 @@ if( !process.env['TRAVIS'] ){
 
 }
 
-var fixturePath = __dirname + '/fixtures';
+var fixturePath = __dirname + '/fixtures/';
 
 
 describe('ident', function(){
