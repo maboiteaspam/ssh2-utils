@@ -11,6 +11,7 @@ var jsdox = {
   'index.js':'docs/'
 };
 var releaseTypes = [
+  "same",
   "major",
   "premajor",
   "minor",
@@ -22,7 +23,7 @@ var releaseTypes = [
 var revision = pkg.version;
 
 releaseTypes.forEach(function(t, i){
-  var r = semver.inc(revision, t);
+  var r = t=="same"?revision:semver.inc(revision, t);
   releaseTypes[i] = ("_         " + t).slice(t.length)+' => '+r;
 });
 
@@ -199,6 +200,7 @@ inquirer.prompt([{
     gitCommit('Generate doc '+releaseType+' '+revision);
 
     gitPush(''+sshUrl+' '+branch);
+    gitStatus();
 
     streamOrDie('cd '+projectPath);
     streamOrDie('rm -fr /tmp/'+pkg.name);
