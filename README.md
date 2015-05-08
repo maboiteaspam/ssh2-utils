@@ -14,37 +14,38 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 ---------------------------------------
 
 
+# Documentation
+
+Automatic source code documentation generation 
+
+is supported by jsdoc at http://maboiteaspam.github.io/ssh2-utils/docs/
+
+Automatic tests documentation  generation 
+
+is support by mocha http://maboiteaspam.github.io/ssh2-utils/mocha-tests
+
+
 ### API
 
-* [`SSH2Utils`]()
-    * [`exec`](#exec)
-    * [`run`](#run)
-    * [`runMultiple`](#runMultiple)
-    * [`readFile`](#readFile)
-    * [`putDir`](#putDir)
-    * [`readDir`](#readDir)
-    * [`putFile`](#putFile)
-    * [`mkdir`](#mkdir)
-    * [`rmdir`](#rmdir)
-    * [`fileExists`](#fileExists)
-    
-
-<a name="SSH2Utils" />
-### new SSH2Utils()
-
-SSH2Utils constructor.
-
-__Arguments__
+* [`SSH2Utils`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html)
+    * [`open`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#open)
+    * [`exec`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#exec)
+    * [`run`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#run)
+    * [`runMultiple`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#runMultiple)
+    * [`readFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readFile)
+    * [`putDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDir)
+    * [`readDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readDir)
+    * [`putFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putFile)
+    * [`mkdir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mkdir)
+    * [`rmdir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#rmdir)
+    * [`fileExists`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExists)
+    * [`writeFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#writeFile)
+    * [`getDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#getDir)
 
 
-__Examples__
+---------------------------------------
 
-```js
-    var SSH2Utils = require('ssh2-utils');
-    var ssh = new SSH2Utils();
-```
-
-
+### Examples
 
 <a name="exec" />
 ### SSH2Utils.exec(server, cmd, callback)

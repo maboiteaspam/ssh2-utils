@@ -1,0 +1,255 @@
+running machine precise64
+    <section class="suite">
+      <h1>ident</h1>
+      <dl>
+        <dt>exec can fail properly with password</dt>
+        <dd><pre><code>var wrongHost = {
+  'host':hostPwd.host,
+  port: hostPwd.port,
+  username: 'wrong',
+  password: 'credentials'
+};
+ssh.exec(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+  (err).should.be.true;
+  (stdout===null).should.be.true;
+  (stderr).should.match(/failed/);
+  done();
+});</code></pre></dd>
+        <dt>run can fail properly with private key</dt>
+        <dd><pre><code>var wrongHost = {
+  'host':hostKey.host,
+  port: hostKey.port,
+  username: 'wrong',
+  privateKey: hostKey.privateKey
+};
+ssh.run(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+  (err).should.be.true;
+  (stdout===null).should.be.true;
+  (stderr).should.match(/failed/);
+  done();
+});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>exec</h1>
+      <dl>
+        <dt>can execute command</dt>
+        <dd><pre><code>ssh.exec(hostPwd,'ls -alh /var/log/', function(err, stdout, stderr, server){
+  if(err!==undefined) (err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  done()
+});</code></pre></dd>
+        <dt>can execute command with private key</dt>
+        <dd><pre><code>ssh.exec(hostKey,'ls -alh /var/log/', function(err, stdout, stderr, server){
+  if(err!==undefined) (err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  done()
+});</code></pre></dd>
+        <dt>can execute sudo command</dt>
+        <dd><pre><code>this.timeout(50000)
+ssh.exec(hostPwd,'sudo ls -alh', function(err, stdout, stderr, server,conn){
+  if(err!==undefined) (err).should.be.false;
+  stdout.should.match(new RegExp(server.username));
+  stderr.should.be.empty;
+  // re use connection
+  ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
+    if(err!==undefined) (err).should.be.false;
+    stdout.should.match(new RegExp(server.username));
+    stderr.should.be.empty;
+    done();
+  });
+});</code></pre></dd>
+        <dt>can connect with private key and execute sudo command</dt>
+        <dd><pre><code>this.timeout(50000)
+ssh.exec(hostKey,'sudo ls -alh', function(err, stdout, stderr, server,conn){
+  if(err!==undefined) (err).should.be.false;
+  stdout.should.match(new RegExp(server.username));
+  stderr.should.be.empty;
+  // re use connection
+  ssh.exec(conn,'sudo ls -alh', function(err, stdout, stderr){
+    if(err!==undefined) (err).should.be.false;
+    stdout.should.match(new RegExp(server.username));
+    stderr.should.be.empty;
+    done();
+  });
+});</code></pre></dd>
+        <dt>can fail properly</dt>
+        <dd><pre><code>ssh.exec(hostPwd,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
+  if(err!==undefined) (err).should.be.false;
+  stdout.should.match(/No such file or directory/)
+  stderr.should.be.empty
+  done()
+});</code></pre></dd>
+        <dt>can fail properly</dt>
+        <dd><pre><code>ssh.exec(hostPwd,'dsscdc', function(err, stdout, stderr, server){
+  if(err!==undefined) (err).should.be.false;
+  stdout.should.match(/command not found/)
+  stderr.should.be.empty
+  done()
+});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>run</h1>
+      <dl>
+        <dt>can run sudo command with password</dt>
+        <dd><pre><code>ssh.run(hostPwd,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
+  (err).should.be.false;
+  var stdout = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  setTimeout(function(){
+    // re use connection
+    ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
+      stdout2.on('data', _.debounce(function(data){
+        data.toString().should.match(/root/)
+        stdout.toString().should.match(/session/)
+        conn.end()
+        done();
+      },500));
+    });
+  },500);
+});</code></pre></dd>
+        <dt>can connect with private key and run sudo command with password</dt>
+        <dd><pre><code>ssh.run(hostKey,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
+  (err).should.be.false;
+  var stdout = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  setTimeout(function(){
+    // re use connection
+    ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
+      stdout2.on('data', _.debounce(function(data){
+        data.toString().should.match(/root/);
+        stdout.toString().should.match(/session/);
+        conn.end();
+        done();
+      }, 500 ) );
+    });
+  },500);
+});</code></pre></dd>
+        <dt>run can fail properly</dt>
+        <dd><pre><code>ssh.run(hostPwd,'ls -alh /var/log/nofile', function(err, stdouts, stderrs, server, conn){
+  var stdout = '';
+  var stderr = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  stderrs.on('data', function(data){
+    stderr+=''+data;
+  });
+  stdouts.on('close', function(){
+    stdout.should.match(/No such file or directory/)
+    stderr.should.be.empty
+    conn.end()
+    done();
+  });
+  (err).should.be.false;
+});</code></pre></dd>
+        <dt>run can fail properly</dt>
+        <dd><pre><code>ssh.run(hostPwd, 'dsscdc', function(err, stdouts, stderrs, server, conn){
+  var stdout = '';
+  var stderr = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  stderrs.on('data', function(data){
+    stderr+=''+data;
+  });
+  stdouts.on('close', function(){
+    stdout.should.match(/command not found/);
+    stderr.should.be.empty;
+    conn.end()
+    done();
+  });
+  (err).should.be.false;
+});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>run multiple</h1>
+      <dl>
+        <dt>can run multiple commands</dt>
+        <dd><pre><code>var cmds = [
+      'echo hello',
+      'time',
+      &quot;`All done!`&quot;
+    ];
+    var onDone = function(err, sessionText, sshObj){
+      if(err!==undefined) (err).should.be.true;
+      sessionText.toString().should.match(/hello/)
+      done();
+    };
+    var onCommandComplete = function(command, response, server){
+    }
+    ssh.runMultiple(hostPwd, cmds, onCommandComplete, onDone);</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>sftp</h1>
+      <dl>
+        <dt>can test file exists</dt>
+        <dd><pre><code>ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err){
+  if(err!==undefined) (err).should.be.true;
+  done();
+});</code></pre></dd>
+        <dt>can write a file</dt>
+        <dd><pre><code>fs.writeFileSync(fixturePath + 'local'+t, t);
+ssh.putFile(hostPwd, fixturePath + 'local'+t, '/tmp/remote'+t, function(err){
+  if(err!==undefined) (err).should.be.true;
+  ssh.fileExists(hostPwd, '/tmp/remote'+t, function(err){
+    if(err!==undefined) (err).should.be.true;
+    done();
+  });
+});</code></pre></dd>
+        <dt>can download a file</dt>
+        <dd><pre><code>ssh.readFile(hostPwd, '/tmp/remote'+t, fixturePath + 'local'+t, function(err){
+  if(err!==undefined) (err).should.be.true;
+  fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
+  done();
+});</code></pre></dd>
+        <dt>can write a file content</dt>
+        <dd><pre><code>ssh.writeFile(hostPwd, '/tmp/remote2'+t, t, function(err){
+  if(err!==undefined) (err).should.be.true;
+  ssh.fileExists(hostPwd, '/tmp/remote2'+t, function(err){
+    if(err!==undefined) (err).should.be.true;
+    ssh.readFile(hostPwd, '/tmp/remote2'+t, fixturePath + 'local2'+t, function(err){
+      if(err!==undefined) (err).should.be.true;
+      fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
+      done();
+    });
+  });
+});</code></pre></dd>
+        <dt>can create a directory</dt>
+        <dd><pre><code>ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err){
+  if(err!==undefined) (err).should.be.true;
+  ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
+    if(err!==undefined) (err).should.be.true;
+    done();
+  });
+});</code></pre></dd>
+        <dt>can put a directory</dt>
+        <dd><pre><code>ssh.putDir(hostPwd, __dirname+'/../examples', '/home/vagrant/examples', function(err, server, conn){
+  if(err!==undefined) (err).should.be.true;
+  conn.end();
+  ssh.fileExists(hostPwd, '/home/vagrant/examples/exec.js', function(err){
+    if(err!==undefined) (err).should.be.true;
+    done();
+  });
+});</code></pre></dd>
+        <dt>can delete a directory</dt>
+        <dd><pre><code>ssh.rmdir(hostPwd, '/home/vagrant/examples', function(err){
+  if(err!==undefined) (err).should.be.true;
+  ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
+    if(err!==undefined) (''+err).should.match(/error/i);
+      (!err).should.be.false;
+    done();
+  });
+});</code></pre></dd>
+      </dl>
+    </section>
+running machine precise64
