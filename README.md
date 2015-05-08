@@ -18,11 +18,11 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 
 Automatic source code documentation generation 
 
-is supported by jsdoc at http://maboiteaspam.github.io/ssh2-utils/docs/
+is supported by jsdoc at https://maboiteaspam.github.io/ssh2-utils/docs/
 
 Automatic tests documentation  generation 
 
-is support by mocha http://maboiteaspam.github.io/ssh2-utils/mocha-tests
+is support by mocha https://github.com/maboiteaspam/ssh2-utils/tree/gh-pages/mocha-tests.md
 
 
 ### API
