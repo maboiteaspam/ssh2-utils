@@ -43,6 +43,8 @@ is support by mocha http://maboiteaspam.github.io/ssh2-utils/mocha-tests
     * [`getDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#getDir)
 
 
+---------------------------------------
+
 ### Examples
 
 <a name="exec" />
