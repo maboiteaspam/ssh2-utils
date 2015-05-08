@@ -218,7 +218,7 @@ inquirer.prompt([{
   var revision = answers.release.match(/^\s*([a-z]+)\s*=>\s*(.+)$/i)[2];
 
   ensureFileContain('.gitignore', '\n.idea/\n');
-  ensureFileContain('.gitignore', '\ngithub.json/\n');
+  ensureFileContain('.gitignore', '\ngithub.json\n');
 
   releaseProject('master', __dirname, releaseType, revision);
   generateDocumentation('gh-pages', __dirname, releaseType, revision);
