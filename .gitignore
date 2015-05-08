@@ -35,4 +35,6 @@ examples/fixture/dir3
 examples/fixture/w2d.json2
 examples/fixture/w2d.json3
 
-github.json
+.idea/
+
+github.json/
