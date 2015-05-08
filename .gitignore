@@ -30,7 +30,7 @@ build/Release
 node_modules
 
 examples/pwd.json
-examples/fixtures
+test/fixtures/
 examples/fixture/dir2
 examples/fixture/dir3
 examples/fixture/w2d.json2
