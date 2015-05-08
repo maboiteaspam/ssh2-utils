@@ -1,6 +1,6 @@
 {
   "name": "ssh2-utils",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "ssh2 utilities around mscdex/ssh2 and cmp-202/ssh2shell module to make it more easy to use",
   "main": "index.js",
   "repository": {
