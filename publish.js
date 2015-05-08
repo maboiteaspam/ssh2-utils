@@ -180,10 +180,8 @@ inquirer.prompt([{
     streamOrDie('cd /tmp/'+pkg.name);
 
     gitClone(' '+sshUrl+' .');
-    gitCheckout('-b '+branch+' ');
-    streamOrDie('rm -fr ./*');
-    streamOrDie('rm -fr ./.giti*');
-    streamOrDie('rm -fr ./.tr*');
+    gitCheckout(''+branch+' ');
+    gitCheckout(' -b '+branch+' ');
     streamOrDie('ls -alh');
     gitStatus();
 
@@ -193,7 +191,7 @@ inquirer.prompt([{
     });
 
     streamOrDie('cd '+projectPath);
-    mocha('markdown', '/tmp/'+pkg.name+'/docs/test.md');
+    mocha('markdown', '/tmp/'+pkg.name+'/mocha-tests.md');
     streamOrDie('cd /tmp/'+pkg.name);
 
     gitAdd('-A');
