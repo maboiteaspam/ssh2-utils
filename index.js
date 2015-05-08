@@ -13,12 +13,32 @@ var pkg = require('./package.json');
 
 log.level = process.env['NPM_LOG'] || 'info';
 
+
+/**
+ * Server credentials information
+ * It can use password or key
+ * to login, or run sudo command
+ * transparently
+ *
+ * @note It is only a class to support documentation
+ * @constructor
+ */
+function ServerCredentials(){
+  this.username = '';
+  this.password = '';
+  this.host = 'localhost';
+  this.port = 22;
+  this.privateKey = '';
+}
+
 /**
  * sudo challenge completion over ssh
  *
- * @param stream
- * @param pwd
- * @param then
+ * If the login success, hasLogin is true
+ *
+ * @param stream Stream
+ * @param pwd string
+ * @param then callback(bool hasLogin)
  */
 var sudoChallenge = function(stream, pwd, then){
 
@@ -26,8 +46,11 @@ var sudoChallenge = function(stream, pwd, then){
 
   var hasReceivedData = false;
   var hasChallenge = false;
+
+  // this is a general timeout on the command
+  // passed this 10 secs, it fails
   var tChallenge = setTimeout(function(){
-    log.error(pkg.name, 'login in failed by timeout');
+    log.error(pkg.name, 'Login has failed by timeout');
     stream.removeListener('data', checkPwdInput);
     if (then) then(true);
   }, 10000);
@@ -37,45 +60,56 @@ var sudoChallenge = function(stream, pwd, then){
     data = ''+data;
     hasReceivedData = true;
 
+    // there can t be anything to resolve
+    // if the challenge has not been sent
     if(!hasChallenge ){
 
+      // first data is always the challenge
       if( data.match(/\[sudo\] password/) ){
         hasChallenge = true;
-        log.verbose(pkg.name, 'login...');
+        log.verbose(pkg.name, 'Challenge started...');
+        // if so send the password on stdin
         stream.write(pwd+'\n');
 
       }else{
 
+        // otherwise,
+        // the command has probably ran successfully
         clearTimeout(tChallenge);
         stream.removeListener('data', checkPwdInput);
-        log.verbose(pkg.name, 'login success without a challenge');
+        log.verbose(pkg.name, 'Login done without a challenge');
         if (then) then(false);
 
       }
 
+      // once the challenge is set,
+      // it must be concluded
+      // right after it s beginning
     } else if(hasChallenge){
 
       clearTimeout(tChallenge);
       stream.removeListener('data', checkPwdInput);
 
       hasChallenge = false;
+      // this case handle only en.
       if(data.toString().match(/Sorry, try again/) ){
-        log.error(pkg.name, 'login in failed by password');
+        log.error(pkg.name, '... Failed to resolve the challenge');
         if (then) then(true);
       }else{
-        log.verbose(pkg.name, 'login in success by password');
+        log.verbose(pkg.name, '... Challenge was successfully resolved');
         if (then) then(false);
       }
     }
   };
   stream.on('data', checkPwdInput);
 
+  // this is for commands like rm -f /some
   var checkEmptyOutputCommands = function(){
     if(!hasReceivedData && !hasChallenge){
       clearTimeout(tChallenge);
       stream.removeListener('data', checkPwdInput);
       stream.removeListener('data', checkEmptyOutputCommands);
-      log.verbose(pkg.name, 'login in success, without a challenge, without a data');
+      log.verbose(pkg.name, 'Login was done, without a challenge, without a data');
       if (then) then(false);
     }
   };
@@ -91,9 +125,10 @@ function SSH2Utils(){
 }
 
 /**
+ * opens ssh connection
  *
- * @param server
- * @param done
+ * @param server ServerCredentials
+ * @param done (err, ssh2.Client conn)
  */
 var connect = function(server, done){
 
@@ -126,11 +161,12 @@ var connect = function(server, done){
 };
 
 /**
+ * Execute a command and returns asap
  *
- * @param conn
- * @param server
- * @param cmd
- * @param done
+ * @param conn ssh2.Client
+ * @param server ServerCredentials
+ * @param cmd String
+ * @param done callback(err, ssh2._Channel_ stream)
  */
 var sudoExec = function(conn, server, cmd, done){
 
@@ -164,12 +200,15 @@ var sudoExec = function(conn, server, cmd, done){
       try{
         stream.signal('SIGINT');
       }catch(ex){ console.log(ex) }
-      // but only this works with openssh@centos
+      // but this only works with openssh@centos
       try{
+        // this is a workaround for more ssh implementations
         stream.write("\x03");
       }catch(ex){ console.log(ex) }
       setTimeout(function(){
         conn.end();
+        // if the connection ends to soon,
+        // suspect the remote process is not killed.
       },2000);
     };
     process.on('SIGINT', sigIntSent);
@@ -180,9 +219,7 @@ var sudoExec = function(conn, server, cmd, done){
 };
 
 /**
- *
- * @param server Oject|Client
- * @param done
+ * @see connect
  */
 SSH2Utils.prototype.getConnReady = connect;
 
@@ -192,14 +229,13 @@ SSH2Utils.prototype.getConnReady = connect;
  * non-interactive
  *
  * also take care of
- * - close the connection once stream is closed
  * - manage sudo cmd
  * - log errors to output
  * - remote program termination with ctrl+C
  *
- * @param server Oject|Client
- * @param cmd
- * @param done
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmd String
+ * @param done callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.exec = function(server,cmd,done){
 
@@ -238,13 +274,12 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
  * interactive
  *
  * also take care of
- * - close the connection once stream is closed
  * - manage sudo cmd
  * - log errors to output
  *
- * @param server
- * @param cmd
- * @param done
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmd String
+ * @param done callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.run = function(server,cmd,done){
 
@@ -271,12 +306,12 @@ SSH2Utils.prototype.run = function(server,cmd,done){
  *
  * Take care of everything, su sudo ect
  *
- * @param server
- * @param cmds
- * @param cmdComplete
- * @param then
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmds [String]
+ * @param cmdComplete callback(String command, String response, ServerCredentials server)
+ * @param then callback(err, String allSessionText, ServerCredentials server)
  */
-SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
+SSH2Utils.prototype.runMultiple = function(server, cmds, cmdComplete, then){
 
   if(!then){
     then = cmdComplete;
@@ -338,13 +373,14 @@ SSH2Utils.prototype.runMultiple = function(server,cmds,cmdComplete,then){
 };
 
 /**
+ * Downloads a file to the local
  *
- * @param server
- * @param remoteFile
- * @param localPath
- * @param then
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param localPath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.readFile = function(server,remoteFile,localPath, then){
+SSH2Utils.prototype.readFile = function(server, remoteFile, localPath, then){
 
   connect(server, function(err,conn){
     conn.sftp(function(err, sftp){
@@ -358,11 +394,12 @@ SSH2Utils.prototype.readFile = function(server,remoteFile,localPath, then){
 };
 
 /**
+ * Uploads a file on the remote remote
  *
- * @param server
- * @param localFile
- * @param remoteFile
- * @param then
+ * @param server ServerCredentials|ssh2.Client
+ * @param localFile String
+ * @param remoteFile String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
 
@@ -395,11 +432,12 @@ SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
 };
 
 /**
+ * Writes content to a remote file
  *
- * @param server
- * @param remoteFile
- * @param content
- * @param then
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
 
@@ -414,7 +452,7 @@ SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
 
       var remotePath = path.dirname(remoteFile);
       log.verbose(pkg.name, 'mkdir %s', remotePath);
-      sftp.mkdir(remotePath,function(err){
+      sftp.mkdir(remotePath, function(err){
         if(err) log.error(pkg.name, 'mkdir '+err);
 
         remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
@@ -423,7 +461,7 @@ SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
         var wStream = sftp.createWriteStream(remoteFile, {encoding: null});
         wStream.end(''+content);
         wStream.on('finish', function () {
-          if(then) then();
+          if(then) then(/*@todo*/);
         });
       });
     });
@@ -431,10 +469,12 @@ SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
 };
 
 /**
+ * Tells if a file exists on remote
+ * by trying to open handle on it.
  *
- * @param server
- * @param remoteFile
- * @param then
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
 
@@ -453,10 +493,12 @@ SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
 };
 
 /**
+ * Deletes a file or directory
+ * sudo rm -fr /some/path
  *
- * @param server
- * @param remotePath
- * @param then
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.rmdir = function(server, remotePath, then){
 
@@ -473,10 +515,11 @@ SSH2Utils.prototype.rmdir = function(server, remotePath, then){
 };
 
 /**
+ * Creates a remote directory
  *
- * @param server
- * @param remotePath
- * @param then
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.mkdir = function(server, remotePath, then){
 
@@ -494,10 +537,18 @@ SSH2Utils.prototype.mkdir = function(server, remotePath, then){
 };
 
 /**
- * @param server
- * @param localPath
- * @param remotePath
- * @param then
+ * Uploads a local directory to the remote.
+ * Partly in series, partly parallel.
+ * Proceed such
+ * sudo rm -fr /remotePath
+ * sudo mkdir -p /remotePath
+ * recursive sftp mkdir
+ * recursive sftp put
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param localPath String
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.putDir = function(server, localPath, remotePath, then){
 
@@ -576,11 +627,14 @@ SSH2Utils.prototype.putDir = function(server, localPath, remotePath, then){
 };
 
 /**
+ * Downloads a remote directory to the local.
+ * remote traverse directories over sftp.
+ * then get files in parallel
  *
- * @param server
- * @param remotePath
- * @param localPath
- * @param allDone
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param localPath String
+ * @param allDone callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.getDir = function(server,remotePath,localPath, allDone){
 
