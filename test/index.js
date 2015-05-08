@@ -1,6 +1,6 @@
 
 require('should');
-var fs = require('fs');
+var fs = require('fs-extra');
 var _ = require('underscore');
 var Vagrant = require('node-vagrant-bin');
 
@@ -285,7 +285,7 @@ describe('sftp', function(){
   this.timeout(50000);
   var t = (new Date()).getTime();
   before(function(){
-
+    fs.mkdirsSync("fixtures")
   });
   it('can test file exists', function(done){
     ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err){
@@ -294,8 +294,8 @@ describe('sftp', function(){
     });
   });
   it('can write a file', function(done){
-    fs.writeFileSync('/tmp/local'+t, t);
-    ssh.putFile(hostPwd, '/tmp/local'+t, '/tmp/remote'+t, function(err){
+    fs.writeFileSync('fixtures/local'+t, t);
+    ssh.putFile(hostPwd, 'fixtures/local'+t, '/tmp/remote'+t, function(err){
       if(err!==undefined) (err).should.be.true;
       ssh.fileExists(hostPwd, '/tmp/remote'+t, function(err){
         if(err!==undefined) (err).should.be.true;
@@ -304,9 +304,9 @@ describe('sftp', function(){
     });
   });
   it('can download a file', function(done){
-    ssh.readFile(hostPwd, '/tmp/remote'+t, '/tmp/local'+t, function(err){
+    ssh.readFile(hostPwd, '/tmp/remote'+t, 'fixtures/local'+t, function(err){
       if(err!==undefined) (err).should.be.true;
-      fs.readFileSync('/tmp/local'+t,'utf-8').should.eql(''+t);
+      fs.readFileSync('fixtures/local'+t,'utf-8').should.eql(''+t);
       done();
     });
   });
@@ -315,9 +315,9 @@ describe('sftp', function(){
       if(err!==undefined) (err).should.be.true;
       ssh.fileExists(hostPwd, '/tmp/remote2'+t, function(err){
         if(err!==undefined) (err).should.be.true;
-        ssh.readFile(hostPwd, '/tmp/remote2'+t, '/tmp/local2'+t, function(err){
+        ssh.readFile(hostPwd, '/tmp/remote2'+t, 'fixtures/local2'+t, function(err){
           if(err!==undefined) (err).should.be.true;
-          fs.readFileSync('/tmp/local2'+t,'utf-8').should.eql(''+t);
+          fs.readFileSync('fixtures/local2'+t,'utf-8').should.eql(''+t);
           done();
         });
       });
