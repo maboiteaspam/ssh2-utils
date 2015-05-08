@@ -165,7 +165,7 @@ inquirer.prompt([{
     gitAdd('-A');
     gitCommit('Publish '+releaseType+' '+revision);
     gitPush(sshUrl+' '+branch+'');
-    streamOrDie('npm publish');
+    streamDisplay('npm publish');
   };
 
 
