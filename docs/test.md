@@ -252,8 +252,8 @@ ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err){
 can write a file.
 
 ```js
-fs.writeFileSync('/tmp/local'+t, t);
-ssh.putFile(hostPwd, '/tmp/local'+t, '/tmp/remote'+t, function(err){
+fs.writeFileSync(fixturePath + 'local'+t, t);
+ssh.putFile(hostPwd, fixturePath + 'local'+t, '/tmp/remote'+t, function(err){
   if(err!==undefined) (err).should.be.true;
   ssh.fileExists(hostPwd, '/tmp/remote'+t, function(err){
     if(err!==undefined) (err).should.be.true;
@@ -265,9 +265,9 @@ ssh.putFile(hostPwd, '/tmp/local'+t, '/tmp/remote'+t, function(err){
 can download a file.
 
 ```js
-ssh.readFile(hostPwd, '/tmp/remote'+t, '/tmp/local'+t, function(err){
+ssh.readFile(hostPwd, '/tmp/remote'+t, fixturePath + 'local'+t, function(err){
   if(err!==undefined) (err).should.be.true;
-  fs.readFileSync('/tmp/local'+t,'utf-8').should.eql(''+t);
+  fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
   done();
 });
 ```
@@ -279,9 +279,9 @@ ssh.writeFile(hostPwd, '/tmp/remote2'+t, t, function(err){
   if(err!==undefined) (err).should.be.true;
   ssh.fileExists(hostPwd, '/tmp/remote2'+t, function(err){
     if(err!==undefined) (err).should.be.true;
-    ssh.readFile(hostPwd, '/tmp/remote2'+t, '/tmp/local2'+t, function(err){
+    ssh.readFile(hostPwd, '/tmp/remote2'+t, fixturePath + 'local2'+t, function(err){
       if(err!==undefined) (err).should.be.true;
-      fs.readFileSync('/tmp/local2'+t,'utf-8').should.eql(''+t);
+      fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
       done();
     });
   });

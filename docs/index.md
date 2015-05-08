@@ -6,17 +6,25 @@
 
 * * *
 
-### sudoChallenge(stream, pwd, then) 
+## Class: ServerCredentials
+Server credentials information
+It can use password or key
+to login, or run sudo command
+transparently
+
+### ServerCredentials.sudoChallenge(stream, pwd, then) 
 
 sudo challenge completion over ssh
 
+If the login success, hasLogin is true
+
 **Parameters**
 
-**stream**: , sudo challenge completion over ssh
+**stream**: , Stream
 
-**pwd**: , sudo challenge completion over ssh
+**pwd**: , string
 
-**then**: , sudo challenge completion over ssh
+**then**: , callback(bool hasLogin)
 
 
 
@@ -26,24 +34,28 @@ sudo challenge completion over ssh
 **getConnReady**:  
 ### SSH2Utils.connect(server, done) 
 
+opens ssh connection
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials
 
-**done**: 
+**done**: , (err, ssh2.Client conn)
 
 
 ### SSH2Utils.sudoExec(conn, server, cmd, done) 
 
+Execute a command and returns asap
+
 **Parameters**
 
-**conn**: 
+**conn**: , ssh2.Client
 
-**server**: 
+**server**: , ServerCredentials
 
-**cmd**: 
+**cmd**: , String
 
-**done**: 
+**done**: , callback(err, ssh2._Channel_ stream)
 
 
 ### SSH2Utils.exec(server, cmd, done) 
@@ -53,34 +65,17 @@ Executes a command and return its output
 non-interactive
 
 also take care of
-- close the connection once stream is closed
 - manage sudo cmd
 - log errors to output
 - remote program termination with ctrl+C
 
 **Parameters**
 
-**server**: , Oject|Client
+**server**: , ServerCredentials|ssh2.Client
 
-**cmd**: , Executes a command and return its output
- like child_process.exec.
-non-interactive
+**cmd**: , String
 
-also take care of
-- close the connection once stream is closed
-- manage sudo cmd
-- log errors to output
-- remote program termination with ctrl+C
-
-**done**: , Executes a command and return its output
- like child_process.exec.
-non-interactive
-
-also take care of
-- close the connection once stream is closed
-- manage sudo cmd
-- log errors to output
-- remote program termination with ctrl+C
+**done**: , callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.run(server, cmd, done) 
@@ -90,38 +85,16 @@ Executes a command and return its stream,
 interactive
 
 also take care of
-- close the connection once stream is closed
 - manage sudo cmd
 - log errors to output
 
 **Parameters**
 
-**server**: , Executes a command and return its stream,
- like of child_process.spawn.
-interactive
+**server**: , ServerCredentials|ssh2.Client
 
-also take care of
-- close the connection once stream is closed
-- manage sudo cmd
-- log errors to output
+**cmd**: , String
 
-**cmd**: , Executes a command and return its stream,
- like of child_process.spawn.
-interactive
-
-also take care of
-- close the connection once stream is closed
-- manage sudo cmd
-- log errors to output
-
-**done**: , Executes a command and return its stream,
- like of child_process.spawn.
-interactive
-
-also take care of
-- close the connection once stream is closed
-- manage sudo cmd
-- log errors to output
+**done**: , callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.runMultiple(server, cmds, cmdComplete, then) 
@@ -133,123 +106,137 @@ Take care of everything, su sudo ect
 
 **Parameters**
 
-**server**: , Executes a set of multiple and sequential commands.
-passive listener.
+**server**: , ServerCredentials|ssh2.Client
 
-Take care of everything, su sudo ect
+**cmds**: , [String]
 
-**cmds**: , Executes a set of multiple and sequential commands.
-passive listener.
+**cmdComplete**: , callback(String command, String response, ServerCredentials server)
 
-Take care of everything, su sudo ect
-
-**cmdComplete**: , Executes a set of multiple and sequential commands.
-passive listener.
-
-Take care of everything, su sudo ect
-
-**then**: , Executes a set of multiple and sequential commands.
-passive listener.
-
-Take care of everything, su sudo ect
+**then**: , callback(err, String allSessionText, ServerCredentials server)
 
 
 ### SSH2Utils.readFile(server, remoteFile, localPath, then) 
 
+Downloads a file to the local
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**remoteFile**: 
+**remoteFile**: , String
 
-**localPath**: 
+**localPath**: , String
 
-**then**: 
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.putFile(server, localFile, remoteFile, then) 
 
+Uploads a file on the remote remote
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**localFile**: 
+**localFile**: , String
 
-**remoteFile**: 
+**remoteFile**: , String
 
-**then**: 
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.writeFile(server, remoteFile, content, then) 
 
+Writes content to a remote file
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**remoteFile**: 
+**remoteFile**: , String
 
-**content**: 
+**content**: , String
 
-**then**: 
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.fileExists(server, remoteFile, then) 
 
+Tells if a file exists on remote
+by trying to open handle on it.
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**remoteFile**: 
+**remoteFile**: , String
 
-**then**: 
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.rmdir(server, remotePath, then) 
 
+Deletes a file or directory
+sudo rm -fr /some/path
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**remotePath**: 
+**remotePath**: , String
 
-**then**: 
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.mkdir(server, remotePath, then) 
 
+Creates a remote directory
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**remotePath**: 
+**remotePath**: , String
 
-**then**: 
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.putDir(server, localPath, remotePath, then) 
 
+Uploads a local directory to the remote.
+Partly in series, partly parallel.
+Proceed such
+sudo rm -fr /remotePath
+sudo mkdir -p /remotePath
+recursive sftp mkdir
+recursive sftp put
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**localPath**: 
+**localPath**: , String
 
-**remotePath**: 
+**remotePath**: , String
 
-**then**: 
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.getDir(server, remotePath, localPath, allDone) 
 
+Downloads a remote directory to the local.
+remote traverse directories over sftp.
+then get files in parallel
+
 **Parameters**
 
-**server**: 
+**server**: , ServerCredentials|ssh2.Client
 
-**remotePath**: 
+**remotePath**: , String
 
-**localPath**: 
+**localPath**: , String
 
-**allDone**: 
+**allDone**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
 
