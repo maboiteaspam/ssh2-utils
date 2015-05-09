@@ -411,14 +411,14 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
             stream.on('data', onStdoutData);
             stream.stderr.on('data', onStderrData);
             var onClose = function(err){
-              process.nextTick(function(){
+              setTimeout(function(){
                 if(i+1===cmds.length){
                   stdoutStream.emit('close', err);
                 }
                 stream.removeListener('close', onClose);
                 stream.removeListener('data', onStdoutData);
                 stream.stderr.removeListener('data', onStderrData);
-              });
+              },500);
             };
             stream.on('close', onClose);
           })(stream, i);
