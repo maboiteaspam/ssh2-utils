@@ -4,6 +4,7 @@ running machine precise64
 # TOC
    - [ident](#ident)
    - [exec](#exec)
+   - [exec multiple](#exec-multiple)
    - [run](#run)
    - [run multiple](#run-multiple)
    - [sftp ensureEmptyDir](#sftp-ensureemptydir)
@@ -25,7 +26,7 @@ var wrongHost = {
   username: 'wrong',
   password: 'credentials'
 };
-ssh.exec(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+ssh.exec(wrongHost, 'ls -alh', function(err, stdout, stderr, server){
   (!!err).should.be.true;
   (stdout===null).should.be.true;
   (err.message).should.match(/failed/);
@@ -115,7 +116,7 @@ ssh.exec(hostKey,'sudo ls -alh', function(err, stdout, stderr, server,conn){
 can fail properly.
 
 ```js
-ssh.exec(hostPwd,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
+ssh.exec(hostPwd,'ls -alh /nofile', function(err, stdout, stderr, server){
   (!!err).should.be.true;
   stderr.should.match(/No such file or directory/);
   err.message.should.match(/No such file or directory/);
@@ -132,6 +133,92 @@ ssh.exec(hostPwd, 'dsscdc', function(err, stdout, stderr, server){
   stderr.should.match(/command not found/);
   err.message.should.match(/command not found/);
   stdout.should.be.empty;
+  done();
+});
+```
+
+<a name="exec-multiple"></a>
+# exec multiple
+can execute multiple commands.
+
+```js
+ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], function(err, stdout, stderr, server){
+  (!!err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  done()
+});
+```
+
+can execute multiple sudo commands.
+
+```js
+ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], function(err, stdout, stderr, server){
+  (!!err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  done()
+});
+```
+
+can capture multiple outputs.
+
+```js
+var doneCnt = 0;
+var doneEach = function(){
+  doneCnt++;
+};
+ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+  (!!err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  doneCnt.should.eql(2);
+  done()
+});
+```
+
+can capture multiple sudo outputs.
+
+```js
+var doneCnt = 0;
+var doneEach = function(){
+  doneCnt++;
+};
+ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+  (!!err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  doneCnt.should.eql(2);
+  done()
+});
+```
+
+can fail properly while executing multiple commands.
+
+```js
+ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], function(err, stdout, stderr, server){
+  (!!err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  done();
+});
+```
+
+can fail properly while executing multiple commands.
+
+```js
+var doneCnt = 0;
+var failedCnt = 0;
+var doneEach = function(err){
+  doneCnt++;
+  if(err) failedCnt++;
+};
+ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+  (!!err).should.be.false;
+  stdout.should.match(/root/);
+  stderr.should.be.empty;
+  doneCnt.should.eql(3);
+  failedCnt.should.eql(1);
   done();
 });
 ```

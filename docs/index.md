@@ -68,7 +68,7 @@ Execute a command and returns asap
 **done**: , callback(err, ssh2._Channel_ stream)
 
 
-### SSH2Utils.exec(server, cmd, done) 
+### SSH2Utils.execOne(server, cmd, done) 
 
 Executes a command and return its output
  like child_process.exec.
@@ -84,6 +84,28 @@ also take care of
 **server**: , ServerCredentials|ssh2.Client
 
 **cmd**: , String
+
+**done**: , callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
+
+
+### SSH2Utils.exec(server, cmd, doneEach, done) 
+
+Executes a command and return its output
+ like child_process.exec.
+non-interactive
+
+also take care of
+- manage sudo cmd
+- log errors to output
+- remote program termination with ctrl+C
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**cmd**: , String
+
+**doneEach**: , callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
 
 **done**: , callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
 
