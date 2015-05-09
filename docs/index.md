@@ -42,6 +42,10 @@ If the login success, hasLogin is true
 
 
 **getConnReady**:  
+**runMultiple**:  , Executes a set of multiple and sequential commands.
+passive listener.
+
+Take care of everything, su sudo ect
 ### SSH2Utils.connect(server, done) 
 
 opens ssh connection
@@ -103,14 +107,14 @@ also take care of
 
 **server**: , ServerCredentials|ssh2.Client
 
-**cmd**: , String
+**cmd**: , String|[String]
 
 **doneEach**: , callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
 
 **done**: , callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
 
 
-### SSH2Utils.run(server, cmd, done) 
+### SSH2Utils.run(server, cmd, doneEach, done) 
 
 Executes a command and return its stream,
  like of child_process.spawn.
@@ -124,27 +128,11 @@ also take care of
 
 **server**: , ServerCredentials|ssh2.Client
 
-**cmd**: , String
+**cmd**: , String|[String]
+
+**doneEach**: , callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
 
 **done**: , callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)
-
-
-### SSH2Utils.runMultiple(server, cmds, cmdComplete, then) 
-
-Executes a set of multiple and sequential commands.
-passive listener.
-
-Take care of everything, su sudo ect
-
-**Parameters**
-
-**server**: , ServerCredentials|ssh2.Client
-
-**cmds**: , [String]
-
-**cmdComplete**: , callback(String command, String response, ServerCredentials server)
-
-**then**: , callback(err, String allSessionText, ServerCredentials server)
 
 
 ### SSH2Utils.readFile(server, remoteFile, localPath, then) 

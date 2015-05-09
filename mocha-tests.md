@@ -44,7 +44,7 @@ var wrongHost = {
   username: 'wrong',
   privateKey: hostKey.privateKey
 };
-ssh.run(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+ssh.run(wrongHost, 'ls -alh', function(err, stdout, stderr, server){
   (!!err).should.be.true;
   (stdout===null).should.be.true;
   (err.message).should.match(/failed/);
@@ -317,22 +317,77 @@ ssh.run(hostPwd, 'dsscdc', function(err, stdouts, stderrs, server, conn){
 
 <a name="run-multiple"></a>
 # run multiple
-can run multiple commands.
+can multiple run sudo command with password.
 
 ```js
 var cmds = [
-      'echo hello',
-      'time',
-      "`All done!`"
-    ];
-    var onDone = function(err, sessionText, sshObj){
-      if(err!==undefined) (err).should.be.true;
-      sessionText.toString().should.match(/hello/)
-      done();
-    };
-    var onCommandComplete = function(command, response, server){
-    }
-    ssh.runMultiple(hostPwd, cmds, onCommandComplete, onDone);
+  'sudo ls -alh /var/log/auth.log',
+  'sudo ls -alh /var/log/secure',
+  'ls -alh /var/log/'
+];
+ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
+  (!!err).should.be.false;
+  var stdout = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  stdouts.on('data', _.debounce(function(data){
+    data.toString().should.match(/root/);
+    stdout.toString().should.match(/total/);
+    conn.end();
+    done();
+  }, 1000));
+});
+```
+
+can run multiple sudo command with password.
+
+```js
+var cmds = [
+  'sudo ls -alh /var/log/auth.log',
+  'sudo ls -alh /var/log/secure',
+  'ls -alh /var/log/'
+];
+ssh.run(hostKey, cmds, function(err, stdouts, stderrs, server, conn){
+  (!!err).should.be.false;
+  var stdout = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  stdouts.on('data', _.debounce(function(data){
+    data.toString().should.match(/root/);
+    stdout.toString().should.match(/total/);
+    conn.end();
+    done();
+  }, 1000 ) );
+});
+```
+
+can run multiple sudo command and fail properly.
+
+```js
+var cmds = [
+  'sudo tail -f /var/log/auth.log',
+  'ls -alh /var/log/',
+  'dsscdc'
+];
+ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
+  var stdout = '';
+  var stderr = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  stderrs.on('data', function(data){
+    stderr+=''+data;
+  });
+  stdouts.on('close', function(){
+    stderr.should.match(/command not found/);
+    stdout.should.be.empty;
+    conn.end();
+    done();
+  });
+  (!!err).should.be.false;
+});
 ```
 
 <a name="sftp-ensureemptydir"></a>
