@@ -20,7 +20,7 @@ log.level = process.env['NPM_LOG'] || 'info';
  * to login, or run sudo command
  * transparently
  *
- * @note It is only a class to support documentation
+ * @note It is a class to only support documentation
  * @constructor
  */
 function ServerCredentials(){
