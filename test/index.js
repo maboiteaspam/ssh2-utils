@@ -99,7 +99,7 @@ describe('ident', function(){
       username: 'wrong',
       privateKey: hostKey.privateKey
     };
-    ssh.run(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+    ssh.run(wrongHost, 'ls -alh', function(err, stdout, stderr, server){
       (!!err).should.be.true;
       (stdout===null).should.be.true;
       (err.message).should.match(/failed/);
@@ -311,6 +311,101 @@ describe('run', function(){
   });
   it('run can fail properly', function(done){
     ssh.run(hostPwd, 'dsscdc', function(err, stdouts, stderrs, server, conn){
+      var stdout = '';
+      var stderr = '';
+      stdouts.on('data', function(data){
+        stdout+=''+data;
+      });
+      stderrs.on('data', function(data){
+        stderr+=''+data;
+      });
+      stdouts.on('close', function(){
+        stderr.should.match(/command not found/);
+        stdout.should.be.empty;
+        conn.end();
+        done();
+      });
+      (!!err).should.be.false;
+    });
+  });
+});
+
+
+describe('run multiple', function(){
+  this.timeout(50000);
+  it('can multiple run sudo command with password', function(done){
+    var cmds = [
+      'sudo ls -alh /var/log/auth.log',
+      'sudo ls -alh /var/log/secure',
+      'ls -alh /var/log/'
+    ];
+    ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
+      (!!err).should.be.false;
+      var stdout = '';
+      stdouts.on('data', function(data){
+        stdout+=''+data;
+      });
+
+      stdouts.on('data', _.debounce(function(data){
+        data.toString().should.match(/root/);
+        stdout.toString().should.match(/total/);
+        conn.end();
+        done();
+      }, 1000));
+
+    });
+  });
+  it('can run multiple sudo command with password', function(done){
+    var cmds = [
+      'sudo ls -alh /var/log/auth.log',
+      'sudo ls -alh /var/log/secure',
+      'ls -alh /var/log/'
+    ];
+    ssh.run(hostKey, cmds, function(err, stdouts, stderrs, server, conn){
+      (!!err).should.be.false;
+      var stdout = '';
+      stdouts.on('data', function(data){
+        stdout+=''+data;
+      });
+      stdouts.on('data', _.debounce(function(data){
+        data.toString().should.match(/root/);
+        stdout.toString().should.match(/total/);
+        conn.end();
+        done();
+      }, 1000 ) );
+    });
+  });
+  it('can run multiple command and fail properly', function(done){
+    var cmds = [
+      'sudo ls -alh /var/log/auth.log',
+      'ls -alh /var/log/',
+      'ls -alh /var/log/nofile'
+    ];
+    ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
+      var stdout = '';
+      var stderr = '';
+      stdouts.on('data', function(data){
+        stdout+=''+data;
+      });
+      stderrs.on('data', function(data){
+        stderr+=''+data;
+      });
+      stdouts.on('close', function(){
+        stderr.should.match(/No such file or directory/)
+        stdout.should.be.empty
+        conn.end();
+        done();
+      });
+      (!!err).should.be.false;
+    });
+  });
+  it('can run multiple sudo command and fail properly', function(done){
+    var cmds = [
+      'sudo tail -f /var/log/auth.log',
+      'ls -alh /var/log/',
+      'dsscdc'
+    ];
+    ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
       stdouts.on('data', function(data){

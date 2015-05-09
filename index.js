@@ -326,7 +326,7 @@ SSH2Utils.prototype.execOne = function(server, cmd, done){
  * - remote program termination with ctrl+C
  *
  * @param server ServerCredentials|ssh2.Client
- * @param cmd String
+ * @param cmd String|[String]
  * @param doneEach callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
  * @param done callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
  */
@@ -345,9 +345,9 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
   var err_;
   var stdout_;
   var stderr_;
-  cmd.forEach(function(cmd){
+  cmd.forEach(function(c){
     cmds.push(function(next){
-      that.execOne(conn_ || server, cmd, function(err, stdout, stderr, server, conn){
+      that.execOne(conn_ || server, c, function(err, stdout, stderr, server, conn){
         conn_ = conn;
         err_ = err;
         stdout_ = stdout;
@@ -374,15 +374,43 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
  * - log errors to output
  *
  * @param server ServerCredentials|ssh2.Client
- * @param cmd String
+ * @param cmd String|[String]
+ * @param doneEach callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
  * @param done callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.run = function(server, cmd, done){
+SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
+  if(_.isString(cmd)){
+    cmd = [cmd];
+  }
+  if(!done&& _.isFunction(doneEach) ){
+    done = doneEach;
+    doneEach = null;
+  }
+  var cmds = [];
+  var conn_;
+  var err_;
+  var stdout_;
+  var stderr_;
   connect(server, function(err, conn){
     if(err) return returnOrThrow(done, err, null, ''+err, server, conn);
-    sudoExec(conn, server, cmd, function(err, stream){
-      returnOrThrow(done, err, stream, stream.stderr, server, conn);
+    conn_ = conn;
+    err_ = err;
+    cmd.forEach(function(c){
+      cmds.push(function(next){
+        sudoExec(conn, server, c, function(err, stream){
+          err_ = err;
+          stdout_ = stream;
+          stderr_ = stream.stderr;
+          if(doneEach) doneEach(err, stream, stream.stderr, server, conn);
+          next();
+        });
+      })
     });
+
+    async.series(cmds, function(){
+      returnOrThrow(done, err, stdout_, stderr_, server, conn);
+    });
+
   });
 
 };
