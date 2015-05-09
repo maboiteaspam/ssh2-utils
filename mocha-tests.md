@@ -338,6 +338,20 @@ ssh.putDir(hostPwd, fixturePath, tmpRemotePath+'/putdir-test', function(err, ser
 });
 ```
 
+can put a local dir to a remote via sudo.
+
+```js
+ssh.putDirSudo(hostPwd, fixturePath, '/root/putdir-test', function(err, server, conn){
+  (!!err).should.be.false;
+  ssh.fileExistsSudo(conn, '/root/putdir-test/temp'+t, function(err2, exists){
+    console.log(err2);
+    (!!err2).should.be.false;
+    (exists).should.be.true;
+    done();
+  });
+});
+```
+
 can fail properly.
 
 ```js
