@@ -198,6 +198,7 @@ inquirer.prompt([{
     gitCommit('Generate doc '+releaseType+' '+revision);
 
     gitPush(''+sshUrl+' '+branch);
+    gitPush(''+sshUrl);
     gitStatus();
 
     streamOrDie('cd '+projectPath);
