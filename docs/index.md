@@ -6,6 +6,16 @@
 
 * * *
 
+### returnOrThrow(then, err) 
+
+**Parameters**
+
+**then**: 
+
+**err**: 
+
+
+
 ## Class: ServerCredentials
 Server credentials information
 It can use password or key
@@ -130,6 +140,21 @@ Downloads a file to the local
 **then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
+### SSH2Utils.ensureFileContains(server, remoteFile, contain, then) 
+
+Ensure a remote file contains a certain text piece of text
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remoteFile**: , String
+
+**contain**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
 ### SSH2Utils.putFile(server, localFile, remoteFile, then) 
 
 Uploads a file on the remote remote
@@ -160,6 +185,21 @@ Writes content to a remote file
 **then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
+### SSH2Utils.writeFileSudo(server, remoteFile, content, then) 
+
+Writes content to a remote file
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remoteFile**: , String
+
+**content**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
 ### SSH2Utils.fileExists(server, remoteFile, then) 
 
 Tells if a file exists on remote
@@ -171,10 +211,38 @@ by trying to open handle on it.
 
 **remoteFile**: , String
 
-**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+**then**: , callback(err, exists, ServerCredentials server, ssh2.Client conn)
+
+
+### SSH2Utils.fileExistsSudo(server, remoteFile, then) 
+
+Tells if a file exists on remote
+by trying to open handle on it.
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remoteFile**: , String
+
+**then**: , callback(err, exists, ServerCredentials server, ssh2.Client conn)
 
 
 ### SSH2Utils.rmdir(server, remotePath, then) 
+
+Deletes a file or directory
+rm -fr /some/path
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remotePath**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
+### SSH2Utils.rmdirSudo(server, remotePath, then) 
 
 Deletes a file or directory
 sudo rm -fr /some/path
@@ -201,7 +269,81 @@ Creates a remote directory
 **then**: , callback(err, ServerCredentials server, ssh2.Client conn)
 
 
+### SSH2Utils.mkdirSudo(server, remotePath, then) 
+
+Creates a remote directory
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remotePath**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
+### SSH2Utils.ensureEmptyDir(server, remotePath, then) 
+
+Ensure a remote directory exists and is empty
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remotePath**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
+### SSH2Utils.ensureEmptyDirSudo(server, remotePath, then) 
+
+Ensure a remote directory exists and is empty
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remotePath**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
+### SSH2Utils.ensureOwnership(server, remotePath, then) 
+
+Ensure a file belongs to connected user
+by sudo chmod -R /path
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**remotePath**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
 ### SSH2Utils.putDir(server, localPath, remotePath, then) 
+
+Uploads a local directory to the remote.
+Partly in series, partly parallel.
+Proceed such
+sudo rm -fr /remotePath
+sudo mkdir -p /remotePath
+recursive sftp mkdir
+recursive sftp put
+
+**Parameters**
+
+**server**: , ServerCredentials|ssh2.Client
+
+**localPath**: , String
+
+**remotePath**: , String
+
+**then**: , callback(err, ServerCredentials server, ssh2.Client conn)
+
+
+### SSH2Utils.putDirSudo(server, localPath, remotePath, then) 
 
 Uploads a local directory to the remote.
 Partly in series, partly parallel.
