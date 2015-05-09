@@ -429,7 +429,7 @@ describe('run multiple', function(){
 });
 
 describe('sftp ensureEmptyDir', function(){
-  this.timeout(50000);
+  this.timeout(10000);
 
   before(function(done){
     fs.mkdirsSync(fixturePath);
@@ -503,7 +503,7 @@ describe('sftp fileExists', function(){
 });
 
 describe('sftp putDir', function(){
-  this.timeout(50000);
+  this.timeout(10000);
   var t = (new Date()).getTime();
 
   before(function(done){
@@ -553,7 +553,7 @@ describe('sftp putDir', function(){
 });
 
 describe('sftp', function(){
-  this.timeout(50000);
+  this.timeout(10000);
   var t = (new Date()).getTime();
 
   before(function(done){
