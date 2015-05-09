@@ -2,7 +2,6 @@
 var path = require('path');
 var async = require('async');
 var Client = require('ssh2').Client;
-var SSH2Shell = require ('ssh2shell');
 var glob = require("glob");
 var fs = require("fs-extra");
 var _ = require("underscore");
@@ -167,7 +166,7 @@ var connect = function(server, done){
     debug('re using existing connection');
     done(false, server);
   }else{
-    server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
+    server.username = server.username || server.userName || server.user; // it is acceptable
     debug('%s@%s:%s',server.username,server.host,server.port);
 
     if(!server.username){
@@ -426,66 +425,7 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
  * @param cmdComplete callback(String command, String response, ServerCredentials server)
  * @param then callback(err, String allSessionText, ServerCredentials server)
  */
-SSH2Utils.prototype.runMultiple = function(server, cmds, cmdComplete, then){
-
-  if(!then){
-    then = cmdComplete;
-    cmdComplete = null;
-  }
-
-  server.userName = server.username || server.userName || server.user;
-
-  debug('%s@%s:%s',server.userName,server.host,server.port);
-  debug('%j',cmds);
-
-  var allSessionText = '';
-
-  var host = {
-    server:server,
-    idleTimeOut:1000,
-    connectedMessage:true,
-    readyMessage:true,
-    closedMessage:true,
-    commands: [].concat(cmds), // very important to clone
-    msg: {
-      send: function( message ) {
-        if(message!=true ){
-          message = _s.trim(message);
-          allSessionText += message;
-          if(message) debug('send '+message );
-        }
-      }
-    },
-    onCommandComplete: function( command, response, sshObj ) {
-      command = _s.trim(command)
-      response = _s.trim(response)
-      if(response&&command){
-        // trim the command of redundant output
-        response = response.split('\n');
-        response.shift();
-        response.pop();
-        response = response.join('\n');
-      }
-      if(command){
-        allSessionText += server.userName+'@'+server.host;
-        allSessionText += '> '+command+'\n';
-        if(response) allSessionText += ''+response+'\n';
-      }
-      if(cmdComplete) cmdComplete(command, response, server);
-    },
-    onEnd: function( sessionText, sshObj ) {
-    }
-  };
-  var SSH = new SSH2Shell(host);
-  SSH.connect();
-
-  SSH.on("close", function onError(err) {
-    if(err) debug(err);
-    debug(allSessionText);
-    if(then) then(err, allSessionText, server);
-  });
-
-};
+SSH2Utils.prototype.runMultiple = SSH2Utils.prototype.run;
 
 /**
  * Downloads a file to the local

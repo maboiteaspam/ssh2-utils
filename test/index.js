@@ -247,7 +247,6 @@ describe('exec multiple', function(){
   });
 });
 
-
 describe('run', function(){
   this.timeout(50000);
   it('can run sudo command with password', function(done){
@@ -329,7 +328,6 @@ describe('run', function(){
     });
   });
 });
-
 
 describe('run multiple', function(){
   this.timeout(50000);
@@ -425,33 +423,6 @@ describe('run multiple', function(){
   });
 });
 
-
-describe('run multiple', function(){
-  this.timeout(10000);
-  it('can run multiple commands', function(done){
-
-    var cmds = [
-      'echo hello',
-      'time',
-      "`All done!`"
-    ];
-
-    var onDone = function(err, sessionText, sshObj){
-      if(err!==undefined) (err).should.be.true;
-      sessionText.toString().should.match(/hello/)
-      done();
-    };
-
-    var onCommandComplete = function(command, response, server){
-
-    }
-
-    ssh.runMultiple(hostPwd, cmds, onCommandComplete, onDone);
-
-  })
-});
-
-
 describe('sftp ensureEmptyDir', function(){
   this.timeout(50000);
 
@@ -494,7 +465,6 @@ describe('sftp ensureEmptyDir', function(){
   });
 });
 
-
 describe('sftp fileExists', function(){
   this.timeout(10000);
 
@@ -526,7 +496,6 @@ describe('sftp fileExists', function(){
     });
   });
 });
-
 
 describe('sftp putDir', function(){
   this.timeout(50000);
@@ -577,7 +546,6 @@ describe('sftp putDir', function(){
     });
   });
 });
-
 
 describe('sftp', function(){
   this.timeout(50000);
@@ -669,7 +637,6 @@ describe('sftp', function(){
   });
 });
 
-
 describe('sftp failures', function(){
   this.timeout(10000);
   it('can fail correctly when it can t test if a file', function(done){
@@ -707,7 +674,6 @@ describe('sftp failures', function(){
     });
   });
 });
-
 
 describe('exec failures', function(){
   it('can fail correctly when it can t execute a command', function(done){
