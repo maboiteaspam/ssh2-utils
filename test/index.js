@@ -417,7 +417,7 @@ describe('run multiple', function(){
       });
       stdouts.on('close', function(){
         stderr.should.match(/command not found/);
-        stdout.should.match(/pam_unix/);
+        stdout.should.match(/(pam_unix|debug)/);
         stdout.should.match(/root/);
         stdout.should.match(/total/);
         conn.end();
