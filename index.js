@@ -1,7 +1,6 @@
 
 var path = require('path');
 var async = require('async');
-var log = require('npmlog');
 var Client = require('ssh2').Client;
 var SSH2Shell = require ('ssh2shell');
 var glob = require("glob");
@@ -10,9 +9,39 @@ var _ = require("underscore");
 var _s = require("underscore.string");
 
 var pkg = require('./package.json');
+var debug = require('debug')(pkg.name);
 
-log.level = process.env['NPM_LOG'] || 'info';
 
+
+/**
+ * @throw err if then is null
+ * @param then
+ * @param err
+ */
+var returnOrThrow = function(then, err){
+  if(then){
+    var args = Array.prototype.slice.call(arguments);
+    args.shift();
+    then.apply(null, args);
+  } else if(err) {
+    debug('returnOrThrow '+ err);
+    throw err;
+  }
+};
+
+var scanLocalDirectory = function(localPath, then){
+  // scan local directories
+  var options = {
+    cwd: localPath
+  };
+  glob( '**/', options, function (er, dirs) {
+    // scan local files
+    options.nodir = true;
+    glob( '**', options, function (er, files) {
+      then(dirs, files);
+    });
+  });
+};
 
 /**
  * Server credentials information
@@ -42,7 +71,7 @@ function ServerCredentials(){
  */
 var sudoChallenge = function(stream, pwd, then){
 
-  log.verbose(pkg.name, 'waiting for sudo');
+  debug('waiting for sudo');
 
   var hasReceivedData = false;
   var hasChallenge = false;
@@ -50,7 +79,7 @@ var sudoChallenge = function(stream, pwd, then){
   // this is a general timeout on the command
   // passed this 10 secs, it fails
   var tChallenge = setTimeout(function(){
-    log.error(pkg.name, 'Login has failed by timeout');
+    debug('Login has failed by timeout');
     stream.removeListener('data', checkPwdInput);
     if (then) then(true);
   }, 10000);
@@ -65,9 +94,9 @@ var sudoChallenge = function(stream, pwd, then){
     if(!hasChallenge ){
 
       // first data is always the challenge
-      if( data.match(/\[sudo\] password/) ){
+      if( data.match(/\[sudo\] password/) || data.match(/Password:/) ){
         hasChallenge = true;
-        log.verbose(pkg.name, 'Challenge started...');
+        debug('Challenge started...');
         // if so send the password on stdin
         stream.write(pwd+'\n');
 
@@ -77,7 +106,7 @@ var sudoChallenge = function(stream, pwd, then){
         // the command has probably ran successfully
         clearTimeout(tChallenge);
         stream.removeListener('data', checkPwdInput);
-        log.verbose(pkg.name, 'Login done without a challenge');
+        debug('Login done without a challenge');
         if (then) then(false);
 
       }
@@ -92,11 +121,11 @@ var sudoChallenge = function(stream, pwd, then){
 
       hasChallenge = false;
       // this case handle only en.
-      if(data.toString().match(/Sorry, try again/) ){
-        log.error(pkg.name, '... Failed to resolve the challenge');
+      if(data.match(/Sorry, try again/) || data.match(/Password:/) ){
+        debug('... Failed to resolve the challenge');
         if (then) then(true);
       }else{
-        log.verbose(pkg.name, '... Challenge was successfully resolved');
+        debug('... Challenge was successfully resolved');
         if (then) then(false);
       }
     }
@@ -109,7 +138,7 @@ var sudoChallenge = function(stream, pwd, then){
       clearTimeout(tChallenge);
       stream.removeListener('data', checkPwdInput);
       stream.removeListener('data', checkEmptyOutputCommands);
-      log.verbose(pkg.name, 'Login was done, without a challenge, without a data');
+      debug('Login was done, without a challenge, without a data');
       if (then) then(false);
     }
   };
@@ -120,9 +149,7 @@ var sudoChallenge = function(stream, pwd, then){
  *
  * @constructor
  */
-function SSH2Utils(){
-  this.log = log;
-}
+function SSH2Utils(){}
 
 /**
  * opens ssh connection
@@ -132,30 +159,44 @@ function SSH2Utils(){
  */
 var connect = function(server, done){
 
+  if(!server){
+    throw new Error('missing server parameter')
+  }
+
   if( server instanceof Client ){
-    log.silly(pkg.name, 're using existing connection');
+    debug('re using existing connection');
     done(false, server);
   }else{
     server.username = server.username || server.userName || server.user; // it is acceptable in order to be config compliant with ssh2shell
-    log.silly(pkg.name, '%s@%s:%s',server.username,server.host,server.port);
+    debug('%s@%s:%s',server.username,server.host,server.port);
+
+    if(!server.username){
+      throw new Error('invalid server parameter')
+    }
 
     var conn = new Client();
     conn.on('ready', function() {
+      Object.keys(server).forEach(function(k){
+        if(conn[k]){
+          throw 'Cannot redefine existing field '+k+' on ssh2Client object, it already exists.'
+        }
+        conn[k] = server[k];
+      });
       done(null, conn);
     });
 
     try{
       conn.connect(server);
 
-      log.verbose(pkg.name, 'connecting');
+      debug('connecting');
 
       conn.on('error',function(stderr){
-        if(stderr) log.error(pkg.name, ''+stderr);
-        done(stderr,null);
+        if(stderr) debug(''+stderr);
+        done(stderr, null);
       });
     }catch(ex){
-      log.error(pkg.name,''+ex);
-      done(ex,null);
+      debug(''+ex);
+      done(ex, null);
     }
   }
 };
@@ -171,27 +212,33 @@ var connect = function(server, done){
 var sudoExec = function(conn, server, cmd, done){
 
   var opts = {};
-  if(cmd.match(/^sudo/) && ('password' in server) ) opts.pty = true;
-  opts.pty = true;
+
+  opts.pty = !!cmd.match(/^su(do\s|\s)/) && ('password' in server);
+
+  debug('cmd %j', cmd);
+  debug('pty %j', opts.pty);
 
   conn.exec(cmd, opts, function(err, stream) {
 
+    if (err) debug('err %j', err);
     if (err) return done(err);
 
     stream.stderr.on('data', function(data){
-      log.error(pkg.name, '%s', _s.trim(''+data))
+      debug('sudoExec stderr %s', _s.trim(''+data))
     });
     stream.on('data', function(data){
-      log.silly(pkg.name, '%s', _s.trim(''+data))
+      debug('sudoExec stdout %s', _s.trim(''+data))
     });
 
-    done(undefined, stream);
+    if(done) done(null, stream);
 
     if( opts.pty ){
       sudoChallenge(stream, server['password'], function(hasLoginError){
-        if(hasLoginError) log.error(pkg.name,
+        if(hasLoginError) debug(
           'login failure, hasLoginError:%j', hasLoginError);
       });
+    }else{
+
     }
 
     // manage user pressing ctrl+C
@@ -237,33 +284,33 @@ SSH2Utils.prototype.getConnReady = connect;
  * @param cmd String
  * @param done callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.exec = function(server,cmd,done){
+SSH2Utils.prototype.exec = function(server, cmd, done){
 
-  connect(server, function(err,conn){
-    if( err ) {
-      log.error(pkg.name,err);
-      done(true,null,''+err, server)
-    } else {
-      log.verbose(pkg.name, cmd);
+  connect(server, function(err, conn){
+    if( err) return returnOrThrow(done, err, null,''+err, server, conn);
 
-      sudoExec(conn, server, cmd, function(err, stream){
-        if (err) throw err;
+    sudoExec(conn, server, cmd, function(err, stream){
+      if( err) return returnOrThrow(done, err, null,''+err, server, conn);
 
-        var stderr = '';
-        var stdout = '';
-        stream.stderr.on('data', function(data){
-          stderr += data.toString();
-        });
-        stream.on('data', function(data){
-          stdout += data.toString();
-        });
-
-        stream.on('close', function(){
-          if (done) done(!!stderr, stdout, stderr, server, conn);
-        });
-
+      var stderr = '';
+      var stdout = '';
+      stream.stderr.on('data', function(data){
+        stderr += data.toString();
       });
-    }
+      stream.on('data', function(data){
+        stdout += data.toString();
+      });
+
+      stream.on('close', function(){
+        var fineErr = null;
+        if(stderr){
+          fineErr = new Error(_s.trim(stderr));
+          debug('stdout %j', stdout);
+          debug('stderr %j', stderr);
+        }
+        returnOrThrow(done, fineErr, stdout, stderr, server, conn);
+      });
+    });
   });
 
 };
@@ -281,21 +328,12 @@ SSH2Utils.prototype.exec = function(server,cmd,done){
  * @param cmd String
  * @param done callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.run = function(server,cmd,done){
-
-  connect(server, function(err,conn){
-    if( err ) {
-      log.error(pkg.name,err);
-      done(true,null,''+err, server)
-    } else {
-      sudoExec(conn, server, cmd, function(err, stream){
-
-        if (err) throw err;
-
-        if (done) done(false, stream, stream.stderr, server, conn);
-
-      });
-    }
+SSH2Utils.prototype.run = function(server, cmd, done){
+  connect(server, function(err, conn){
+    if(err) return returnOrThrow(done, err, null, ''+err, server, conn);
+    sudoExec(conn, server, cmd, function(err, stream){
+      returnOrThrow(done, err, stream, stream.stderr, server, conn);
+    });
   });
 
 };
@@ -320,8 +358,8 @@ SSH2Utils.prototype.runMultiple = function(server, cmds, cmdComplete, then){
 
   server.userName = server.username || server.userName || server.user;
 
-  log.silly(pkg.name, '%s@%s:%s',server.userName,server.host,server.port);
-  log.silly(pkg.name, '%j',cmds);
+  debug('%s@%s:%s',server.userName,server.host,server.port);
+  debug('%j',cmds);
 
   var allSessionText = '';
 
@@ -337,7 +375,7 @@ SSH2Utils.prototype.runMultiple = function(server, cmds, cmdComplete, then){
         if(message!=true ){
           message = _s.trim(message);
           allSessionText += message;
-          if(message) log.verbose(pkg.name, 'send '+message );
+          if(message) debug('send '+message );
         }
       }
     },
@@ -365,8 +403,8 @@ SSH2Utils.prototype.runMultiple = function(server, cmds, cmdComplete, then){
   SSH.connect();
 
   SSH.on("close", function onError(err) {
-    if(err) log.error(pkg.name,err);
-    log.silly(allSessionText);
+    if(err) debug(err);
+    debug(allSessionText);
     if(then) then(err, allSessionText, server);
   });
 
@@ -384,12 +422,32 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, localPath, then){
 
   connect(server, function(err,conn){
     conn.sftp(function(err, sftp){
-      if (err) throw err;
+      if(err) return returnOrThrow(then, err, server, conn);
       sftp.fastGet(remoteFile, localPath, function(err){
-        if (err) throw err;
-        if(then) then(err, server, conn);
+        returnOrThrow(then, err, server, conn);
       });
     });
+  });
+};
+
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param contain String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, then){
+  var that = this;
+  that.exec(server, 'grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
+    if(stdout.length>0){
+      then(true, err, stdout, stderr, server, conn)
+    } else {
+      that.exec(conn, 'echo "'+contain+'" >> '+remoteFile, function(err,stdout,stderr,server,conn){
+        then(!!err, err, stdout, stderr, server, conn);
+      });
+    }
   });
 };
 
@@ -403,31 +461,27 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, localPath, then){
  */
 SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
 
-  log.verbose(pkg.name, 'from %s to %s',path.relative(__dirname,localFile),remoteFile);
+  debug('from %s to %s', path.relative(__dirname,localFile), remoteFile);
+
+  remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
+  var remotePath = path.dirname(remoteFile);
+  this.mkdir(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, server, conn);
+
+      debug('put %s %s',
+        path.relative(process.cwd(),localFile), path.relative(remotePath,remoteFile));
+
+      sftp.fastPut(localFile, remoteFile, function(err){
+        returnOrThrow(then, err, server, conn);
+      });
+    });
+  });
 
   connect(server, function(err,conn){
 
-    conn.sftp(function(err, sftp){
-      if (err) throw err;
-
-      log.verbose(pkg.name, 'ready');
-
-      var remotePath = path.dirname(remoteFile);
-      log.verbose(pkg.name, 'mkdir %s', remotePath);
-      sftp.mkdir(remotePath,function(err){
-        if(err) log.error(pkg.name, 'mkdir '+err);
-
-        remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
-        log.verbose(pkg.name, 'put %s %s',
-          path.relative(process.cwd(),localFile), path.relative(remotePath,remoteFile));
-        sftp.fastPut(localFile, remoteFile, function(err){
-          if (err) throw err;
-          if(err) log.error(pkg.name, 'fastPut '+err);
-          if(then) then(err, server, conn);
-        });
-
-      });
-    });
   });
 };
 
@@ -441,29 +495,77 @@ SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
  */
 SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
 
-  log.verbose(pkg.name, 'write to %s',remoteFile);
+  debug('write to %s',remoteFile);
 
-  connect(server, function(err,conn){
+  remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
 
-    conn.sftp(function(err, sftp){
-      if (err) throw err;
+  var remotePath = path.dirname(remoteFile);
+  debug('mkdir %s', remotePath);
+  this.mkdir(server, remotePath, function(err, server, conn){
+    if(err){
+      return returnOrThrow(then, err, server, conn);
+    }
 
-      log.verbose(pkg.name, 'ready');
+    debug('write %s', remoteFile);
 
-      var remotePath = path.dirname(remoteFile);
-      log.verbose(pkg.name, 'mkdir %s', remotePath);
-      sftp.mkdir(remotePath, function(err){
-        if(err) log.error(pkg.name, 'mkdir '+err);
-
-        remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
-        log.verbose(pkg.name, 'write %s',
-          path.relative(remotePath,remoteFile));
-        var wStream = sftp.createWriteStream(remoteFile, {encoding: null});
+    conn.sftp(function sftpOpen(err, sftp){
+      if(err){
+        return returnOrThrow(then, err, server, conn);
+      }
+      try{
+        debug('stream start');
+        var wStream = sftp.createWriteStream(remoteFile, {flags: 'w+', encoding: null});
         wStream.end(''+content);
-        wStream.on('finish', function () {
-          if(then) then(/*@todo*/);
+        wStream.on('error', function (err) {
+          debug('stream error %j', err);
+          wStream.removeAllListeners('finish');
+          returnOrThrow(then, err, server, conn);
         });
-      });
+        wStream.on('finish', function () {
+          debug('stream finish');
+          returnOrThrow(then, err, server, conn);
+        });
+      }catch(ex){
+        debug('stream ex %j', ex);
+        return returnOrThrow(then, ex, server, conn);
+      }
+    });
+  });
+};
+
+/**
+ * Writes content to a remote file
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.writeFileSudo = function(server, remoteFile, content, then){
+  throw 'todo';
+};
+
+/**
+ * Tells if a file exists on remote
+ * by trying to open handle on it.
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, exists, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
+
+  remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
+  debug('fileExists %s',remoteFile);
+
+  connect(server, function sshConnect(err, conn){
+    if (err) return returnOrThrow(then, err, server, conn);
+    conn.sftp(function sftpOpen(err, sftp){
+      if (err) return returnOrThrow(then, err, server, conn);
+      sftp.open(remoteFile, 'r', function stfpOpenFileHandle(err, handle){
+        if(handle) sftp.close(handle);
+        returnOrThrow(then, err, !err, server, conn);
+      })
     });
   });
 };
@@ -474,21 +576,36 @@ SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
  *
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
+ * @param then callback(err, exists, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.fileExistsSudo = function(server, remoteFile, then){
+
+  var remotePath = path.dirname(remoteFile);
+  var remoteFileName = path.basename(remoteFile);
+  debug('fileExistsSudo %s', remoteFile);
+
+  this.exec(server, 'sudo ls -alh '+remotePath, function(err, stdout, stderr, server, conn){
+    returnOrThrow(then, err, !!stdout.match(remoteFileName), server, conn);
+  });
+};
+
+/**
+ * Deletes a file or directory
+ * rm -fr /some/path
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
  * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
-
-  log.verbose(pkg.name, 'to %s',remoteFile);
-
-  connect(server, function(err,conn){
-    if (err) throw err;
-    conn.sftp(function(err, sftp){
-      if (err) throw err;
-      sftp.open(remoteFile, 'r', function(err, handle){
-        if(then) then(err, server, conn);
-        if(handle) sftp.close(handle)
-      })
-    });
+SSH2Utils.prototype.rmdir = function(server, remotePath, then){
+  debug('rmdir %s',remotePath);
+  this.exec(server, 'rm -fr '+remotePath, function rmdir (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
   });
 };
 
@@ -500,17 +617,15 @@ SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
  * @param remotePath String
  * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.rmdir = function(server, remotePath, then){
-
-  log.verbose(pkg.name, 'rmdir %s',remotePath);
-
-  connect(server, function(err,conn){
-    if (err) throw err;
-
-    sudoExec(conn, server, 'rm -fr '+remotePath, function(err){
-      if (err) throw err;
-      if(then) then(err, server, conn);
-    });
+SSH2Utils.prototype.rmdirSudo = function(server, remotePath, then){
+  debug('rmdirSudo %s', remotePath);
+  this.exec(server, 'sudo rm -fr '+remotePath, function rmdirSudo (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
   });
 };
 
@@ -522,17 +637,86 @@ SSH2Utils.prototype.rmdir = function(server, remotePath, then){
  * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.mkdir = function(server, remotePath, then){
+  debug('mkdir %s',remotePath);
+  this.exec(server, 'mkdir -p '+remotePath, function mkdir (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
+  });
+};
 
-  log.verbose(pkg.name, 'mkdir %s',remotePath);
+/**
+ * Creates a remote directory
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.mkdirSudo = function(server, remotePath, then){
+  debug('mkdirSudo %s',remotePath);
+  this.exec(server, 'sudo mkdir -p '+remotePath, function mkdirSudo (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
+  });
+};
 
-  connect(server, function(err,conn){
-    if (err) throw err;
-    conn.sftp(function(err, sftp){
-      if (err) throw err;
-      sftp.mkdir(remotePath, function(err){
-        if(then) then(err, server, conn);
-      })
+/**
+ * Ensure a remote directory exists and is empty
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureEmptyDir = function(server, remotePath, then){
+  debug('ensureEmptyDir %s',remotePath);
+  var that = this;
+  that.rmdir(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.mkdir(server, remotePath, function(err, server, conn){
+      returnOrThrow(then, err, server, conn);
     });
+  });
+};
+
+/**
+ * Ensure a remote directory exists and is empty
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureEmptyDirSudo = function(server, remotePath, then){
+  debug('ensureEmptyDir %s',remotePath);
+  var that = this;
+  that.rmdirSudo(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.mkdirSudo(server, remotePath, function(err, server, conn){
+      returnOrThrow(then, err, server, conn);
+    });
+  });
+};
+
+/**
+ * Ensure a file belongs to connected user
+ * by sudo chmod -R /path
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureOwnership = function(server, remotePath, then){
+  debug('ensureWritable %s',remotePath);
+  var that = this;
+  server.username = server.username || server.userName || server.user;
+  that.exec(server, 'sudo chown -R '+server.username+':'+server.username+' '+remotePath, function(err, stdout, stderr, server, conn) {
+    returnOrThrow(then, err, server, conn);
   });
 };
 
@@ -551,79 +735,134 @@ SSH2Utils.prototype.mkdir = function(server, remotePath, then){
  * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.putDir = function(server, localPath, remotePath, then){
+  var that = this;
+  that.ensureEmptyDir(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
 
-  connect(server, function sshPutDir(err,conn){
     conn.sftp(function(err, sftp){
-      if (err) throw err;
+      if(err) return returnOrThrow(then, err, server, conn);
 
-      log.verbose(pkg.name, 'ready');
-      var options = {
-        cwd: localPath
-      };
-
-      // scan local directories
-      glob( '**/', options, function (er, dirs) {
-
-        var dirHandlers = [];
-
-        // create root remote directory
-        dirHandlers.push(function(done){
-          log.verbose(pkg.name, 'mkdir %s', remotePath);
-          conn.exec("mkdir -p "+remotePath, function(err){
-            if(err) log.error(pkg.name, 'mkdir '+err);
-            setTimeout(done, 500); // this is weird, to be checked later.
-          });
-        });
+      debug('ready');
+      scanLocalDirectory(localPath, function(dirs, files){
 
         // create remote directories
+        var dirHandlers = [];
         dirs.forEach(function(f){
-          dirHandlers.push(function(done){
-            var to = path.join(remotePath, f).replace(/[\\]/g,'/');
-            log.info(pkg.name, 'mkdir %s', to);
-            sftp.mkdir(to, function(err){
-              if(err) log.error(pkg.name, 'mkdir %s %s', to, err.message);
-              done();
+          dirHandlers.push(function(next){
+            var to = path.join(remotePath, f).replace(/[\\]/g,'/'); // windows needs this
+            debug(pkg.name, 'mkdir %s', to);
+            that.mkdir(server, to, function(err){
+              if(err) debug('mkdir %s %s', to, err.message);
+              next();
             });
           })
         });
 
-        // scan local files
-        options.nodir = true;
-        glob( '**', options, function (er, files) {
-
-          var filesHandlers = [];
-
-          // push files to remote
-          files.forEach(function(f){
-            filesHandlers.push(function(done){
-              var from = path.join(localPath, f);
-              var to = path.join(remotePath, f).replace(/[\\]/g,'/'); // windows needs this
-              log.info(pkg.name, 'put %s %s',
-                path.relative(process.cwd(),from), path.relative(remotePath,to));
-              sftp.fastPut(from, to, function(err){
-                if(err) log.error(pkg.name, 'fastPut %s %s %s', from, to, err.message);
-                done();
-              });
-            })
-          });
-
-          // delete root remote directory if it exists
-          log.verbose(pkg.name, 'rmdir %s', remotePath);
-          conn.exec("rm -fr "+remotePath, function(err){
-            if(err) log.error(pkg.name, 'rmdir %s %s', remotePath, err.message);
-            // then push the scanned files and directories
-            async.series(dirHandlers, function(){
-              async.parallelLimit(filesHandlers, 4, function(){
-                if(then)then(err, server, conn);
-              });
+        // push files to remote
+        var filesHandlers = [];
+        files.forEach(function(f){
+          filesHandlers.push(function(next){
+            var from = path.join(localPath, f);
+            var to = path.join(remotePath, f).replace(/[\\]/g,'/'); // windows needs this
+            debug(pkg.name, 'put %s %s', path.relative(process.cwd(), from), to);
+            sftp.fastPut(from, to, function(err){
+              if(err) debug('fastPut %s %s %s', from, to, err.message);
+              next();
             });
-          });
-
+          })
         });
 
+        // then push the scanned files and directories
+        async.series(dirHandlers, function(){
+          async.parallelLimit(filesHandlers, 4, function(){
+            returnOrThrow(then, err, server, conn);
+          });
+        });
       });
     });
   });
+};
+
+/**
+ * Uploads a local directory to the remote.
+ * Partly in series, partly parallel.
+ * Proceed such
+ * sudo rm -fr /remotePath
+ * sudo mkdir -p /remotePath
+ * recursive sftp mkdir
+ * recursive sftp put
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param localPath String
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.putDirSudo = function(server, localPath, remotePath, then){
+
+  var that = this;
+
+  var tmpRemotePath = path.join('/tmp/ssh2-utils/', remotePath);
+  that.ensureEmptyDirSudo(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.ensureEmptyDirSudo(conn, tmpRemotePath, function(err, server, conn){
+      if(err) return returnOrThrow(then, err, server, conn);
+      that.ensureOwnership(conn, tmpRemotePath, function(err, server, conn) {
+        if (err) return returnOrThrow(then, err, server, conn);
+
+        conn.sftp(function(err, sftp){
+          if(err) return returnOrThrow(then, err, server, conn);
+
+          debug('ready');
+          scanLocalDirectory(localPath, function(dirs, files){
+
+            // create remote directories
+            var dirHandlers = [];
+            dirs.forEach(function(f){
+              dirHandlers.push(function(next){
+                var to = path.join(tmpRemotePath, f).replace(/[\\]/g,'/');
+                debug(pkg.name, 'mkdir %s', to);
+                that.mkdirSudo(to, function(err){
+                  if(err) debug('mkdir %s %s', to, err.message);
+                  next();
+                });
+              })
+            });
+
+            // push files to remote
+            var filesHandlers = [];
+            files.forEach(function(f){
+              filesHandlers.push(function(next){
+                var from = path.join(localPath, f);
+                var to = path.join(tmpRemotePath, f).replace(/[\\]/g,'/'); // windows needs this
+                debug(pkg.name, 'put %s %s', path.relative(process.cwd(), from), to);
+                sftp.fastPut(from, to, function(err){
+                  if(err) debug('fastPut %s %s %s', from, to, err.message);
+                  next();
+                });
+              })
+            });
+
+            // then push the scanned files and directories
+            async.series(dirHandlers, function(){
+              async.parallelLimit(filesHandlers, 4, function(){
+                if(err) return returnOrThrow(then, err, server, conn);
+                that.exec(conn, 'sudo cp -R '+path.join(tmpRemotePath, '*')+' '+remotePath+'/', function(err, stdout, stderr, server, conn){
+                  if(err) return returnOrThrow(then, err, server, conn);
+                  that.rmdirSudo(conn, tmpRemotePath, function(err, server, conn){
+                    returnOrThrow(then, err, server, conn);
+                  });
+                });
+              });
+            });
+          });
+        });
+
+      });
+
+
+    });
+  });
+
 };
 
 /**
@@ -645,7 +884,7 @@ SSH2Utils.prototype.getDir = function(server,remotePath,localPath, allDone){
     conn.sftp(function(err, sftp){
       if (err) throw err;
 
-      log.verbose(pkg.name, 'ready');
+      debug('ready');
 
       var files = [];
       var dirs = [];
