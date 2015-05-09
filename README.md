@@ -34,13 +34,22 @@ is support by mocha https://github.com/maboiteaspam/ssh2-utils/tree/gh-pages/moc
     * [`runMultiple`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#runMultiple)
     * [`readFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readFile)
     * [`putDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDir)
+    * [`putDirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDirSudo)
     * [`readDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readDir)
     * [`putFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putFile)
     * [`mkdir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mkdir)
+    * [`mkdirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mkdirSudo)
     * [`rmdir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#rmdir)
-    * [`fileExists`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExists)
+    * [`rmdirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#rmdirSudo)
     * [`writeFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#writeFile)
+    * [`writeFileSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#writeFileSudo)
     * [`getDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#getDir)
+    * [`fileExists`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExists)
+    * [`fileExistsSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExistsSudo)
+    * [`ensureFileContains`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureFileContains)
+    * [`ensureEmptyDirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDirSudo)
+    * [`ensureEmptyDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDir)
+    * [`ensureOwnership`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureOwnership)
 
 
 ---------------------------------------
