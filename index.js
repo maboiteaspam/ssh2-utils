@@ -284,7 +284,7 @@ SSH2Utils.prototype.getConnReady = connect;
  * @param cmd String
  * @param done callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.exec = function(server, cmd, done){
+SSH2Utils.prototype.execOne = function(server, cmd, done){
 
   connect(server, function(err, conn){
     if( err) return returnOrThrow(done, err, null,''+err, server, conn);
@@ -311,6 +311,55 @@ SSH2Utils.prototype.exec = function(server, cmd, done){
         returnOrThrow(done, fineErr, stdout, stderr, server, conn);
       });
     });
+  });
+
+};
+
+/**
+ * Executes a command and return its output
+ *  like child_process.exec.
+ * non-interactive
+ *
+ * also take care of
+ * - manage sudo cmd
+ * - log errors to output
+ * - remote program termination with ctrl+C
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmd String
+ * @param doneEach callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
+ * @param done callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
+
+  var that = this;
+  if(_.isString(cmd)){
+    cmd = [cmd];
+  }
+  if(!done&& _.isFunction(doneEach) ){
+    done = doneEach;
+    doneEach = null;
+  }
+  var cmds = [];
+  var conn_;
+  var err_;
+  var stdout_;
+  var stderr_;
+  cmd.forEach(function(cmd){
+    cmds.push(function(next){
+      that.execOne(conn_ || server, cmd, function(err, stdout, stderr, server, conn){
+        conn_ = conn;
+        err_ = err;
+        stdout_ = stdout;
+        stderr_ = stderr;
+        if(doneEach) doneEach(err, stdout, stderr, server, conn);
+        next();
+      });
+    });
+  });
+
+  async.series(cmds, function(){
+    done(err_, stdout_, stderr_, server, conn_);
   });
 
 };

@@ -76,7 +76,7 @@ var fixturePath = __dirname + '/fixtures/';
 
 
 describe('ident', function(){
-  this.timeout(50000)
+  this.timeout(10000);
   it('exec can fail properly with password', function(done){
     var wrongHost = {
       'host':hostPwd.host,
@@ -84,7 +84,7 @@ describe('ident', function(){
       username: 'wrong',
       password: 'credentials'
     };
-    ssh.exec(wrongHost,'ls -alh', function(err, stdout, stderr, server){
+    ssh.exec(wrongHost, 'ls -alh', function(err, stdout, stderr, server){
       (!!err).should.be.true;
       (stdout===null).should.be.true;
       (err.message).should.match(/failed/);
@@ -110,7 +110,7 @@ describe('ident', function(){
 });
 
 describe('exec', function(){
-  this.timeout(50000)
+  this.timeout(10000);
   it('can execute command', function(done){
     ssh.exec(hostPwd,'ls -alh /var/log/', function(err, stdout, stderr, server){
       (!!err).should.be.false;
@@ -158,7 +158,7 @@ describe('exec', function(){
     });
   });
   it('can fail properly', function(done){
-    ssh.exec(hostPwd,'ls -alh /var/log/nofile', function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,'ls -alh /nofile', function(err, stdout, stderr, server){
       (!!err).should.be.true;
       stderr.should.match(/No such file or directory/);
       err.message.should.match(/No such file or directory/);
@@ -172,6 +172,76 @@ describe('exec', function(){
       stderr.should.match(/command not found/);
       err.message.should.match(/command not found/);
       stdout.should.be.empty;
+      done();
+    });
+  });
+});
+
+describe('exec multiple', function(){
+  this.timeout(10000);
+  it('can execute multiple commands', function(done){
+    ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], function(err, stdout, stderr, server){
+      (!!err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
+      done()
+    });
+  });
+  it('can execute multiple sudo commands', function(done){
+    ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], function(err, stdout, stderr, server){
+      (!!err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
+      done()
+    });
+  });
+  it('can capture multiple outputs', function(done){
+    var doneCnt = 0;
+    var doneEach = function(){
+      doneCnt++;
+    };
+    ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+      (!!err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
+      doneCnt.should.eql(2);
+      done()
+    });
+  });
+  it('can capture multiple sudo outputs', function(done){
+    var doneCnt = 0;
+    var doneEach = function(){
+      doneCnt++;
+    };
+    ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+      (!!err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
+      doneCnt.should.eql(2);
+      done()
+    });
+  });
+  it('can fail properly while executing multiple commands', function(done){
+    ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], function(err, stdout, stderr, server){
+      (!!err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
+      done();
+    });
+  });
+  it('can fail properly while executing multiple commands', function(done){
+    var doneCnt = 0;
+    var failedCnt = 0;
+    var doneEach = function(err){
+      doneCnt++;
+      if(err) failedCnt++;
+    };
+    ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+      (!!err).should.be.false;
+      stdout.should.match(/root/);
+      stderr.should.be.empty;
+      doneCnt.should.eql(3);
+      failedCnt.should.eql(1);
       done();
     });
   });
@@ -262,7 +332,7 @@ describe('run', function(){
 
 
 describe('run multiple', function(){
-  this.timeout(50000);
+  this.timeout(10000);
   it('can run multiple commands', function(done){
 
     var cmds = [
@@ -331,7 +401,7 @@ describe('sftp ensureEmptyDir', function(){
 
 
 describe('sftp fileExists', function(){
-  this.timeout(50000);
+  this.timeout(10000);
 
   it('can ensure a remote path exists', function(done){
     ssh.ensureEmptyDir(hostPwd, '/home/vagrant/fileExists-test', function(err, server, conn){
