@@ -1,6 +1,8 @@
-running machine precise64
+running machine centos
+cxvxcv
+ddfsf
 null
-running machine precise64
+running machine centos
 # TOC
    - [ident](#ident)
    - [exec](#exec)
@@ -237,12 +239,14 @@ ssh.run(hostPwd,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts
   setTimeout(function(){
     // re use connection
     ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
-      stdout2.on('data', _.debounce(function(data){
+      console.log('cxvxcv')
+      stdout2.on('data', function(data){
         data.toString().should.match(/root/);
         stdout.toString().should.match(/session/);
         conn.end();
+        console.log('ddfsf')
         done();
-      },500));
+      });
     });
   },500);
 });
@@ -321,8 +325,8 @@ can multiple run sudo command with password.
 
 ```js
 var cmds = [
-  'sudo ls -alh /var/log/auth.log',
-  'sudo ls -alh /var/log/secure',
+  'sudo ls -alh /var/log/{auth.log,secure}',
+  'sudo ls -alh /var/log/{auth.log,secure}',
   'ls -alh /var/log/'
 ];
 ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
@@ -331,12 +335,12 @@ ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
   stdouts.on('data', function(data){
     stdout+=''+data;
   });
-  stdouts.on('data', _.debounce(function(data){
-    data.toString().should.match(/root/);
-    stdout.toString().should.match(/total/);
+  stdouts.on('close', function(data){
+    stdout.should.match(/root/);
+    stdout.should.match(/total/);
     conn.end();
     done();
-  }, 1000));
+  });
 });
 ```
 
@@ -344,8 +348,8 @@ can run multiple sudo command with password.
 
 ```js
 var cmds = [
-  'sudo ls -alh /var/log/auth.log',
-  'sudo ls -alh /var/log/secure',
+  'sudo ls -alh /var/log/{auth.log,secure}',
+  'sudo ls -alh /var/log/{auth.log,secure}',
   'ls -alh /var/log/'
 ];
 ssh.run(hostKey, cmds, function(err, stdouts, stderrs, server, conn){
@@ -354,12 +358,40 @@ ssh.run(hostKey, cmds, function(err, stdouts, stderrs, server, conn){
   stdouts.on('data', function(data){
     stdout+=''+data;
   });
-  stdouts.on('data', _.debounce(function(data){
-    data.toString().should.match(/root/);
-    stdout.toString().should.match(/total/);
+  stdouts.on('close', function(){
+    stdout.should.match(/root/);
+    stdout.should.match(/total/);
     conn.end();
     done();
-  }, 1000 ) );
+  });
+});
+```
+
+can run multiple command and fail properly.
+
+```js
+var cmds = [
+  'sudo ls -alh /var/log/{auth.log,secure}',
+  'ls -alh /var/log/',
+  'ls -alh /var/log/nofile'
+];
+ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
+  (!!err).should.be.false;
+  var stdout = '';
+  var stderr = '';
+  stdouts.on('data', function(data){
+    stdout+=''+data;
+  });
+  stderrs.on('data', function(data){
+    stderr+=''+data;
+  });
+  stdouts.on('close', function(){
+    stderr.should.match(/No such file or directory/)
+    stdout.should.match(/root/)
+    stdout.should.match(/total/)
+    conn.end();
+    done();
+  });
 });
 ```
 
@@ -367,7 +399,7 @@ can run multiple sudo command and fail properly.
 
 ```js
 var cmds = [
-  'sudo tail -f /var/log/auth.log',
+  'sudo tail -f /var/log/{auth.log,secure}',
   'ls -alh /var/log/',
   'dsscdc'
 ];
@@ -382,7 +414,9 @@ ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
   });
   stdouts.on('close', function(){
     stderr.should.match(/command not found/);
-    stdout.should.be.empty;
+    stdout.should.match(/(pam_unix|debug)/);
+    stdout.should.match(/root/);
+    stdout.should.match(/total/);
     conn.end();
     done();
   });
