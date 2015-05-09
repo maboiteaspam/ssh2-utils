@@ -311,7 +311,7 @@ describe('sftp ensureEmptyDir', function(){
   });
   it('can ensure a remote dir is empty and exists via sudo', function(done){
     ssh.ensureEmptyDirSudo(hostPwd, '/tmp/empty-dir-sudo', function(err, server, conn){
-      ssh.fileExists(conn, '/tmp/empty-dir-sudo', function(err2, exists){
+      ssh.fileExistsSudo(conn, '/tmp/empty-dir-sudo', function(err2, exists){
         (!!err).should.be.false;
         (exists).should.be.true;
         done();
