@@ -8,7 +8,7 @@
     "url": "http://github.com/maboiteaspam/ssh2-utils.git"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "export DEBUG='ssh2-utils'; mocha"
   },
   "keywords": [
     "ssh2",
