@@ -248,7 +248,7 @@ describe('exec multiple', function(){
 });
 
 describe('run', function(){
-  this.timeout(50000);
+  this.timeout(10000);
   it('can run sudo command with password', function(done){
     ssh.run(hostPwd,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
       (!!err).should.be.false;
@@ -259,12 +259,14 @@ describe('run', function(){
       setTimeout(function(){
         // re use connection
         ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
-          stdout2.on('data', _.debounce(function(data){
+          console.log('cxvxcv')
+          stdout2.on('data', function(data){
             data.toString().should.match(/root/);
             stdout.toString().should.match(/session/);
             conn.end();
+            console.log('ddfsf')
             done();
-          },500));
+          });
         });
       },500);
     });
@@ -330,11 +332,11 @@ describe('run', function(){
 });
 
 describe('run multiple', function(){
-  this.timeout(50000);
+  this.timeout(10000);
   it('can multiple run sudo command with password', function(done){
     var cmds = [
-      'sudo ls -alh /var/log/auth.log',
-      'sudo ls -alh /var/log/secure',
+      'sudo ls -alh /var/log/{auth.log,secure}',
+      'sudo ls -alh /var/log/{auth.log,secure}',
       'ls -alh /var/log/'
     ];
     ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
@@ -344,19 +346,19 @@ describe('run multiple', function(){
         stdout+=''+data;
       });
 
-      stdouts.on('data', _.debounce(function(data){
-        data.toString().should.match(/root/);
-        stdout.toString().should.match(/total/);
+      stdouts.on('close', function(data){
+        stdout.should.match(/root/);
+        stdout.should.match(/total/);
         conn.end();
         done();
-      }, 1000));
+      });
 
     });
   });
   it('can run multiple sudo command with password', function(done){
     var cmds = [
-      'sudo ls -alh /var/log/auth.log',
-      'sudo ls -alh /var/log/secure',
+      'sudo ls -alh /var/log/{auth.log,secure}',
+      'sudo ls -alh /var/log/{auth.log,secure}',
       'ls -alh /var/log/'
     ];
     ssh.run(hostKey, cmds, function(err, stdouts, stderrs, server, conn){
@@ -365,21 +367,22 @@ describe('run multiple', function(){
       stdouts.on('data', function(data){
         stdout+=''+data;
       });
-      stdouts.on('data', _.debounce(function(data){
-        data.toString().should.match(/root/);
-        stdout.toString().should.match(/total/);
+      stdouts.on('close', function(){
+        stdout.should.match(/root/);
+        stdout.should.match(/total/);
         conn.end();
         done();
-      }, 1000 ) );
+      });
     });
   });
   it('can run multiple command and fail properly', function(done){
     var cmds = [
-      'sudo ls -alh /var/log/auth.log',
+      'sudo ls -alh /var/log/{auth.log,secure}',
       'ls -alh /var/log/',
       'ls -alh /var/log/nofile'
     ];
     ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
+      (!!err).should.be.false;
       var stdout = '';
       var stderr = '';
       stdouts.on('data', function(data){
@@ -390,16 +393,16 @@ describe('run multiple', function(){
       });
       stdouts.on('close', function(){
         stderr.should.match(/No such file or directory/)
-        stdout.should.be.empty
+        stdout.should.match(/root/)
+        stdout.should.match(/total/)
         conn.end();
         done();
       });
-      (!!err).should.be.false;
     });
   });
   it('can run multiple sudo command and fail properly', function(done){
     var cmds = [
-      'sudo tail -f /var/log/auth.log',
+      'sudo tail -f /var/log/{auth.log,secure}',
       'ls -alh /var/log/',
       'dsscdc'
     ];
@@ -414,7 +417,9 @@ describe('run multiple', function(){
       });
       stdouts.on('close', function(){
         stderr.should.match(/command not found/);
-        stdout.should.be.empty;
+        stdout.should.match(/pam_unix/);
+        stdout.should.match(/root/);
+        stdout.should.match(/total/);
         conn.end();
         done();
       });

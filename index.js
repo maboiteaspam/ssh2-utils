@@ -4,6 +4,7 @@ var async = require('async');
 var Client = require('ssh2').Client;
 var glob = require("glob");
 var fs = require("fs-extra");
+var through = require('through');
 var _ = require("underscore");
 var _s = require("underscore.string");
 
@@ -378,6 +379,8 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
  * @param done callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
+  var stdoutStream = through();
+  var stderrStream = through();
   if(_.isString(cmd)){
     cmd = [cmd];
   }
@@ -388,26 +391,53 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
   var cmds = [];
   var conn_;
   var err_;
-  var stdout_;
-  var stderr_;
+  var stream_;
   connect(server, function(err, conn){
     if(err) return returnOrThrow(done, err, null, ''+err, server, conn);
-    conn_ = conn;
-    err_ = err;
-    cmd.forEach(function(c){
+    cmd.forEach(function(c, i){
       cmds.push(function(next){
         sudoExec(conn, server, c, function(err, stream){
+          conn_ = conn;
           err_ = err;
-          stdout_ = stream;
-          stderr_ = stream.stderr;
+
+
+          (function(stream, i){
+            var onStdoutData = function(d){
+              stdoutStream.emit('data', d);
+            };
+            var onStderrData = function(d){
+              stderrStream.emit('data', d);
+            };
+            stream.on('data', onStdoutData);
+            stream.stderr.on('data', onStderrData);
+            var onClose = function(err){
+              process.nextTick(function(){
+                if(i+1===cmds.length){
+                  stdoutStream.emit('close', err);
+                }
+                stream.removeListener('close', onClose);
+                stream.removeListener('data', onStdoutData);
+                stream.stderr.removeListener('data', onStderrData);
+              });
+            };
+            stream.on('close', onClose);
+          })(stream, i);
+
+          if(!stream_){
+            returnOrThrow(done, err, stdoutStream, stderrStream, server, conn);
+          }
           if(doneEach) doneEach(err, stream, stream.stderr, server, conn);
+          stream_ = stream;
           next();
+
         });
       })
     });
 
     async.series(cmds, function(){
-      returnOrThrow(done, err, stdout_, stderr_, server, conn);
+      if(!stream_){
+        returnOrThrow(done, err_, stdoutStream, stderrStream, server, conn_);
+      }
     });
 
   });
