@@ -276,8 +276,6 @@ SSH2Utils.prototype.getConnReady = connect;
  * non-interactive
  *
  * also take care of
- * - manage sudo cmd
- * - log errors to output
  * - remote program termination with ctrl+C
  *
  * @param server ServerCredentials|ssh2.Client
@@ -321,9 +319,11 @@ SSH2Utils.prototype.execOne = function(server, cmd, done){
  * non-interactive
  *
  * also take care of
- * - manage sudo cmd
- * - log errors to output
  * - remote program termination with ctrl+C
+ *
+ * If cmd is an array of string,
+ * they are executed in serie,
+ * respective output of each stdout / stderr is join then returned.
  *
  * @param server ServerCredentials|ssh2.Client
  * @param cmd String|[String]
@@ -372,6 +372,10 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
  * also take care of
  * - manage sudo cmd
  * - log errors to output
+ *
+ * If cmd is an array, they are executed in serie,
+ * the pipe is open asap,
+ * you ll receive each stdout stderr data in serie
  *
  * @param server ServerCredentials|ssh2.Client
  * @param cmd String|[String]
@@ -446,9 +450,6 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
 
 /**
  * Executes a set of multiple and sequential commands.
- * passive listener.
- *
- * Take care of everything, su sudo ect
  *
  * @param server ServerCredentials|ssh2.Client
  * @param cmds [String]
