@@ -32,11 +32,14 @@ is support by mocha https://github.com/maboiteaspam/ssh2-utils/tree/gh-pages/moc
     * [`exec`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#exec)
     * [`run`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#run)
     * [`runMultiple`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#runMultiple)
+    * [`mktemp`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mktemp)
     * [`readFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readFile)
+    * [`getFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#getFile)
     * [`putDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDir)
     * [`putDirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDirSudo)
     * [`readDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readDir)
     * [`putFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putFile)
+    * [`putFileSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putFileSudo)
     * [`mkdir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mkdir)
     * [`mkdirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mkdirSudo)
     * [`rmdir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#rmdir)
@@ -47,8 +50,9 @@ is support by mocha https://github.com/maboiteaspam/ssh2-utils/tree/gh-pages/moc
     * [`fileExists`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExists)
     * [`fileExistsSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExistsSudo)
     * [`ensureFileContains`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureFileContains)
-    * [`ensureEmptyDirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDirSudo)
+    * [`ensureFileContainsSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureFileContainsSudo)
     * [`ensureEmptyDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDir)
+    * [`ensureEmptyDirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDirSudo)
     * [`ensureOwnership`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureOwnership)
 
 
@@ -158,8 +162,8 @@ __Examples__
 ```
 
 
-<a name="readFile" />
-### SSH2Utils.readFile(server, remoteFile, localPath, callback)
+<a name="getFile" />
+### SSH2Utils.getFile(server, remoteFile, localPath, callback)
 
 Download a file from remote to local.
 
@@ -181,13 +185,13 @@ __Examples__
     
     var server = {host: "localhost", username:"user", password:"pwd" };
         
-    ssh.readFile(server,'/tmp/from_some_remote','/tmp/to_some_local', function(err){
+    ssh.getFile(server,'/tmp/from_some_remote','/tmp/to_some_local', function(err){
         if(err) console.log(err);
     });
 ```
 
 
-<a name="readFile" />
+<a name="putFile" />
 ### SSH2Utils.putFile(server, localFile, remoteFile, callback)
 
 Put a file from local to remote

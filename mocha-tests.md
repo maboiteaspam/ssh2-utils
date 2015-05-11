@@ -1,8 +1,8 @@
-running machine centos
 cxvxcv
 ddfsf
 null
-running machine centos
+running machine precise64
+halted
 # TOC
    - [ident](#ident)
    - [exec](#exec)
@@ -12,6 +12,11 @@ running machine centos
    - [sftp ensureEmptyDir](#sftp-ensureemptydir)
    - [sftp fileExists](#sftp-fileexists)
    - [sftp putDir](#sftp-putdir)
+   - [sftp readFile](#sftp-readfile)
+   - [sftp getFile](#sftp-getfile)
+   - [sftp mktemp](#sftp-mktemp)
+   - [sftp ensureFileContains](#sftp-ensurefilecontains)
+   - [sftp putFile](#sftp-putfile)
    - [sftp](#sftp)
    - [sftp failures](#sftp-failures)
    - [exec failures](#exec-failures)
@@ -540,6 +545,87 @@ ssh.putDir(hostPwd, fixturePath, '/root/putdir-test-fail', function(err, server,
 });
 ```
 
+<a name="sftp-readfile"></a>
+# sftp readFile
+<a name="sftp-getfile"></a>
+# sftp getFile
+<a name="sftp-mktemp"></a>
+# sftp mktemp
+can safely create a remote temporary directory.
+
+```js
+ssh.mktemp(hostPwd, 'some', function(err, tempPath, server, conn){
+  ssh.writeFile(conn, tempPath+'/test', t, function(){
+    ssh.readFile(conn, tempPath+'/test', function(err, data){
+      (!!err).should.be.false;
+      data.should.eql(''+t);
+      done();
+    });
+  });
+});
+```
+
+<a name="sftp-ensurefilecontains"></a>
+# sftp ensureFileContains
+can ensure a file contains a certain piece of text.
+
+```js
+ssh.writeFile(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err){
+  (!!err).should.be.false;
+  ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(contains, err){
+    (!!err).should.be.false;
+    (contains).should.be.true;
+    done(err);
+  });
+});
+```
+
+can ensure a file contains a certain piece of text via sudo.
+
+```js
+t++;
+fs.writeFileSync(fixturePath + 'local'+t, t);
+ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/remote8'+t, function(err){
+  (!!err).should.be.false;
+  ssh.ensureFileContainsSudo(hostPwd, '/root/remote8'+t, t, function(contains, err){
+    (!!err).should.be.false;
+    (contains).should.be.true;
+    done(err);
+  });
+});
+```
+
+<a name="sftp-putfile"></a>
+# sftp putFile
+can put file on remote.
+
+```js
+fs.writeFileSync(fixturePath + 'local'+t, t);
+ssh.putFile(hostPwd, fixturePath + 'local'+t, tmpRemotePath+'/remote'+t, function(err, server, conn){
+  (!!err).should.be.false;
+  ssh.ensureFileContains(conn, tmpRemotePath+'/remote'+t, t, function(contains, err){
+    (!!err).should.be.false;
+    (contains).should.be.true;
+    done();
+  });
+});
+```
+
+can put file on remote via sudo.
+
+```js
+t++;
+fs.writeFileSync(fixturePath + 'local'+t, t);
+ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/some'+t, function(err){
+  (!!err).should.be.false;
+  ssh.ensureFileContainsSudo(hostPwd, '/root/some'+t, t, function(contains, err){
+    (!!err).should.be.false;
+    (contains).should.be.true;
+    done(err);
+  });
+});
+```
+
 <a name="sftp"></a>
 # sftp
 can test file exists.
@@ -552,30 +638,6 @@ ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err, exists){
 });
 ```
 
-can write a file.
-
-```js
-fs.writeFileSync(fixturePath + 'local'+t, t);
-ssh.putFile(hostPwd, fixturePath + 'local'+t, tmpRemotePath+'/remote'+t, function(err, server, conn){
-  (!!err).should.be.false;
-  ssh.fileExists(conn, tmpRemotePath+'/remote'+t, function(err, exists){
-    (!!err).should.be.false;
-    (exists).should.be.true;
-    done();
-  });
-});
-```
-
-can download a file.
-
-```js
-ssh.readFile(hostPwd, tmpRemotePath+'/remote'+t, fixturePath + 'local'+t, function(err){
-  (!!err).should.be.false;
-  fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
-  done();
-});
-```
-
 can write a file content.
 
 ```js
@@ -583,22 +645,11 @@ ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err){
   (!!err).should.be.false;
   ssh.fileExists(hostPwd, tmpRemotePath+'/remote2'+t, function(err){
     (!!err).should.be.false;
-    ssh.readFile(hostPwd, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
+    ssh.getFile(hostPwd, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
       (!!err).should.be.false;
       fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
       done();
     });
-  });
-});
-```
-
-can ensure a file contains a certain piece of text.
-
-```js
-ssh.writeFile(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err){
-  ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(contains, err){
-    (contains).should.be.true;
-    done(err);
   });
 });
 ```

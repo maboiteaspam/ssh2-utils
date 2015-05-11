@@ -89,7 +89,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line123">line 123</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line152">line 152</a>
     </li></ul></dd>
     
 
@@ -173,7 +173,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line224">line 224</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line271">line 271</a>
     </li></ul></dd>
     
 
@@ -197,6 +197,68 @@
 
 
         
+            
+<h4 class="name" id="runMultiple"><span class="type-signature"></span>runMultiple<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Executes a set of multiple and sequential commands.
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line459">line 459</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
     
 
     
@@ -207,7 +269,854 @@
 
     
 
-    <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(server, cmd, done)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="ensureEmptyDir"><span class="type-signature"></span>ensureEmptyDir<span class="signature">(server, remotePath, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Ensure a remote directory exists and is empty
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remotePath</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line844">line 844</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="ensureEmptyDirSudo"><span class="type-signature"></span>ensureEmptyDirSudo<span class="signature">(server, remotePath, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Ensure a remote directory exists and is empty
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remotePath</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line862">line 862</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="ensureFileContains"><span class="type-signature"></span>ensureFileContains<span class="signature">(server, remoteFile, contain, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Ensure a remote file contains a certain text piece of text
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remoteFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contain</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(contains, err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line520">line 520</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="ensureFileContainsSudo"><span class="type-signature"></span>ensureFileContainsSudo<span class="signature">(server, remoteFile, contain, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Ensure a remote file contains a certain text piece of text
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remoteFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contain</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(contains, err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line541">line 541</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="ensureOwnership"><span class="type-signature"></span>ensureOwnership<span class="signature">(server, remotePath, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Ensure a file belongs to connected user
+by sudo chmod -R /path
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remotePath</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line881">line 881</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(server, cmd, doneEach, done)</span><span class="type-signature"></span></h4>
 
     
 
@@ -219,8 +1128,195 @@
 non-interactive
 
 also take care of
-- manage sudo cmd
-- log errors to output
+- remote program termination with ctrl+C
+
+If cmd is an array of string,
+they are executed in serie,
+respective output of each stdout / stderr is join then returned.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cmd</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String|[String]</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>doneEach</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>done</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line333">line 333</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="execOne"><span class="type-signature"></span>execOne<span class="signature">(server, cmd, done)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Executes a command and return its output
+ like child_process.exec.
+non-interactive
+
+also take care of
 - remote program termination with ctrl+C
 </div>
 
@@ -345,7 +1441,7 @@ also take care of
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line240">line 240</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line285">line 285</a>
     </li></ul></dd>
     
 
@@ -467,7 +1563,7 @@ by trying to open handle on it.
 
             
 
-            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+            <td class="description last">callback(err, exists, ServerCredentials server, ssh2.Client conn)</td>
         </tr>
 
     
@@ -508,7 +1604,170 @@ by trying to open handle on it.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line479">line 479</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line703">line 703</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="fileExistsSudo"><span class="type-signature"></span>fileExistsSudo<span class="signature">(server, remoteFile, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Tells if a file exists on remote
+by trying to open handle on it.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remoteFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, exists, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line728">line 728</a>
     </li></ul></dd>
     
 
@@ -690,7 +1949,187 @@ then get files in parallel
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line639">line 639</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line1047">line 1047</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getFile"><span class="type-signature"></span>getFile<span class="signature">(server, remoteFile, localPath, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Downloads a file to the local
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remoteFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>localPath</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line500">line 500</a>
     </li></ul></dd>
     
 
@@ -852,7 +2291,334 @@ then get files in parallel
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line524">line 524</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line806">line 806</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="mkdirSudo"><span class="type-signature"></span>mkdirSudo<span class="signature">(server, remotePath, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Creates a remote directory
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remotePath</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line825">line 825</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="mktemp"><span class="type-signature"></span>mktemp<span class="signature">(server, suffix, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Creates a concurrent-safe temporary remote directory.
+
+It does not attempt to keep track of temp files created during the session.
+Thus it won t delete them on connection close.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>suffix</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, tmpDirName, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line789">line 789</a>
     </li></ul></dd>
     
 
@@ -1038,7 +2804,193 @@ recursive sftp put
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line553">line 553</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line904">line 904</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="putDirSudo"><span class="type-signature"></span>putDirSudo<span class="signature">(server, localPath, remotePath, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Uploads a local directory to the remote.
+Partly in series, partly parallel.
+Proceed such
+sudo rm -fr /remotePath
+sudo mkdir -p /remotePath
+recursive sftp mkdir
+recursive sftp put
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>localPath</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remotePath</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line967">line 967</a>
     </li></ul></dd>
     
 
@@ -1218,7 +3170,7 @@ recursive sftp put
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line404">line 404</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line562">line 562</a>
     </li></ul></dd>
     
 
@@ -1249,14 +3201,194 @@ recursive sftp put
 
     
 
-    <h4 class="name" id="readFile"><span class="type-signature"></span>readFile<span class="signature">(server, remoteFile, localPath, then)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="putFileSudo"><span class="type-signature"></span>putFileSudo<span class="signature">(server, localFile, remoteFile, then)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Downloads a file to the local
+    Uploads a file on the remote via sudo support
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>localFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remoteFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line593">line 593</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="readFile"><span class="type-signature"></span>readFile<span class="signature">(server, remoteFile, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Reads a file on the remote
 </div>
 
 
@@ -1328,7 +3460,152 @@ recursive sftp put
 
         <tr>
             
-                <td class="name"><code>localPath</code></td>
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line468">line 468</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="rmdir"><span class="type-signature"></span>rmdir<span class="signature">(server, remotePath, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Deletes a file or directory
+rm -fr /some/path
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remotePath</code></td>
             
 
             <td class="type">
@@ -1398,7 +3675,7 @@ recursive sftp put
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line383">line 383</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line747">line 747</a>
     </li></ul></dd>
     
 
@@ -1429,7 +3706,7 @@ recursive sftp put
 
     
 
-    <h4 class="name" id="rmdir"><span class="type-signature"></span>rmdir<span class="signature">(server, remotePath, then)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="rmdirSudo"><span class="type-signature"></span>rmdirSudo<span class="signature">(server, remotePath, then)</span><span class="type-signature"></span></h4>
 
     
 
@@ -1561,7 +3838,7 @@ sudo rm -fr /some/path
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line503">line 503</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line767">line 767</a>
     </li></ul></dd>
     
 
@@ -1592,7 +3869,7 @@ sudo rm -fr /some/path
 
     
 
-    <h4 class="name" id="run"><span class="type-signature"></span>run<span class="signature">(server, cmd, done)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="run"><span class="type-signature"></span>run<span class="signature">(server, cmd, doneEach, done)</span><span class="type-signature"></span></h4>
 
     
 
@@ -1606,6 +3883,10 @@ interactive
 also take care of
 - manage sudo cmd
 - log errors to output
+
+If cmd is an array, they are executed in serie,
+the pipe is open asap,
+you ll receive each stdout stderr data in serie
 </div>
 
 
@@ -1670,7 +3951,25 @@ also take care of
 
             
 
-            <td class="description last">String</td>
+            <td class="description last">String|[String]</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>doneEach</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)</td>
         </tr>
 
     
@@ -1729,190 +4028,7 @@ also take care of
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line284">line 284</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="runMultiple"><span class="type-signature"></span>runMultiple<span class="signature">(server, cmds, cmdComplete, then)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Executes a set of multiple and sequential commands.
-passive listener.
-
-Take care of everything, su sudo ect
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>server</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">ServerCredentials|ssh2.Client</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>cmds</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">[String]</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>cmdComplete</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">callback(String command, String response, ServerCredentials server)</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>then</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">callback(err, String allSessionText, ServerCredentials server)</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line314">line 314</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line385">line 385</a>
     </li></ul></dd>
     
 
@@ -2092,7 +4208,187 @@ Take care of everything, su sudo ect
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line442">line 442</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line643">line 643</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="writeFileSudo"><span class="type-signature"></span>writeFileSudo<span class="signature">(server, remoteFile, content, then)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Writes content to a remote file
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ServerCredentials|ssh2.Client</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>remoteFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>content</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>then</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">callback(err, ServerCredentials server, ssh2.Client conn)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line691">line 691</a>
     </li></ul></dd>
     
 
@@ -2134,13 +4430,13 @@ Take care of everything, su sudo ect
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ServerCredentials.html">ServerCredentials</a></li><li><a href="SSH2Utils.html">SSH2Utils</a></li></ul><h3>Global</h3><ul><li><a href="global.html#connect">connect</a></li><li><a href="global.html#sudoChallenge">sudoChallenge</a></li><li><a href="global.html#sudoExec">sudoExec</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ServerCredentials.html">ServerCredentials</a></li><li><a href="SSH2Utils.html">SSH2Utils</a></li></ul><h3>Global</h3><ul><li><a href="global.html#connect">connect</a></li><li><a href="global.html#returnOrThrow">returnOrThrow</a></li><li><a href="global.html#sudoChallenge">sudoChallenge</a></li><li><a href="global.html#sudoExec">sudoExec</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-beta3</a> on Fri May 08 2015 22:34:06 GMT+0800 (CST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-beta3</a> on Tue May 12 2015 00:14:42 GMT+0800 (CST)
 </footer>
 
 <script> prettyPrint(); </script>
