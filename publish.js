@@ -138,7 +138,7 @@ inquirer.prompt([{
   };
 
   var jsDoc = function(from, to){
-    return line.stream('jsdoc '+from+' -d '+to+'', function(){
+    return line.stream('jsdoc -r '+from+' -d '+to+'', function(){
       this.spinUntil(/.+/);
       this.success('completed');
       this.display();
