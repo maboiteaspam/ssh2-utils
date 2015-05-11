@@ -474,9 +474,7 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, then){
       var content = '';
       var streamErr;
       var stream = sftp.createReadStream(remoteFile);
-      console.error(stream)
       stream.on('data', function(d){
-        console.error(''+d)
         content += ''+d;
       });
       stream.on('error', function(e){
