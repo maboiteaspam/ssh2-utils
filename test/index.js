@@ -47,7 +47,6 @@ if( !process.env['TRAVIS'] ){
           done();
         });
       }else{
-        console.log('running machine '+running);
         hasBooted = false;
         done();
       }
@@ -57,10 +56,8 @@ if( !process.env['TRAVIS'] ){
   after(function(done){
     this.timeout(50000);
     vagrant.isRunning(function(running){
-      console.log('running machine '+running);
       if(hasBooted){
         vagrant.halt(function(){
-          console.log('halted');
           done();
         });
       } else {
@@ -259,12 +256,10 @@ describe('run', function(){
       setTimeout(function(){
         // re use connection
         ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
-          console.log('cxvxcv')
           stdout2.on('data', function(data){
             data.toString().should.match(/root/);
             stdout.toString().should.match(/session/);
             conn.end();
-            console.log('ddfsf')
             done();
           });
         });
@@ -534,7 +529,6 @@ describe('sftp putDir', function(){
     ssh.putDirSudo(hostPwd, fixturePath, '/root/putdir-test', function(err, server, conn){
       (!!err).should.be.false;
       ssh.fileExistsSudo(conn, '/root/putdir-test/temp'+t, function(err2, exists){
-        console.log(err2);
         (!!err2).should.be.false;
         (exists).should.be.true;
         done();
@@ -557,7 +551,7 @@ describe('sftp readFile', function(){
   it('can read a file from remote', function(done){
     ssh.readFile(hostPwd, '/home/vagrant/.bashrc', function(err, data){
       (!!err).should.be.false;
-      data.should.match('bashrc');
+      data.should.match(/bashrc/);
       done();
     });
   });
@@ -592,7 +586,8 @@ describe('sftp getFile', function(){
   });
 
   it('can download a file', function(done){
-    ssh.writeFile(hostPwd, tmpRemotePath+'/remote', t, function(err,server,conn){
+    ssh.writeFile(hostPwd, tmpRemotePath+'/remote'+t, t, function(err,server,conn){
+      (!!err).should.be.false;
       ssh.getFile(conn, tmpRemotePath+'/remote'+t, fixturePath + 'local'+t, function(err){
         (!!err).should.be.false;
         fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
