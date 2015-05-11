@@ -68,11 +68,14 @@
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#exec"><code>exec</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#run"><code>run</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#runMultiple"><code>runMultiple</code></a></li>
+<li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mktemp"><code>mktemp</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readFile"><code>readFile</code></a></li>
+<li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#getFile"><code>getFile</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDir"><code>putDir</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDirSudo"><code>putDirSudo</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readDir"><code>readDir</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putFile"><code>putFile</code></a></li>
+<li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putFileSudo"><code>putFileSudo</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mkdir"><code>mkdir</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mkdirSudo"><code>mkdirSudo</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#rmdir"><code>rmdir</code></a></li>
@@ -83,8 +86,9 @@
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExists"><code>fileExists</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#fileExistsSudo"><code>fileExistsSudo</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureFileContains"><code>ensureFileContains</code></a></li>
-<li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDirSudo"><code>ensureEmptyDirSudo</code></a></li>
+<li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureFileContainsSudo"><code>ensureFileContainsSudo</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDir"><code>ensureEmptyDir</code></a></li>
+<li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDirSudo"><code>ensureEmptyDirSudo</code></a></li>
 <li><a href="http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureOwnership"><code>ensureOwnership</code></a></li>
 </ul>
 </li>
@@ -242,10 +246,10 @@
         <span class="pl-en">console</span><span class="pl-c1">.log</span>(sessionText);
     });</pre></div>
 
-<p><a name="readFile"></a></p>
+<p><a name="getFile"></a></p>
 
 <h3>
-<a id="ssh2utilsreadfileserver-remotefile-localpath-callback" class="anchor" href="#ssh2utilsreadfileserver-remotefile-localpath-callback" aria-hidden="true"><span class="octicon octicon-link"></span></a>SSH2Utils.readFile(server, remoteFile, localPath, callback)</h3>
+<a id="ssh2utilsgetfileserver-remotefile-localpath-callback" class="anchor" href="#ssh2utilsgetfileserver-remotefile-localpath-callback" aria-hidden="true"><span class="octicon octicon-link"></span></a>SSH2Utils.getFile(server, remoteFile, localPath, callback)</h3>
 
 <p>Download a file from remote to local.</p>
 
@@ -279,11 +283,11 @@
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.readFile(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_remote<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_local<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
+    ssh.getFile(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_remote<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_local<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
         <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
     });</pre></div>
 
-<p><a name="readFile"></a></p>
+<p><a name="putFile"></a></p>
 
 <h3>
 <a id="ssh2utilsputfileserver-localfile-remotefile-callback" class="anchor" href="#ssh2utilsputfileserver-localfile-remotefile-callback" aria-hidden="true"><span class="octicon octicon-link"></span></a>SSH2Utils.putFile(server, localFile, remoteFile, callback)</h3>
