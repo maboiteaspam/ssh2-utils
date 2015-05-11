@@ -1,8 +1,3 @@
-cxvxcv
-ddfsf
-null
-running machine precise64
-halted
 # TOC
    - [ident](#ident)
    - [exec](#exec)
@@ -244,12 +239,10 @@ ssh.run(hostPwd,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts
   setTimeout(function(){
     // re use connection
     ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
-      console.log('cxvxcv')
       stdout2.on('data', function(data){
         data.toString().should.match(/root/);
         stdout.toString().should.match(/session/);
         conn.end();
-        console.log('ddfsf')
         done();
       });
     });
@@ -525,7 +518,6 @@ can put a local dir to a remote via sudo.
 ssh.putDirSudo(hostPwd, fixturePath, '/root/putdir-test', function(err, server, conn){
   (!!err).should.be.false;
   ssh.fileExistsSudo(conn, '/root/putdir-test/temp'+t, function(err2, exists){
-    console.log(err2);
     (!!err2).should.be.false;
     (exists).should.be.true;
     done();
@@ -547,8 +539,31 @@ ssh.putDir(hostPwd, fixturePath, '/root/putdir-test-fail', function(err, server,
 
 <a name="sftp-readfile"></a>
 # sftp readFile
+can read a file from remote.
+
+```js
+ssh.readFile(hostPwd, '/home/vagrant/.bashrc', function(err, data){
+  (!!err).should.be.false;
+  data.should.match(/bashrc/);
+  done();
+});
+```
+
 <a name="sftp-getfile"></a>
 # sftp getFile
+can download a file.
+
+```js
+ssh.writeFile(hostPwd, tmpRemotePath+'/remote'+t, t, function(err,server,conn){
+  (!!err).should.be.false;
+  ssh.getFile(conn, tmpRemotePath+'/remote'+t, fixturePath + 'local'+t, function(err){
+    (!!err).should.be.false;
+    fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
+    done();
+  });
+});
+```
+
 <a name="sftp-mktemp"></a>
 # sftp mktemp
 can safely create a remote temporary directory.
