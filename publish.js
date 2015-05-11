@@ -111,8 +111,8 @@ inquirer.prompt([{
   var gitPreferCleanTree = function(){
     var cmd = 'git status';
     return line.stream(cmd, function(){
-      this.must(/(est propre|is clean)/i,'Tree is unclean')
-        .or(line.confirmToStop('%s, stop now ?', true));
+      this.must(/(est propre|is clean)/ig, 'Tree should be clean')
+        .or(line.confirmToStop('Tree is unclean, stop now ?', true));
     });
   };
   var gitCommit = function(cmd){
@@ -131,6 +131,14 @@ inquirer.prompt([{
 
   var jsDox = function(from, to){
     return line.stream('jsdox --output '+to+' '+from, function(){
+      this.spinUntil(/.+/);
+      this.success('completed');
+      this.display();
+    });
+  };
+
+  var jsDoc = function(from, to){
+    return line.stream('jsdoc '+from+' -d '+to+'', function(){
       this.spinUntil(/.+/);
       this.success('completed');
       this.display();
@@ -187,7 +195,7 @@ inquirer.prompt([{
 
     streamOrDie('cp '+projectPath+'/README.md .');
     Object.keys(jsdox).forEach(function(projectRelativePath){
-      jsDox(projectPath+'/'+projectRelativePath, jsdox[projectRelativePath]);
+      jsDoc(projectPath+'/'+projectRelativePath, jsdox[projectRelativePath]);
     });
 
     streamOrDie('cd '+projectPath);
@@ -198,7 +206,6 @@ inquirer.prompt([{
     gitCommit('Generate doc '+releaseType+' '+revision);
 
     gitPush(''+sshUrl+' '+branch);
-    gitPush(''+sshUrl);
     gitStatus();
 
     streamOrDie('cd '+projectPath);
@@ -224,9 +231,8 @@ inquirer.prompt([{
   releaseProject('master', __dirname, releaseType, revision);
   generateDocumentation('gh-pages', __dirname, releaseType, revision);
 
-  transport.run(line, function(){
+  line.run(transport, function(){
     console.log('All done');
-    transport.close()
   });
 
 });
