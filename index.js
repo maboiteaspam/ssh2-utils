@@ -459,6 +459,37 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
 SSH2Utils.prototype.runMultiple = SSH2Utils.prototype.run;
 
 /**
+ * Reads a file on the remote
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.readFile = function(server, remoteFile, then){
+
+  connect(server, function(err,conn){
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, server, conn);
+
+      var content = '';
+      var streamErr;
+      var stream = sftp.createReadStream(remoteFile);
+      console.error(stream)
+      stream.on('data', function(d){
+        console.error(''+d)
+        content += ''+d;
+      });
+      stream.on('error', function(e){
+        streamErr = e;
+      });
+      stream.on('close', function(){
+        returnOrThrow(then, streamErr, content, server, conn);
+      });
+    });
+  });
+};
+
+/**
  * Downloads a file to the local
  *
  * @param server ServerCredentials|ssh2.Client
@@ -466,7 +497,7 @@ SSH2Utils.prototype.runMultiple = SSH2Utils.prototype.run;
  * @param localPath String
  * @param then callback(err, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.readFile = function(server, remoteFile, localPath, then){
+SSH2Utils.prototype.getFile = function(server, remoteFile, localPath, then){
 
   connect(server, function(err,conn){
     conn.sftp(function(err, sftp){
@@ -484,7 +515,7 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, localPath, then){
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
  * @param contain String
- * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(contains, err, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, then){
   var that = this;
@@ -492,7 +523,28 @@ SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, t
     if(stdout.length>0){
       then(true, err, stdout, stderr, server, conn)
     } else {
-      that.exec(conn, 'echo "'+contain+'" >> '+remoteFile, function(err,stdout,stderr,server,conn){
+      that.exec(conn, 'echo "'+contain+'" >> '+remoteFile, function(err, stdout, stderr, server, conn){
+        then(!!err, err, stdout, stderr, server, conn);
+      });
+    }
+  });
+};
+
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param contain String
+ * @param then callback(contains, err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureFileContainsSudo = function(server, remoteFile, contain, then){
+  var that = this;
+  that.exec(server, 'sudo grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
+    if(stdout.length>0){
+      then(true, err, stdout, stderr, server, conn)
+    } else {
+      that.exec(conn, 'sudo echo "'+contain+'" >> '+remoteFile, function(err,stdout,stderr,server,conn){
         then(!!err, err, stdout, stderr, server, conn);
       });
     }
@@ -528,9 +580,56 @@ SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
     });
   });
 
-  connect(server, function(err,conn){
+};
 
+/**
+ * Uploads a file on the remote via sudo support
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param localFile String
+ * @param remoteFile String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.putFileSudo = function(server, localFile, remoteFile, then){
+
+  var that = this;
+
+  debug('from %s to %s', path.relative(__dirname, localFile), remoteFile);
+
+  remoteFile = remoteFile.replace(/[\\]/g,'/'); // windows needs this
+  var remotePath = path.dirname(remoteFile);
+  var fileName = path.basename(remoteFile);
+
+  this.mktemp(server, pkg.name, function(err, tmpPath, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, server, conn);
+
+      debug('put %s %s',
+        path.relative(process.cwd(), localFile), path.relative(remotePath, remoteFile));
+
+      sftp.fastPut(localFile, tmpPath+'/'+fileName, function(err){
+        if(err) return returnOrThrow(then, err, server, conn);
+
+        that.mkdirSudo(conn,remotePath, function(err){
+          if(err) return returnOrThrow(then, err, server, conn);
+
+          that.exec(conn, 'sudo cp '+tmpPath+'/'+fileName+' '+remoteFile, function(err, stdout, stderr){
+            if(err) return returnOrThrow(then, err, server, conn);
+
+            that.rmdirSudo(conn, tmpPath+'/'+fileName, function(err){
+              returnOrThrow(then, err, server, conn);
+            });
+
+          });
+
+        });
+
+      });
+    });
   });
+
 };
 
 /**
@@ -563,7 +662,6 @@ SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
       try{
         debug('stream start');
         var wStream = sftp.createWriteStream(remoteFile, {flags: 'w+', encoding: null});
-        wStream.end(''+content);
         wStream.on('error', function (err) {
           debug('stream error %j', err);
           wStream.removeAllListeners('finish');
@@ -573,6 +671,7 @@ SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
           debug('stream finish');
           returnOrThrow(then, err, server, conn);
         });
+        wStream.end(''+content);
       }catch(ex){
         debug('stream ex %j', ex);
         return returnOrThrow(then, ex, server, conn);
@@ -674,6 +773,26 @@ SSH2Utils.prototype.rmdirSudo = function(server, remotePath, then){
       fineErr.code = 3;
     }
     returnOrThrow(then, fineErr, server, conn);
+  });
+};
+
+/**
+ * Creates a concurrent-safe temporary remote directory.
+ *
+ * It does not attempt to keep track of temp files created during the session.
+ * Thus it won t delete them on connection close.
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param suffix String
+ * @param then callback(err, tmpDirName, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.mktemp = function(server, suffix, then){
+  debug('mktemp %s',suffix);
+  this.exec(server, 'mktemp -d --suffix='+suffix, function mkdir (err, stderr, stdout, server, conn){
+    // if response is done on stderr when everything s fine,
+    // errors may go into stdout or fd.pipe[3], it is unclear and for sure untested
+    var tempPath = _s.trim(stderr);
+    returnOrThrow(then, null, tempPath, server, conn);
   });
 };
 
@@ -852,8 +971,10 @@ SSH2Utils.prototype.putDirSudo = function(server, localPath, remotePath, then){
   var tmpRemotePath = path.join('/tmp/ssh2-utils/', remotePath);
   that.ensureEmptyDirSudo(server, remotePath, function(err, server, conn){
     if(err) return returnOrThrow(then, err, server, conn);
+
     that.ensureEmptyDirSudo(conn, tmpRemotePath, function(err, server, conn){
       if(err) return returnOrThrow(then, err, server, conn);
+
       that.ensureOwnership(conn, tmpRemotePath, function(err, server, conn) {
         if (err) return returnOrThrow(then, err, server, conn);
 
@@ -923,7 +1044,7 @@ SSH2Utils.prototype.putDirSudo = function(server, localPath, remotePath, then){
  * @param localPath String
  * @param allDone callback(err, ServerCredentials server, ssh2.Client conn)
  */
-SSH2Utils.prototype.getDir = function(server,remotePath,localPath, allDone){
+SSH2Utils.prototype.getDir = function(server, remotePath, localPath, allDone){
 
   var that = this;
   server.username = server.username || server.userName || server.user;

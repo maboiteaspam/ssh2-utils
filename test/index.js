@@ -552,15 +552,167 @@ describe('sftp putDir', function(){
   });
 });
 
+describe('sftp readFile', function(){
+  this.timeout(10000);
+  it('can read a file from remote', function(done){
+    ssh.readFile(hostPwd, '/home/vagrant/.bashrc', function(err, data){
+      (!!err).should.be.false;
+      data.should.match('bashrc');
+      done();
+    });
+  });
+  /*
+  so far, ssh2 does not provide error echo
+
+   it('can properly fail to read a file from remote', function(done){
+   ssh.readFile(hostPwd, '~/NoSuchFile', function(err, data){
+   (!!err).should.be.true;
+   // todo,
+   // err message should match some
+   // err code may exists
+   done();
+   });
+   });
+   */
+});
+
+describe('sftp getFile', function(){
+  this.timeout(10000);
+  var t = (new Date()).getTime();
+
+  before(function(done){
+    fs.mkdirsSync(fixturePath);
+    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
+      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
+        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
+          done();
+        });
+      });
+    });
+  });
+
+  it('can download a file', function(done){
+    ssh.writeFile(hostPwd, tmpRemotePath+'/remote', t, function(err,server,conn){
+      ssh.getFile(conn, tmpRemotePath+'/remote'+t, fixturePath + 'local'+t, function(err){
+        (!!err).should.be.false;
+        fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
+        done();
+      });
+    });
+  });
+
+});
+
+describe('sftp mktemp', function(){
+  this.timeout(10000);
+  var t = (new Date()).getTime();
+
+  it('can safely create a remote temporary directory', function(done){
+    ssh.mktemp(hostPwd, 'some', function(err, tempPath, server, conn){
+      ssh.writeFile(conn, tempPath+'/test', t, function(){
+        ssh.readFile(conn, tempPath+'/test', function(err, data){
+          (!!err).should.be.false;
+          data.should.eql(''+t);
+          done();
+        });
+      });
+    });
+  });
+});
+
+describe('sftp ensureFileContains', function(){
+  this.timeout(10000);
+  var t = (new Date()).getTime();
+
+  before(function(done){
+    fs.mkdirsSync(fixturePath);
+    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
+      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
+        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
+          done();
+        });
+      });
+    });
+  });
+
+  it('can ensure a file contains a certain piece of text', function(done){
+    ssh.writeFile(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err){
+      (!!err).should.be.false;
+      ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(contains, err){
+        (!!err).should.be.false;
+        (contains).should.be.true;
+        done(err);
+      });
+    });
+  });
+
+  it('can ensure a file contains a certain piece of text via sudo', function(done){
+    t++;
+    fs.writeFileSync(fixturePath + 'local'+t, t);
+    ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/remote8'+t, function(err){
+      (!!err).should.be.false;
+      ssh.ensureFileContainsSudo(hostPwd, '/root/remote8'+t, t, function(contains, err){
+        (!!err).should.be.false;
+        (contains).should.be.true;
+        done(err);
+      });
+    });
+  });
+
+});
+
+
+describe('sftp putFile', function(){
+  this.timeout(10000);
+  var t = (new Date()).getTime();
+
+  before(function(done){
+    fs.mkdirsSync(fixturePath);
+    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
+      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
+        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
+          done();
+        });
+      });
+    });
+  });
+
+  it('can put file on remote', function(done){
+    fs.writeFileSync(fixturePath + 'local'+t, t);
+    ssh.putFile(hostPwd, fixturePath + 'local'+t, tmpRemotePath+'/remote'+t, function(err, server, conn){
+      (!!err).should.be.false;
+      ssh.ensureFileContains(conn, tmpRemotePath+'/remote'+t, t, function(contains, err){
+        (!!err).should.be.false;
+        (contains).should.be.true;
+        done();
+      });
+    });
+  });
+
+  it('can put file on remote via sudo', function(done){
+    t++;
+    fs.writeFileSync(fixturePath + 'local'+t, t);
+    ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/some'+t, function(err){
+      (!!err).should.be.false;
+      ssh.ensureFileContainsSudo(hostPwd, '/root/some'+t, t, function(contains, err){
+        (!!err).should.be.false;
+        (contains).should.be.true;
+        done(err);
+      });
+    });
+  });
+
+});
+
 describe('sftp', function(){
   this.timeout(10000);
   var t = (new Date()).getTime();
 
   before(function(done){
     fs.mkdirsSync(fixturePath);
-    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(){
-      ssh.exec(hostPwd, 'sudo mkdir -p '+tmpRemotePath+'', function(){
-        ssh.exec(hostPwd, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
+    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
+      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
+        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
           done();
         });
       });
@@ -573,42 +725,16 @@ describe('sftp', function(){
       done();
     });
   });
-  it('can write a file', function(done){
-    fs.writeFileSync(fixturePath + 'local'+t, t);
-    ssh.putFile(hostPwd, fixturePath + 'local'+t, tmpRemotePath+'/remote'+t, function(err, server, conn){
-      (!!err).should.be.false;
-      ssh.fileExists(conn, tmpRemotePath+'/remote'+t, function(err, exists){
-        (!!err).should.be.false;
-        (exists).should.be.true;
-        done();
-      });
-    });
-  });
-  it('can download a file', function(done){
-    ssh.readFile(hostPwd, tmpRemotePath+'/remote'+t, fixturePath + 'local'+t, function(err){
-      (!!err).should.be.false;
-      fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
-      done();
-    });
-  });
   it('can write a file content', function(done){
     ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err){
       (!!err).should.be.false;
       ssh.fileExists(hostPwd, tmpRemotePath+'/remote2'+t, function(err){
         (!!err).should.be.false;
-        ssh.readFile(hostPwd, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
+        ssh.getFile(hostPwd, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
           (!!err).should.be.false;
           fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
           done();
         });
-      });
-    });
-  });
-  it('can ensure a file contains a certain piece of text', function(done){
-    ssh.writeFile(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err){
-      ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(contains, err){
-        (contains).should.be.true;
-        done(err);
       });
     });
   });
