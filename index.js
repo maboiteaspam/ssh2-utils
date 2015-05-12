@@ -350,8 +350,8 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
       that.execOne(conn_ || server, c, function(err, stdout, stderr, server, conn){
         conn_ = conn;
         err_ = err;
-        stdout_ = stdout;
-        stderr_ = stderr;
+        stdout_ += stdout;
+        stderr_ += stderr;
         if(doneEach) doneEach(err, stdout, stderr, server, conn);
         next();
       });
@@ -472,18 +472,74 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, then){
       if(err) return returnOrThrow(then, err, server, conn);
 
       var content = '';
-      var streamErr;
+      var readErr;
       var stream = sftp.createReadStream(remoteFile);
       stream.on('data', function(d){
         content += ''+d;
       });
       stream.on('error', function(e){
-        streamErr = e;
+        readErr = e;
       });
       stream.on('close', function(){
-        returnOrThrow(then, streamErr, content, server, conn);
+        returnOrThrow(then, readErr, content, server, conn);
       });
     });
+  });
+};
+
+/**
+ * Reads a file on the remote via sudo
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.readFileSudo = function(server, remoteFile, then){
+
+  this.run(server, 'sudo cat '+remoteFile+'', function(err, stdout, stderr, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+
+    var content = '';
+    var readErr;
+    stdout.on('data', function(d){
+      content += ''+d;
+    });
+    stdout.on('error', function(e){
+      readErr = e;
+    });
+    stdout.on('close', function(){
+      returnOrThrow(then, readErr, content, server, conn);
+    });
+  });
+};
+
+/**
+ * Reads a large file on the remote
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, Stream data, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.streamReadFile = function(server, remoteFile, then){
+
+  connect(server, function(err,conn){
+    conn.sftp(function(err, sftp){
+      var stream = sftp.createReadStream(remoteFile);
+      returnOrThrow(then, err, stream, server, conn);
+    });
+  });
+};
+
+/**
+ * Reads a large file on the remote via sudo
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, Stream data, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.streamReadFileSudo = function(server, remoteFile, then){
+  this.run(server, 'sudo cat '+remoteFile+'', function(err, stdout, stderr, server, conn){
+    returnOrThrow(then, err, stdout, server, conn);
   });
 };
 
