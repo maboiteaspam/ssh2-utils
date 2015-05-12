@@ -447,8 +447,11 @@ describe('sftp ensureEmptyDir', function(){
   });
   it('can ensure a remote dir is empty and exists via sudo', function(done){
     ssh.ensureEmptyDirSudo(hostPwd, '/tmp/empty-dir-sudo', function(err, server, conn){
+      if(err) console.error(err);
+      (!!err).should.be.false;
       ssh.fileExistsSudo(conn, '/tmp/empty-dir-sudo', function(err2, exists){
-        (!!err).should.be.false;
+        if(err2) console.error(err2);
+        (!!err2).should.be.false;
         (exists).should.be.true;
         done();
       });
@@ -527,8 +530,10 @@ describe('sftp putDir', function(){
   });
   it('can put a local dir to a remote via sudo', function(done){
     ssh.putDirSudo(hostPwd, fixturePath, '/root/putdir-test', function(err, server, conn){
+      if(err) console.error(err);
       (!!err).should.be.false;
       ssh.fileExistsSudo(conn, '/root/putdir-test/temp'+t, function(err2, exists){
+        if(err2) console.error(err2);
         (!!err2).should.be.false;
         (exists).should.be.true;
         done();
@@ -550,24 +555,21 @@ describe('sftp readFile', function(){
   this.timeout(10000);
   it('can read a file from remote', function(done){
     ssh.readFile(hostPwd, '/home/vagrant/.bashrc', function(err, data){
+      if(err) console.error(err);
       (!!err).should.be.false;
       data.should.match(/bashrc/);
       done();
     });
   });
-  /*
-  so far, ssh2 does not provide error echo
-
-   it('can properly fail to read a file from remote', function(done){
-   ssh.readFile(hostPwd, '~/NoSuchFile', function(err, data){
-   (!!err).should.be.true;
-   // todo,
-   // err message should match some
-   // err code may exists
-   done();
-   });
-   });
-   */
+  it('can properly fail to read a file from remote', function(done){
+    ssh.readFile(hostPwd, '~/NoSuchFile', function(err, data){
+      if(err) console.error(err);
+      (!!err).should.be.true;
+      err.code.should.eql(2);
+      err.message.should.match(/No such file/);
+      done();
+    });
+  });
 });
 
 describe('sftp getFile', function(){
