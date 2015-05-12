@@ -1,3 +1,5 @@
+var SegfaultHandler = require('segfault-handler');
+SegfaultHandler.registerHandler();
 
 require('should');
 var fs = require('fs-extra');
@@ -218,7 +220,7 @@ describe('exec multiple', function(){
       done()
     });
   });
-  it('can fail properly while executing multiple commands', function(done){
+  it('can fail properly', function(done){
     ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], function(err, stdout, stderr, server){
       (!!err).should.be.false;
       stdout.should.match(/root/);
@@ -226,7 +228,7 @@ describe('exec multiple', function(){
       done();
     });
   });
-  it('can fail properly while executing multiple commands', function(done){
+  it('can fail properly', function(done){
     var doneCnt = 0;
     var failedCnt = 0;
     var doneEach = function(err){
@@ -242,11 +244,24 @@ describe('exec multiple', function(){
       done();
     });
   });
+  it('can process commands in order', function(done){
+    var cmds = [
+      'echo "processed"',
+      'echo "in"',
+      'echo "order"'
+    ];
+    ssh.exec(hostPwd, cmds, function(err, stdout, stderr, server, conn){
+      (!!err).should.be.false;
+      stdout.replace(/\n/g, ' ').should.eql('processed in order');
+      conn.end();
+      done();
+    });
+  });
 });
 
 describe('run', function(){
   this.timeout(10000);
-  it('can run sudo command with password', function(done){
+  it('can execute sudo command with password', function(done){
     ssh.run(hostPwd,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
       (!!err).should.be.false;
       var stdout = '';
@@ -266,7 +281,7 @@ describe('run', function(){
       },500);
     });
   });
-  it('can connect with private key and run sudo command with password', function(done){
+  it('can execute sudo command with key', function(done){
     ssh.run(hostKey,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
       (!!err).should.be.false;
       var stdout = '';
@@ -286,7 +301,7 @@ describe('run', function(){
       },500);
     });
   });
-  it('run can fail properly', function(done){
+  it('can fail properly', function(done){
     ssh.run(hostPwd,'ls -alh /var/log/nofile', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
@@ -305,7 +320,7 @@ describe('run', function(){
       (!!err).should.be.false;
     });
   });
-  it('run can fail properly', function(done){
+  it('can fail properly', function(done){
     ssh.run(hostPwd, 'dsscdc', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
@@ -328,7 +343,7 @@ describe('run', function(){
 
 describe('run multiple', function(){
   this.timeout(10000);
-  it('can multiple run sudo command with password', function(done){
+  it('can execute multiple commands with sudo mixin using password', function(done){
     var cmds = [
       'sudo ls -alh /var/log/{auth.log,secure}',
       'sudo ls -alh /var/log/{auth.log,secure}',
@@ -350,7 +365,7 @@ describe('run multiple', function(){
 
     });
   });
-  it('can run multiple sudo command with password', function(done){
+  it('can execute multiple commands with sudo mixin using key', function(done){
     var cmds = [
       'sudo ls -alh /var/log/{auth.log,secure}',
       'sudo ls -alh /var/log/{auth.log,secure}',
@@ -370,7 +385,7 @@ describe('run multiple', function(){
       });
     });
   });
-  it('can run multiple command and fail properly', function(done){
+  it('can fail properly', function(done){
     var cmds = [
       'sudo ls -alh /var/log/{auth.log,secure}',
       'ls -alh /var/log/',
@@ -382,6 +397,7 @@ describe('run multiple', function(){
       var stderr = '';
       stdouts.on('data', function(data){
         stdout+=''+data;
+        console.error(''+data);
       });
       stderrs.on('data', function(data){
         stderr+=''+data;
@@ -395,7 +411,7 @@ describe('run multiple', function(){
       });
     });
   });
-  it('can run multiple sudo command and fail properly', function(done){
+  it('can fail properly', function(done){
     var cmds = [
       'sudo tail -f /var/log/{auth.log,secure}',
       'ls -alh /var/log/',
@@ -561,13 +577,68 @@ describe('sftp readFile', function(){
       done();
     });
   });
+  it('can read a file from remote via sudo', function(done){
+    ssh.readFile(hostPwd, '/root/.bashrc', function(err, data){
+      if(err) console.error(err);
+      (!!err).should.be.false;
+      data.should.match(/bashrc/);
+      done();
+    });
+  });
   it('can properly fail to read a file from remote', function(done){
-    ssh.readFile(hostPwd, '~/NoSuchFile', function(err, data){
+    ssh.readFileSudo(hostPwd, '~/NoSuchFile', function(err, data){
       if(err) console.error(err);
       (!!err).should.be.true;
       err.code.should.eql(2);
       err.message.should.match(/No such file/);
       done();
+    });
+  });
+});
+
+describe('sftp streamReadFile', function(){
+  this.timeout(30000);
+  before(function(done){
+    var cmds = [
+      'rm -fr /home/vagrant/sample.txt',
+      //'dd if=/dev/urandom of=/home/vagrant/sample.txt bs=1M count=1',
+      'yes 123456789 | head -16777772 > /home/vagrant/sample.txt',
+      'echo end >> /home/vagrant/sample.txt',
+      'ls -alh /home/vagrant/sample.txt'
+    ];
+    ssh.exec(hostPwd, cmds, function(err){
+      if(err) console.error(err);
+      done();
+    });
+  });
+  it('can read large files', function(done){
+    this.timeout(500000);
+    ssh.streamReadFile(hostPwd, '/home/vagrant/sample.txt', function(err, stream){
+      if(err) console.error(err);
+      (!!err).should.be.false;
+      var lastData;
+      stream.on('data', function(d){
+        lastData = d;
+      });
+      stream.on('close', function(){
+        (''+lastData).should.match(/end\s+$/);
+        done();
+      });
+    });
+  });
+  it('can read large files via sudo', function(done){
+    this.timeout(5000000);
+    ssh.streamReadFileSudo(hostPwd, '/home/vagrant/sample.txt', function(err, stream){
+      if(err) console.error(err);
+      (!!err).should.be.false;
+      var lastData;
+      stream.on('data', function(d){
+        lastData = d;
+      });
+      stream.on('close', function(){
+        (''+lastData).should.match(/end\s+$/);
+        done();
+      });
     });
   });
 });
