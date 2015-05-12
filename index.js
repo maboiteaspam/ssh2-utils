@@ -725,11 +725,11 @@ SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
  */
 SSH2Utils.prototype.fileExistsSudo = function(server, remoteFile, then){
 
-  var remotePath = path.dirname(remoteFile);
+  remoteFile = path.normalize(remoteFile).replace(/\\/g, '/');
   var remoteFileName = path.basename(remoteFile);
   debug('fileExistsSudo %s', remoteFile);
 
-  this.exec(server, 'sudo ls -alh '+path.normalize(remotePath)+'/', function(err, stdout, stderr, server, conn){
+  this.exec(server, 'sudo ls -alh '+path.normalize(remoteFile)+'', function(err, stdout, stderr, server, conn){
     returnOrThrow(then, err, !!stdout.match(remoteFileName), server, conn);
   });
 };
