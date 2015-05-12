@@ -1,6 +1,3 @@
-var SegfaultHandler = require('segfault-handler');
-SegfaultHandler.registerHandler();
-
 require('should');
 var fs = require('fs-extra');
 var _ = require('underscore');
