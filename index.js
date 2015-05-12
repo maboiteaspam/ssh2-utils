@@ -727,9 +727,10 @@ SSH2Utils.prototype.fileExistsSudo = function(server, remoteFile, then){
 
   remoteFile = path.normalize(remoteFile).replace(/\\/g, '/');
   var remoteFileName = path.basename(remoteFile);
+  var remotePath = path.dirname(remoteFile);
   debug('fileExistsSudo %s', remoteFile);
 
-  this.exec(server, 'sudo ls -alh '+path.normalize(remoteFile)+'', function(err, stdout, stderr, server, conn){
+  this.exec(server, 'sudo ls -alh '+remotePath+'', function(err, stdout, stderr, server, conn){
     returnOrThrow(then, err, !!stdout.match(remoteFileName), server, conn);
   });
 };
