@@ -145,6 +145,9 @@ var sudoChallenge = function(stream, pwd, then){
   stream.on('close', checkEmptyOutputCommands);
 };
 
+// todo
+// better not to do that as it s a global
+process.setMaxListeners(100);
 /**
  *
  * @constructor
@@ -194,11 +197,55 @@ var connect = function(server, done){
         if(stderr) debug(''+stderr);
         done(stderr, null);
       });
+
+
+      // manage process termination
+      conn.pendingStreams = [];
+      var superEnd = conn.end;
+      conn.end = function(){
+        conn.pendingStreams.forEach(function(stream){
+          stream.kill(conn.pendingStreams.length);
+        });
+        conn.pendingStreams = [];
+        superEnd.call(conn);
+      };
+      // manage user pressing ctrl+C
+      var sigIntSent = function(){
+        conn.end();
+      };
+      process.on('SIGINT', sigIntSent);
+      conn.on('close',function(){
+        process.removeListener('SIGINT', sigIntSent);
+      });
+      conn.on('end',function(){
+        process.removeListener('SIGINT', sigIntSent);
+      });
     }catch(ex){
       debug(''+ex);
       done(ex, null);
     }
   }
+};
+
+/**
+ *
+ * @param cmd String
+ * @param stream Stream
+ */
+var sendSigInt = function(cmd, stream, length){
+  debug('sendSigInt '+cmd);
+  try{
+    // this is a workaround for more ssh implementations
+    for(var i=0;i<length;i++){
+      stream.write("\x03");
+    }
+  }catch(ex){ }
+  // this only works with openssh@centos
+  try{
+    for(var i=0;i<length;i++){
+      stream.signal('SIGINT');
+    }
+  }catch(ex){ }
 };
 
 /**
@@ -237,31 +284,17 @@ var sudoExec = function(conn, server, cmd, done){
         if(hasLoginError) debug(
           'login failure, hasLoginError:%j', hasLoginError);
       });
-    }else{
-
     }
 
-    // manage user pressing ctrl+C
-    var sigIntSent = function(){
-      // this is supposed to be compatible : /
-      try{
-        stream.signal('SIGINT');
-      }catch(ex){ console.log(ex) }
-      // but this only works with openssh@centos
-      try{
-        // this is a workaround for more ssh implementations
-        stream.write("\x03");
-      }catch(ex){ console.log(ex) }
-      setTimeout(function(){
-        conn.end();
-        // if the connection ends to soon,
-        // suspect the remote process is not killed.
-      },2000);
+    stream.kill = function(length){
+      sendSigInt(cmd, stream, length || 1);
     };
-    process.on('SIGINT', sigIntSent);
+    // manage process termination with open handle
     stream.on('close', function(){
-      process.removeListener('SIGINT', sigIntSent);
+      var k = conn.pendingStreams.indexOf(stream);
+      if(k>-1) conn.pendingStreams.splice(k,1);
     });
+    conn.pendingStreams.push(stream);
   });
 };
 
@@ -285,10 +318,10 @@ SSH2Utils.prototype.getConnReady = connect;
 SSH2Utils.prototype.execOne = function(server, cmd, done){
 
   connect(server, function(err, conn){
-    if( err) return returnOrThrow(done, err, null,''+err, server, conn);
+    if( err) return returnOrThrow(done, err, '', ''+err, server, conn);
 
     sudoExec(conn, server, cmd, function(err, stream){
-      if( err) return returnOrThrow(done, err, null,''+err, server, conn);
+      if( err) return returnOrThrow(done, err, '', ''+err, server, conn);
 
       var stderr = '';
       var stdout = '';
@@ -343,8 +376,8 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
   var cmds = [];
   var conn_;
   var err_;
-  var stdout_;
-  var stderr_;
+  var stdout_ = '';
+  var stderr_ = '';
   cmd.forEach(function(c){
     cmds.push(function(next){
       that.execOne(conn_ || server, c, function(err, stdout, stderr, server, conn){
@@ -359,7 +392,7 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
   });
 
   async.series(cmds, function(){
-    done(err_, stdout_, stderr_, server, conn_);
+    returnOrThrow(done, err_, stdout_, stderr_, server, conn_);
   });
 
 };
@@ -401,9 +434,10 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
     cmd.forEach(function(c, i){
       cmds.push(function(next){
         sudoExec(conn, server, c, function(err, stream){
+          if(err) return returnOrThrow(done, err, stream, stream.stderr, server, conn);
+
           conn_ = conn;
           err_ = err;
-
 
           (function(stream, i){
             var onStdoutData = function(d){
@@ -416,7 +450,7 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
             stream.stderr.on('data', onStderrData);
             var onClose = function(err){
               setTimeout(function(){
-                if(i+1===cmds.length){
+                if(i===cmds.length){
                   stdoutStream.emit('close', err);
                 }
                 stream.removeListener('close', onClose);
@@ -425,12 +459,14 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
               },500);
             };
             stream.on('close', onClose);
-          })(stream, i);
+          })(stream, i+1);
 
-          if(!stream_){
+          if(!stream_){ // execute only once
             returnOrThrow(done, err, stdoutStream, stderrStream, server, conn);
           }
+
           if(doneEach) doneEach(err, stream, stream.stderr, server, conn);
+
           stream_ = stream;
           next();
 
@@ -471,6 +507,7 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, then){
     conn.sftp(function(err, sftp){
       if(err) return returnOrThrow(then, err, server, conn);
 
+      debug('createReadStream %s', remoteFile);
       var content = '';
       var readErr;
       var stream = sftp.createReadStream(remoteFile);
@@ -480,7 +517,15 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, then){
       stream.on('error', function(e){
         readErr = e;
       });
+      //see https://github.com/mscdex/ssh2-streams/issues/7
+      var tout = setTimeout(function(){
+        stream.destroy();
+        var err = new Error('No such file or directory (timeout)');
+        err.code = 2;
+        returnOrThrow(then, err, '', server, conn);
+      }, 20000);
       stream.on('close', function(){
+        clearTimeout(tout);
         returnOrThrow(then, readErr, content, server, conn);
       });
     });
@@ -496,10 +541,10 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, then){
  */
 SSH2Utils.prototype.readFileSudo = function(server, remoteFile, then){
 
+  var content = '';
   this.run(server, 'sudo cat '+remoteFile+'', function(err, stdout, stderr, server, conn){
-    if(err) return returnOrThrow(then, err, server, conn);
+    if(err) return returnOrThrow(then, err, content, server, conn);
 
-    var content = '';
     var readErr;
     stdout.on('data', function(d){
       content += ''+d;
