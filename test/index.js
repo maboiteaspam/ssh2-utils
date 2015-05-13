@@ -610,7 +610,7 @@ describe('sftp streamReadFile', function(){
   });
   it('can read large files', function(done){
     this.timeout(500000);
-    process.env['debug'] = ''; // prevent large files to output on stdout
+    process.env['DEBUG'] = ''; // prevent large files to output on stdout
     ssh.streamReadFile(hostPwd, '/home/vagrant/sample.txt', function(err, stream){
       if(err) console.error(err);
       (!!err).should.be.false;
@@ -620,14 +620,14 @@ describe('sftp streamReadFile', function(){
       });
       stream.on('close', function(){
         (''+lastData).should.match(/end\s+$/);
-        process.env['debug'] = 'ssh2-utils';
+        process.env['DEBUG'] = 'ssh2-utils';
         done();
       });
     });
   });
   it('can read large files via sudo', function(done){
     this.timeout(5000000);
-    process.env['debug'] = ''; // prevent large files to output on stdout
+    process.env['DEBUG'] = ''; // prevent large files to output on stdout
     ssh.streamReadFileSudo(hostPwd, '/home/vagrant/sample.txt', function(err, stream){
       if(err) console.error(err);
       (!!err).should.be.false;
@@ -637,7 +637,7 @@ describe('sftp streamReadFile', function(){
       });
       stream.on('close', function(){
         (''+lastData).should.match(/end\s+$/);
-        process.env['debug'] = 'ssh2-utils';
+        process.env['DEBUG'] = 'ssh2-utils';
         done();
       });
     });
