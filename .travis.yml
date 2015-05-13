@@ -13,4 +13,5 @@ install:
 script:
   - sh ./.travis-ssh.sh
   - npm test
+  - ps aux | grep tail
 sudo: true
