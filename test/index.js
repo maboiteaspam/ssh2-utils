@@ -434,6 +434,7 @@ describe('run multiple', function(){
     var cmds = [
       'sudo tail -f ~/.bashrc',
       'sudo tail -f /var/log/secure',
+      'sudo tail -f /var/log/auth.log',
       'ls -alh /var/log/',
       'dsscdc'
     ];
