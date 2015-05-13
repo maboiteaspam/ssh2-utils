@@ -610,7 +610,6 @@ describe('sftp streamReadFile', function(){
   });
   it('can read large files', function(done){
     this.timeout(500000);
-    process.env['DEBUG'] = ''; // prevent large files to output on stdout
     ssh.streamReadFile(hostPwd, '/home/vagrant/sample.txt', function(err, stream){
       if(err) console.error(err);
       (!!err).should.be.false;
@@ -620,28 +619,34 @@ describe('sftp streamReadFile', function(){
       });
       stream.on('close', function(){
         (''+lastData).should.match(/end\s+$/);
-        process.env['DEBUG'] = 'ssh2-utils';
         done();
       });
     });
   });
-  it('can read large files via sudo', function(done){
-    this.timeout(5000000);
-    process.env['DEBUG'] = ''; // prevent large files to output on stdout
-    ssh.streamReadFileSudo(hostPwd, '/home/vagrant/sample.txt', function(err, stream){
-      if(err) console.error(err);
-      (!!err).should.be.false;
-      var lastData;
-      stream.on('data', function(d){
-        lastData = d;
-      });
-      stream.on('close', function(){
-        (''+lastData).should.match(/end\s+$/);
-        process.env['DEBUG'] = 'ssh2-utils';
-        done();
+
+  if( !process.env['TRAVIS'] ){
+    /*
+    can t test this on travis,
+    because of debug enabled, it will output
+    the whole file to stdout
+    As a result it exceeds the limit of 4MB output log in travis.
+     */
+    it('can read large files via sudo', function(done){
+      this.timeout(5000000);
+      ssh.streamReadFileSudo(hostPwd, '/home/vagrant/sample.txt', function(err, stream){
+        if(err) console.error(err);
+        (!!err).should.be.false;
+        var lastData;
+        stream.on('data', function(d){
+          lastData = d;
+        });
+        stream.on('close', function(){
+          (''+lastData).should.match(/end\s+$/);
+          done();
+        });
       });
     });
-  });
+  }
 });
 
 describe('sftp getFile', function(){
