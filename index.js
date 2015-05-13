@@ -215,10 +215,14 @@ var connect = function(server, done){
       };
       process.on('SIGINT', sigIntSent);
       conn.on('close',function(){
-        process.removeListener('SIGINT', sigIntSent);
+        try{
+          process.removeListener('SIGINT', sigIntSent);
+        }catch(ex){}
       });
       conn.on('end',function(){
-        process.removeListener('SIGINT', sigIntSent);
+        try{
+          process.removeListener('SIGINT', sigIntSent);
+        }catch(ex){}
       });
     }catch(ex){
       debug(''+ex);
