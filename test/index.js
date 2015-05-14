@@ -817,7 +817,7 @@ describe('sftp ensureFileContains', function(){
   it('can ensure a file contains a certain piece of text', function(done){
     ssh.writeFile(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err){
       (!!err).should.be.false;
-      ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(contains, err){
+      ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
         done(err);
@@ -830,7 +830,7 @@ describe('sftp ensureFileContains', function(){
     fs.writeFileSync(fixturePath + 'local'+t, t);
     ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/remote8'+t, function(err){
       (!!err).should.be.false;
-      ssh.ensureFileContainsSudo(hostPwd, '/root/remote8'+t, t, function(contains, err){
+      ssh.ensureFileContainsSudo(hostPwd, '/root/remote8'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
         done(err);
@@ -859,7 +859,7 @@ describe('sftp putFile', function(){
     fs.writeFileSync(fixturePath + 'local'+t, t);
     ssh.putFile(hostPwd, fixturePath + 'local'+t, tmpRemotePath+'/remote'+t, function(err, server, conn){
       (!!err).should.be.false;
-      ssh.ensureFileContains(conn, tmpRemotePath+'/remote'+t, t, function(contains, err){
+      ssh.ensureFileContains(conn, tmpRemotePath+'/remote'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
         conn.end();
@@ -873,7 +873,7 @@ describe('sftp putFile', function(){
     fs.writeFileSync(fixturePath + 'local'+t, t);
     ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/some'+t, function(err){
       (!!err).should.be.false;
-      ssh.ensureFileContainsSudo(hostPwd, '/root/some'+t, t, function(contains, err){
+      ssh.ensureFileContainsSudo(hostPwd, '/root/some'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
         done(err);
