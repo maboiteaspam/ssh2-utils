@@ -503,18 +503,18 @@ SSH2Utils.prototype.runMultiple = SSH2Utils.prototype.run;
  *
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
- * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(err, String content, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.readFile = function(server, remoteFile, then){
 
+  var content = '';
   connect(server, function(err, conn){
-    if(err) return returnOrThrow(then, err, '', server, conn);
+    if(err) return returnOrThrow(then, err, content, server, conn);
 
     conn.sftp(function(err, sftp){
-      if(err) return returnOrThrow(then, err, '', server, conn);
+      if(err) return returnOrThrow(then, err, content, server, conn);
 
       debug('createReadStream %s', remoteFile);
-      var content = '';
       var stream = sftp.createReadStream(remoteFile);
       stream.on('data', function(d){
         content += ''+d;
@@ -535,7 +535,7 @@ SSH2Utils.prototype.readFile = function(server, remoteFile, then){
  *
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
- * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(err, String content, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.readFileSudo = function(server, remoteFile, then){
 
@@ -612,16 +612,16 @@ SSH2Utils.prototype.getFile = function(server, remoteFile, localPath, then){
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
  * @param contain String
- * @param then callback(contains, err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, then){
   var that = this;
   that.exec(server, 'grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
     if(stdout.length>0){
-      then(true, err, stdout, stderr, server, conn)
+      then(err, true, server, conn);
     } else {
       that.exec(conn, 'echo "'+contain+'" >> '+remoteFile, function(err, stdout, stderr, server, conn){
-        then(!!err, err, stdout, stderr, server, conn);
+        then(err, !!err, server, conn);
       });
     }
   });
@@ -633,16 +633,16 @@ SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, t
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
  * @param contain String
- * @param then callback(contains, err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.ensureFileContainsSudo = function(server, remoteFile, contain, then){
   var that = this;
   that.exec(server, 'sudo grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
     if(stdout.length>0){
-      then(true, err, stdout, stderr, server, conn)
+      then(err, true, server, conn);
     } else {
       that.exec(conn, 'sudo echo "'+contain+'" >> '+remoteFile, function(err,stdout,stderr,server,conn){
-        then(!!err, err, stdout, stderr, server, conn);
+        then(err, !!err, server, conn);
       });
     }
   });
