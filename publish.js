@@ -1,6 +1,7 @@
 
 var pkg = require('./package.json');
 var github = require('./github.json');
+var ghApi = require('./github');
 var inquirer = require('inquirer');
 var semver = require('semver');
 var fs = require('fs');
@@ -150,6 +151,30 @@ inquirer.prompt([{
       this.display();
     });
   };
+  var gitHubRelease = function(branch, tag_name, releaseType){
+    return line.then(function(then){
+      ghApi.authenticate({
+        type: "basic",
+        username: github.user,
+        password: github.password
+      });
+      ghApi.releases.createRelease({
+        owner: github.owner || github.user,
+        repo: github.repo || pkg.name,
+        tag_name: tag_name,
+        target_commitish: branch,
+        //name: "node-github-name",
+        //body: "node-github-body",
+        //draft: false,
+        prerelease: releaseType==='prerelease'
+      },
+      function(err, res) {
+        if(err)console.log(err);
+        then();
+      }
+      );
+    });
+  };
 
   var ensureFileContain = function(file, data){
     var c = fs.readFileSync(file);
@@ -174,6 +199,7 @@ inquirer.prompt([{
     gitCommit('Publish '+releaseType+' '+revision);
     gitPush(sshUrl+' '+branch+'');
     streamDisplay('npm publish');
+    gitHubRelease('master', revision, releaseType);
   };
 
 
