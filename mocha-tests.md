@@ -10,11 +10,11 @@
    - [sftp readFile](#sftp-readfile)
    - [sftp getFile](#sftp-getfile)
    - [sftp mktemp](#sftp-mktemp)
+   - [sftp mkdir](#sftp-mkdir)
+   - [sftp rmdir](#sftp-rmdir)
+   - [sftp writeFile](#sftp-writefile)
    - [sftp ensureFileContains](#sftp-ensurefilecontains)
    - [sftp putFile](#sftp-putfile)
-   - [sftp](#sftp)
-   - [sftp failures](#sftp-failures)
-   - [exec failures](#exec-failures)
 <a name=""></a>
  
 <a name="ident"></a>
@@ -140,6 +140,17 @@ ssh.exec(hostPwd, 'dsscdc', function(err, stdout, stderr, server, conn){
   stderr.should.match(/command not found/);
   err.message.should.match(/command not found/);
   stdout.should.be.empty;
+  conn.end();
+  done();
+});
+```
+
+can fail correctly when it can t execute a command.
+
+```js
+ssh.exec(hostPwd, 'echo some >> /root/cannot', function(err,stdout,stderr, server, conn){
+  (!!err).should.be.true;
+  err.message.should.match(/Permission denied/);
   conn.end();
   done();
 });
@@ -508,6 +519,16 @@ ssh.ensureEmptyDir(hostPwd, '/root/empty-dir-sudo-fail', function(err, server, c
 
 <a name="sftp-fileexists"></a>
 # sftp fileExists
+can test file exists.
+
+```js
+ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err, exists){
+  (!!err).should.be.false;
+  (exists).should.be.true;
+  done();
+});
+```
+
 can ensure a remote path exists.
 
 ```js
@@ -615,6 +636,19 @@ ssh.readFileSudo(hostPwd, '/root/.bashrc', function(err, data){
 });
 ```
 
+can properly fail permission.
+
+```js
+this.timeout(25000);
+ssh.readFile(hostPwd, '/root/.bashrc', function(err, data){
+  if(err) console.error(err);
+  (!!err).should.be.true;
+  err.code.should.eql(3);
+  err.message.should.match(/Permission denied/);
+  done();
+});
+```
+
 can properly fail to read a file from remote.
 
 ```js
@@ -658,6 +692,100 @@ ssh.mktemp(hostPwd, 'some', function(err, tempPath, server, conn){
       done();
     });
   });
+});
+```
+
+<a name="sftp-mkdir"></a>
+# sftp mkdir
+can create a directory.
+
+```js
+ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err,server,conn){
+  (!!err).should.be.false;
+  ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
+    (!!err).should.be.false;
+    conn.end();
+    done();
+  });
+});
+```
+
+can fail correctly when it can t mkdir.
+
+```js
+ssh.mkdir(hostPwd, '/root/cannot', function(err){
+  (!!err).should.be.true;
+  err.code.should.eql(3);
+  err.message.should.match(/Permission denied/);
+  done();
+});
+```
+
+<a name="sftp-rmdir"></a>
+# sftp rmdir
+can delete a directory.
+
+```js
+ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err, server, conn){
+  (!!err).should.be.false;
+  ssh.fileExists(conn, '/home/vagrant/examples', function(err, exists){
+    (!!err).should.be.false;
+    (exists).should.be.true;
+    ssh.rmdir(conn, '/home/vagrant/examples', function(err, server, conn){
+      (!!err).should.be.false;
+      ssh.fileExists(conn, '/home/vagrant/examples', function(err, exists){
+        (!!err).should.be.true;
+        (exists).should.be.false;
+        (err.message).should.match(/No such file/i);
+        conn.end();
+        done();
+      });
+    });
+  });
+});
+```
+
+can fail correctly when it can t rmdir.
+
+```js
+ssh.exec(hostPwd, 'sudo mkdir -p /root/some', function(err,stdout,sterr,sever,conn){
+  ssh.rmdir(conn, '/root/some', function(err){
+    (!!err).should.be.true;
+    err.code.should.eql(3);
+    err.message.should.match(/Permission denied/);
+    conn.end();
+    done();
+  });
+});
+```
+
+<a name="sftp-writefile"></a>
+# sftp writeFile
+can write a file content.
+
+```js
+ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err,server,conn){
+  (!!err).should.be.false;
+  ssh.fileExists(conn, tmpRemotePath+'/remote2'+t, function(err){
+    (!!err).should.be.false;
+    ssh.getFile(conn, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
+      (!!err).should.be.false;
+      fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
+      conn.end();
+      done();
+    });
+  });
+});
+```
+
+can fail correctly when it can t write a file.
+
+```js
+ssh.writeFile(hostPwd, '/root/cannot', 'some', function(err){
+  (!!err).should.be.true;
+  err.code.should.eql(3);
+  err.message.should.match(/Permission denied/);
+  done();
 });
 ```
 
@@ -720,126 +848,6 @@ ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/some'+t, function(err){
     (contains).should.be.true;
     done(err);
   });
-});
-```
-
-<a name="sftp"></a>
-# sftp
-can test file exists.
-
-```js
-ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err, exists){
-  (!!err).should.be.false;
-  (exists).should.be.true;
-  done();
-});
-```
-
-can write a file content.
-
-```js
-ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err,server,conn){
-  (!!err).should.be.false;
-  ssh.fileExists(conn, tmpRemotePath+'/remote2'+t, function(err){
-    (!!err).should.be.false;
-    ssh.getFile(conn, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
-      (!!err).should.be.false;
-      fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
-      conn.end();
-      done();
-    });
-  });
-});
-```
-
-can create a directory.
-
-```js
-ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err,server,conn){
-  (!!err).should.be.false;
-  ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
-    (!!err).should.be.false;
-    conn.end();
-    done();
-  });
-});
-```
-
-can delete a directory.
-
-```js
-ssh.rmdir(hostPwd, '/home/vagrant/examples', function(err, server, conn){
-  (!!err).should.be.false;
-  ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err, exists){
-    (!!err).should.be.true;
-    (exists).should.be.false;
-    (err.message).should.match(/No such file/i);
-    conn.end();
-    done();
-  });
-});
-```
-
-<a name="sftp-failures"></a>
-# sftp failures
-can fail correctly when it can t test if a file.
-
-```js
-ssh.fileExists(hostPwd, '/root/.bashrc', function(err, exists, server, conn){
-  (!!err).should.be.true;
-  err.code.should.eql(3);
-  err.message.should.match(/Permission denied/);
-  conn.end();
-  done();
-});
-```
-
-can fail correctly when it can t write a file.
-
-```js
-ssh.writeFile(hostPwd, '/root/cannot', 'some', function(err){
-  (!!err).should.be.true;
-  err.code.should.eql(3);
-  err.message.should.match(/Permission denied/);
-  done();
-});
-```
-
-can fail correctly when it can t mkdir.
-
-```js
-ssh.mkdir(hostPwd, '/root/cannot', function(err){
-  (!!err).should.be.true;
-  err.code.should.eql(3);
-  err.message.should.match(/Permission denied/);
-  done();
-});
-```
-
-can fail correctly when it can t rmdir.
-
-```js
-ssh.exec(hostPwd, 'sudo mkdir -p /root/some', function(err,stdout,sterr,sever,conn){
-  ssh.rmdir(conn, '/root/some', function(err){
-    (!!err).should.be.true;
-    err.code.should.eql(3);
-    err.message.should.match(/Permission denied/);
-    conn.end();
-    done();
-  });
-});
-```
-
-<a name="exec-failures"></a>
-# exec failures
-can fail correctly when it can t execute a command.
-
-```js
-ssh.exec(hostPwd, 'echo some >> /root/cannot', function(err,stdout,stderr, server, conn){
-  (!!err).should.be.true;
-  err.message.should.match(/Permission denied/);
-  conn.end();
-  done();
 });
 ```
 
