@@ -507,31 +507,25 @@ SSH2Utils.prototype.runMultiple = SSH2Utils.prototype.run;
  */
 SSH2Utils.prototype.readFile = function(server, remoteFile, then){
 
-  connect(server, function(err,conn){
+  connect(server, function(err, conn){
+    if(err) return returnOrThrow(then, err, '', server, conn);
+
     conn.sftp(function(err, sftp){
-      if(err) return returnOrThrow(then, err, server, conn);
+      if(err) return returnOrThrow(then, err, '', server, conn);
 
       debug('createReadStream %s', remoteFile);
       var content = '';
-      var readErr;
       var stream = sftp.createReadStream(remoteFile);
       stream.on('data', function(d){
         content += ''+d;
       });
-      stream.on('error', function(e){
-        readErr = e;
-      });
-      //see https://github.com/mscdex/ssh2-streams/issues/7
-      var tout = setTimeout(function(){
-        stream.destroy();
-        var err = new Error('No such file or directory (timeout)');
-        err.code = 2;
-        returnOrThrow(then, err, '', server, conn);
-      }, 20000);
-      stream.on('close', function(){
-        clearTimeout(tout);
+      var finish = function(readErr){
+        stream.removeListener('error', finish);
+        stream.removeListener('close', finish);
         returnOrThrow(then, readErr, content, server, conn);
-      });
+      };
+      stream.on('error', finish);
+      stream.on('close', finish);
     });
   });
 };

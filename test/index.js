@@ -615,6 +615,16 @@ describe('sftp readFile', function(){
       done();
     });
   });
+  it('can properly fail permission', function(done){
+    this.timeout(25000);
+    ssh.readFile(hostPwd, '/root/.bashrc', function(err, data){
+      if(err) console.error(err);
+      (!!err).should.be.true;
+      err.code.should.eql(3);
+      err.message.should.match(/Permission denied/);
+      done();
+    });
+  });
   it('can properly fail to read a file from remote', function(done){
     this.timeout(25000);
     ssh.readFile(hostPwd, '~/NoSuchFile', function(err, data){
