@@ -153,6 +153,7 @@ inquirer.prompt([{
   };
   var gitHubRelease = function(branch, tag_name, releaseType){
     return line.then(function(then){
+      console.log(github);
       var ghApi = new ghClient({
         version: "3.0.0"
       });
@@ -172,7 +173,7 @@ inquirer.prompt([{
         prerelease: releaseType==='prerelease'
       },
       function(err, res) {
-        if(err)console.log(err);
+        if(err) console.log(err);
         then();
       }
       );
