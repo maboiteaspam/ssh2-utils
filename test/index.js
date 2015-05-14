@@ -838,6 +838,15 @@ describe('sftp ensureFileContains', function(){
     });
   });
 
+  it('can fail correctly', function(done){
+    t++;
+    ssh.ensureFileContains(hostPwd, '/root/some'+t, t, function(err, contains){
+      (!!err).should.be.true;
+      (contains).should.be.false;
+      done();
+    });
+  });
+
 });
 
 describe('sftp putFile', function(){

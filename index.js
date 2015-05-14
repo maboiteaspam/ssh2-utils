@@ -617,11 +617,11 @@ SSH2Utils.prototype.getFile = function(server, remoteFile, localPath, then){
 SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, then){
   var that = this;
   that.exec(server, 'grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
-    if(stdout.length>0){
+    if(stdout.length>0 && stdout.match(contain)){
       then(err, true, server, conn);
     } else {
       that.exec(conn, 'echo "'+contain+'" >> '+remoteFile, function(err, stdout, stderr, server, conn){
-        then(err, !!err, server, conn);
+        then(err, !err, server, conn);
       });
     }
   });
