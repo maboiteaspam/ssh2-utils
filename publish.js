@@ -175,6 +175,7 @@ inquirer.prompt([{
       },
       function(err, res) {
         if(err) console.log(err);
+        console.log(res);
         then();
       }
       );
