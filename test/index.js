@@ -177,6 +177,14 @@ describe('exec', function(){
       done();
     });
   });
+  it('can fail correctly when it can t execute a command', function(done){
+    ssh.exec(hostPwd, 'echo some >> /root/cannot', function(err,stdout,stderr, server, conn){
+      (!!err).should.be.true;
+      err.message.should.match(/Permission denied/);
+      conn.end();
+      done();
+    });
+  });
 });
 
 describe('exec multiple', function(){
@@ -510,6 +518,13 @@ describe('sftp ensureEmptyDir', function(){
 describe('sftp fileExists', function(){
   this.timeout(10000);
 
+  it('can test file exists', function(done){
+    ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err, exists){
+      (!!err).should.be.false;
+      (exists).should.be.true;
+      done();
+    });
+  });
   it('can ensure a remote path exists', function(done){
     ssh.ensureEmptyDir(hostPwd, '/home/vagrant/fileExists-test', function(err, server, conn){
       (!!err).should.be.false;
@@ -684,6 +699,106 @@ describe('sftp mktemp', function(){
   });
 });
 
+describe('sftp mkdir', function(){
+  this.timeout(10000);
+
+  it('can create a directory', function(done){
+    ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err,server,conn){
+      (!!err).should.be.false;
+      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
+        (!!err).should.be.false;
+        conn.end();
+        done();
+      });
+    });
+  });
+
+  it('can fail correctly when it can t mkdir', function(done){
+    ssh.mkdir(hostPwd, '/root/cannot', function(err){
+      (!!err).should.be.true;
+      err.code.should.eql(3);
+      err.message.should.match(/Permission denied/);
+      done();
+    });
+  });
+});
+
+describe('sftp rmdir', function(){
+  this.timeout(10000);
+
+  it('can delete a directory', function(done){
+    ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err, server, conn){
+      (!!err).should.be.false;
+      ssh.fileExists(conn, '/home/vagrant/examples', function(err, exists){
+        (!!err).should.be.false;
+        (exists).should.be.true;
+        ssh.rmdir(conn, '/home/vagrant/examples', function(err, server, conn){
+          (!!err).should.be.false;
+          ssh.fileExists(conn, '/home/vagrant/examples', function(err, exists){
+            (!!err).should.be.true;
+            (exists).should.be.false;
+            (err.message).should.match(/No such file/i);
+            conn.end();
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  it('can fail correctly when it can t rmdir', function(done){
+    ssh.exec(hostPwd, 'sudo mkdir -p /root/some', function(err,stdout,sterr,sever,conn){
+      ssh.rmdir(conn, '/root/some', function(err){
+        (!!err).should.be.true;
+        err.code.should.eql(3);
+        err.message.should.match(/Permission denied/);
+        conn.end();
+        done();
+      });
+    });
+  });
+});
+
+describe('sftp writeFile', function(){
+  this.timeout(10000);
+  var t = (new Date()).getTime();
+
+  before(function(done){
+    fs.mkdirsSync(fixturePath);
+    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
+      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
+        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
+          done();
+        });
+      });
+    });
+  });
+
+  it('can write a file content', function(done){
+    ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err,server,conn){
+      (!!err).should.be.false;
+      ssh.fileExists(conn, tmpRemotePath+'/remote2'+t, function(err){
+        (!!err).should.be.false;
+        ssh.getFile(conn, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
+          (!!err).should.be.false;
+          fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
+          conn.end();
+          done();
+        });
+      });
+    });
+  });
+
+  it('can fail correctly when it can t write a file', function(done){
+    ssh.writeFile(hostPwd, '/root/cannot', 'some', function(err){
+      (!!err).should.be.true;
+      err.code.should.eql(3);
+      err.message.should.match(/Permission denied/);
+      done();
+    });
+  });
+});
+
 describe('sftp ensureFileContains', function(){
   this.timeout(10000);
   var t = (new Date()).getTime();
@@ -724,7 +839,6 @@ describe('sftp ensureFileContains', function(){
   });
 
 });
-
 
 describe('sftp putFile', function(){
   this.timeout(10000);
@@ -769,122 +883,3 @@ describe('sftp putFile', function(){
 
 });
 
-describe('sftp', function(){
-  this.timeout(10000);
-  var t = (new Date()).getTime();
-
-  before(function(done){
-    fs.mkdirsSync(fixturePath);
-    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
-      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
-        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
-          done();
-        });
-      });
-    });
-  });
-  it('can test file exists', function(done){
-    ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err, exists){
-      (!!err).should.be.false;
-      (exists).should.be.true;
-      done();
-    });
-  });
-  it('can write a file content', function(done){
-    ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err,server,conn){
-      (!!err).should.be.false;
-      ssh.fileExists(conn, tmpRemotePath+'/remote2'+t, function(err){
-        (!!err).should.be.false;
-        ssh.getFile(conn, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
-          (!!err).should.be.false;
-          fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
-          conn.end();
-          done();
-        });
-      });
-    });
-  });
-  it('can create a directory', function(done){
-    ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err,server,conn){
-      (!!err).should.be.false;
-      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
-        (!!err).should.be.false;
-        conn.end();
-        done();
-      });
-    });
-  });
-  it('can put a directory', function(done){
-    ssh.putDir(hostPwd, __dirname+'/../examples', '/home/vagrant/examples', function(err, server, conn){
-      (!!err).should.be.false;
-      ssh.fileExists(conn, '/home/vagrant/examples/exec.js', function(err){
-        (!!err).should.be.false;
-        conn.end();
-        done();
-      });
-    });
-  });
-  it('can delete a directory', function(done){
-    ssh.rmdir(hostPwd, '/home/vagrant/examples', function(err, server, conn){
-      (!!err).should.be.false;
-      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err, exists){
-        (!!err).should.be.true;
-        (exists).should.be.false;
-        (err.message).should.match(/No such file/i);
-        conn.end();
-        done();
-      });
-    });
-  });
-});
-
-describe('sftp failures', function(){
-  this.timeout(10000);
-  it('can fail correctly when it can t test if a file', function(done){
-    ssh.fileExists(hostPwd, '/root/.bashrc', function(err, exists, server, conn){
-      (!!err).should.be.true;
-      err.code.should.eql(3);
-      err.message.should.match(/Permission denied/);
-      conn.end();
-      done();
-    });
-  });
-  it('can fail correctly when it can t write a file', function(done){
-    ssh.writeFile(hostPwd, '/root/cannot', 'some', function(err){
-      (!!err).should.be.true;
-      err.code.should.eql(3);
-      err.message.should.match(/Permission denied/);
-      done();
-    });
-  });
-  it('can fail correctly when it can t mkdir', function(done){
-    ssh.mkdir(hostPwd, '/root/cannot', function(err){
-      (!!err).should.be.true;
-      err.code.should.eql(3);
-      err.message.should.match(/Permission denied/);
-      done();
-    });
-  });
-  it('can fail correctly when it can t rmdir', function(done){
-    ssh.exec(hostPwd, 'sudo mkdir -p /root/some', function(err,stdout,sterr,sever,conn){
-      ssh.rmdir(conn, '/root/some', function(err){
-        (!!err).should.be.true;
-        err.code.should.eql(3);
-        err.message.should.match(/Permission denied/);
-        conn.end();
-        done();
-      });
-    });
-  });
-});
-
-describe('exec failures', function(){
-  it('can fail correctly when it can t execute a command', function(done){
-    ssh.exec(hostPwd, 'echo some >> /root/cannot', function(err,stdout,stderr, server, conn){
-      (!!err).should.be.true;
-      err.message.should.match(/Permission denied/);
-      conn.end();
-      done();
-    });
-  });
-});
