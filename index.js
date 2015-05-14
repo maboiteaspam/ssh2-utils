@@ -620,8 +620,10 @@ SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, t
     if(stdout.length>0 && stdout.match(contain)){
       then(err, true, server, conn);
     } else {
-      that.exec(conn, 'echo "'+contain+'" >> '+remoteFile, function(err, stdout, stderr, server, conn){
-        then(err, !err, server, conn);
+      that.exec(conn, 'echo "'+contain+'" >> '+remoteFile+'', function(err, stdout, stderr, server, conn){
+        that.exec(conn, 'grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
+          then(err, (stdout.length>0 && stdout.match(contain)), server, conn);
+        });
       });
     }
   });
