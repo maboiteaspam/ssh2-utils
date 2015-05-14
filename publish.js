@@ -1,7 +1,7 @@
 
 var pkg = require('./package.json');
 var github = require('./github.json');
-var ghApi = require('./github');
+var ghClient = require('./github');
 var inquirer = require('inquirer');
 var semver = require('semver');
 var fs = require('fs');
@@ -153,6 +153,9 @@ inquirer.prompt([{
   };
   var gitHubRelease = function(branch, tag_name, releaseType){
     return line.then(function(then){
+      var ghApi = new ghClient({
+        version: "3.0.0"
+      });
       ghApi.authenticate({
         type: "basic",
         username: github.user,
