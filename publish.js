@@ -153,17 +153,18 @@ inquirer.prompt([{
   };
   var gitHubRelease = function(branch, tag_name, releaseType){
     return line.then(function(then){
-      console.log(github);
+      console.log(github.username);
+      console.log(github.repo || pkg.name);
       var ghApi = new ghClient({
         version: "3.0.0"
       });
       ghApi.authenticate({
         type: "basic",
-        username: github.user,
+        username: github.username,
         password: github.password
       });
       ghApi.releases.createRelease({
-        owner: github.owner || github.user,
+        owner: github.owner || github.username,
         repo: github.repo || pkg.name,
         tag_name: tag_name,
         target_commitish: branch,
