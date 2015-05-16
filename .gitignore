@@ -38,4 +38,6 @@ examples/fixture/w2d.json3
 
 .idea/
 
-github.json
+.local.json
+
+.local
