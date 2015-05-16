@@ -617,7 +617,8 @@ SSH2Utils.prototype.getFile = function(server, remoteFile, localPath, then){
 SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, then){
   var that = this;
   that.exec(server, 'grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
-    if(stdout.length>0 && stdout.match(contain)){
+    var found = stdout.length>0 && stdout.match(contain);
+    if(found){
       then(err, true, server, conn);
     } else {
       that.exec(conn, 'echo "'+contain+'" >> '+remoteFile+'', function(err, stdout, stderr, server, conn){
@@ -640,7 +641,8 @@ SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, t
 SSH2Utils.prototype.ensureFileContainsSudo = function(server, remoteFile, contain, then){
   var that = this;
   that.exec(server, 'sudo grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
-    if(stdout.length>0){
+    var found = stdout.length>0 && stdout.match(contain);
+    if(found){
       then(err, true, server, conn);
     } else {
       that.exec(conn, 'sudo echo "'+contain+'" >> '+remoteFile, function(err,stdout,stderr,server,conn){
