@@ -1,0 +1,895 @@
+{
+    "project": {},
+    "files": {
+        "/home/maboiteaspam/Bureau/ssh2-utils/index.js": {
+            "name": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {},
+    "classes": {},
+    "classitems": [
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 16,
+            "throw": "err if then is null",
+            "params": [
+                {
+                    "name": "then",
+                    "description": ""
+                },
+                {
+                    "name": "err",
+                    "description": ""
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 46,
+            "description": "Server credentials information\nIt can use password or key\nto login, or run sudo command\ntransparently",
+            "note": "It is a class to only support documentation",
+            "is_constructor": 1,
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 63,
+            "description": "sudo challenge completion over ssh\n\nIf the login success, hasLogin is true",
+            "params": [
+                {
+                    "name": "stream",
+                    "description": "Stream"
+                },
+                {
+                    "name": "pwd",
+                    "description": "string"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(bool hasLogin)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 151,
+            "is_constructor": 1,
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 157,
+            "description": "opens ssh connection",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials"
+                },
+                {
+                    "name": "done",
+                    "description": "(err, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 234,
+            "params": [
+                {
+                    "name": "cmd",
+                    "description": "String"
+                },
+                {
+                    "name": "stream",
+                    "description": "Stream"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 255,
+            "description": "Execute a command and returns asap",
+            "params": [
+                {
+                    "name": "conn",
+                    "description": "ssh2.Client"
+                },
+                {
+                    "name": "server",
+                    "description": "ServerCredentials"
+                },
+                {
+                    "name": "cmd",
+                    "description": "String"
+                },
+                {
+                    "name": "done",
+                    "description": "callback(err, ssh2._Channel_ stream)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 305,
+            "see": [
+                "connect"
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 310,
+            "description": "Executes a command and return its output\n like child_process.exec.\nnon-interactive\n\nalso take care of\n- remote program termination with ctrl+C",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "cmd",
+                    "description": "String"
+                },
+                {
+                    "name": "done",
+                    "description": "callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 353,
+            "description": "Executes a command and return its output\n like child_process.exec.\nnon-interactive\n\nalso take care of\n- remote program termination with ctrl+C\n\nIf cmd is an array of string,\nthey are executed in serie,\nrespective output of each stdout / stderr is join then returned.",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "cmd",
+                    "description": "String|[String]"
+                },
+                {
+                    "name": "doneEach",
+                    "description": "callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)"
+                },
+                {
+                    "name": "done",
+                    "description": "callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 404,
+            "description": "Executes a command and return its stream,\n like of child_process.spawn.\ninteractive\n\nalso take care of\n- manage sudo cmd\n- log errors to output\n\nIf cmd is an array, they are executed in serie,\nthe pipe is open asap,\nyou ll receive each stdout stderr data in serie",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "cmd",
+                    "description": "String|[String]"
+                },
+                {
+                    "name": "doneEach",
+                    "description": "callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)"
+                },
+                {
+                    "name": "done",
+                    "description": "callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 491,
+            "description": "Executes a set of multiple and sequential commands.",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "cmds",
+                    "description": "[String]"
+                },
+                {
+                    "name": "cmdComplete",
+                    "description": "callback(String command, String response, ServerCredentials server)"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, String allSessionText, ServerCredentials server)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 501,
+            "description": "Reads a file on the remote",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, String content, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 533,
+            "description": "Reads a file on the remote via sudo",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, String content, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 559,
+            "description": "Reads a large file on the remote",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, Stream data, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 576,
+            "description": "Reads a large file on the remote via sudo",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, Stream data, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 589,
+            "description": "Downloads a file to the local",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "localPath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 609,
+            "description": "Ensure a remote file contains a certain text piece of text",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "contain",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 633,
+            "description": "Ensure a remote file contains a certain text piece of text",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "contain",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 655,
+            "description": "Uploads a file on the remote remote",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "localFile",
+                    "description": "String"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 686,
+            "description": "Uploads a file on the remote via sudo support",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "localFile",
+                    "description": "String"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 736,
+            "description": "Writes content to a remote file",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "content",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 784,
+            "description": "Writes content to a remote file",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "content",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 796,
+            "description": "Tells if a file exists on remote\nby trying to open handle on it.",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, exists, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 821,
+            "description": "Tells if a file exists on remote\nby trying to open handle on it.",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remoteFile",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, exists, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 841,
+            "description": "Deletes a file or directory\nrm -fr /some/path",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 861,
+            "description": "Deletes a file or directory\nsudo rm -fr /some/path",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 881,
+            "description": "Creates a concurrent-safe temporary remote directory.\n\nIt does not attempt to keep track of temp files created during the session.\nThus it won t delete them on connection close.",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "suffix",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, tmpDirName, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 901,
+            "description": "Creates a remote directory",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 920,
+            "description": "Creates a remote directory",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 939,
+            "description": "Ensure a remote directory exists and is empty",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 957,
+            "description": "Ensure a remote directory exists and is empty",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 975,
+            "description": "Ensure a file belongs to connected user\nby sudo chmod -R /path",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 992,
+            "description": "Uploads a local directory to the remote.\nPartly in series, partly parallel.\nProceed such\nsudo rm -fr /remotePath\nsudo mkdir -p /remotePath\nrecursive sftp mkdir\nrecursive sftp put",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "localPath",
+                    "description": "String"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 1055,
+            "description": "Uploads a local directory to the remote.\nPartly in series, partly parallel.\nProceed such\nsudo rm -fr /remotePath\nsudo mkdir -p /remotePath\nrecursive sftp mkdir\nrecursive sftp put",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "localPath",
+                    "description": "String"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "then",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "/home/maboiteaspam/Bureau/ssh2-utils/index.js",
+            "line": 1139,
+            "description": "Downloads a remote directory to the local.\nremote traverse directories over sftp.\nthen get files in parallel",
+            "params": [
+                {
+                    "name": "server",
+                    "description": "ServerCredentials|ssh2.Client"
+                },
+                {
+                    "name": "remotePath",
+                    "description": "String"
+                },
+                {
+                    "name": "localPath",
+                    "description": "String"
+                },
+                {
+                    "name": "allDone",
+                    "description": "callback(err, ServerCredentials server, ssh2.Client conn)"
+                }
+            ],
+            "class": ""
+        }
+    ],
+    "warnings": [
+        {
+            "message": "unknown tag: throw",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:16"
+        },
+        {
+            "message": "unknown tag: note",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:46"
+        },
+        {
+            "message": "Missing item type",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:16"
+        },
+        {
+            "message": "Missing item type\nServer credentials information\nIt can use password or key\nto login, or run sudo command\ntransparently",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:46"
+        },
+        {
+            "message": "Missing item type\nsudo challenge completion over ssh\n\nIf the login success, hasLogin is true",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:63"
+        },
+        {
+            "message": "Missing item type",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:151"
+        },
+        {
+            "message": "Missing item type\nopens ssh connection",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:157"
+        },
+        {
+            "message": "Missing item type",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:234"
+        },
+        {
+            "message": "Missing item type\nExecute a command and returns asap",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:255"
+        },
+        {
+            "message": "Missing item type",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:305"
+        },
+        {
+            "message": "Missing item type\nExecutes a command and return its output\n like child_process.exec.\nnon-interactive\n\nalso take care of\n- remote program termination with ctrl+C",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:310"
+        },
+        {
+            "message": "Missing item type\nExecutes a command and return its output\n like child_process.exec.\nnon-interactive\n\nalso take care of\n- remote program termination with ctrl+C\n\nIf cmd is an array of string,\nthey are executed in serie,\nrespective output of each stdout / stderr is join then returned.",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:353"
+        },
+        {
+            "message": "Missing item type\nExecutes a command and return its stream,\n like of child_process.spawn.\ninteractive\n\nalso take care of\n- manage sudo cmd\n- log errors to output\n\nIf cmd is an array, they are executed in serie,\nthe pipe is open asap,\nyou ll receive each stdout stderr data in serie",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:404"
+        },
+        {
+            "message": "Missing item type\nExecutes a set of multiple and sequential commands.",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:491"
+        },
+        {
+            "message": "Missing item type\nReads a file on the remote",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:501"
+        },
+        {
+            "message": "Missing item type\nReads a file on the remote via sudo",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:533"
+        },
+        {
+            "message": "Missing item type\nReads a large file on the remote",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:559"
+        },
+        {
+            "message": "Missing item type\nReads a large file on the remote via sudo",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:576"
+        },
+        {
+            "message": "Missing item type\nDownloads a file to the local",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:589"
+        },
+        {
+            "message": "Missing item type\nEnsure a remote file contains a certain text piece of text",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:609"
+        },
+        {
+            "message": "Missing item type\nEnsure a remote file contains a certain text piece of text",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:633"
+        },
+        {
+            "message": "Missing item type\nUploads a file on the remote remote",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:655"
+        },
+        {
+            "message": "Missing item type\nUploads a file on the remote via sudo support",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:686"
+        },
+        {
+            "message": "Missing item type\nWrites content to a remote file",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:736"
+        },
+        {
+            "message": "Missing item type\nWrites content to a remote file",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:784"
+        },
+        {
+            "message": "Missing item type\nTells if a file exists on remote\nby trying to open handle on it.",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:796"
+        },
+        {
+            "message": "Missing item type\nTells if a file exists on remote\nby trying to open handle on it.",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:821"
+        },
+        {
+            "message": "Missing item type\nDeletes a file or directory\nrm -fr /some/path",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:841"
+        },
+        {
+            "message": "Missing item type\nDeletes a file or directory\nsudo rm -fr /some/path",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:861"
+        },
+        {
+            "message": "Missing item type\nCreates a concurrent-safe temporary remote directory.\n\nIt does not attempt to keep track of temp files created during the session.\nThus it won t delete them on connection close.",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:881"
+        },
+        {
+            "message": "Missing item type\nCreates a remote directory",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:901"
+        },
+        {
+            "message": "Missing item type\nCreates a remote directory",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:920"
+        },
+        {
+            "message": "Missing item type\nEnsure a remote directory exists and is empty",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:939"
+        },
+        {
+            "message": "Missing item type\nEnsure a remote directory exists and is empty",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:957"
+        },
+        {
+            "message": "Missing item type\nEnsure a file belongs to connected user\nby sudo chmod -R /path",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:975"
+        },
+        {
+            "message": "Missing item type\nUploads a local directory to the remote.\nPartly in series, partly parallel.\nProceed such\nsudo rm -fr /remotePath\nsudo mkdir -p /remotePath\nrecursive sftp mkdir\nrecursive sftp put",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:992"
+        },
+        {
+            "message": "Missing item type\nUploads a local directory to the remote.\nPartly in series, partly parallel.\nProceed such\nsudo rm -fr /remotePath\nsudo mkdir -p /remotePath\nrecursive sftp mkdir\nrecursive sftp put",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:1055"
+        },
+        {
+            "message": "Missing item type\nDownloads a remote directory to the local.\nremote traverse directories over sftp.\nthen get files in parallel",
+            "line": " /home/maboiteaspam/Bureau/ssh2-utils/index.js:1139"
+        }
+    ]
+}

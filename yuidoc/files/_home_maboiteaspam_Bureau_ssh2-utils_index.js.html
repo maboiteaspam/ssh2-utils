@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>/home/maboiteaspam/Bureau/ssh2-utils/index.js</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="icon" href="../assets/favicon.ico">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: </em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+                    <h2 class="off-left">APIs</h2>
+                    <div id="api-tabview" class="tabview">
+                        <ul class="tabs">
+                            <li><a href="#api-classes">Classes</a></li>
+                            <li><a href="#api-modules">Modules</a></li>
+                        </ul>
+                
+                        <div id="api-tabview-filter">
+                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+                        </div>
+                
+                        <div id="api-tabview-panel">
+                            <ul id="api-classes" class="apis classes">
+                            </ul>
+                
+                            <ul id="api-modules" class="apis modules">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+                    Show:
+                    <label for="api-show-inherited">
+                        <input type="checkbox" id="api-show-inherited" checked>
+                        Inherited
+                    </label>
+            
+                    <label for="api-show-protected">
+                        <input type="checkbox" id="api-show-protected">
+                        Protected
+                    </label>
+            
+                    <label for="api-show-private">
+                        <input type="checkbox" id="api-show-private">
+                        Private
+                    </label>
+                    <label for="api-show-deprecated">
+                        <input type="checkbox" id="api-show-deprecated">
+                        Deprecated
+                    </label>
+            
+                </div>
+            
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+<h1 class="file-heading">File: /home/maboiteaspam/Bureau/ssh2-utils/index.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
+
+var path = require(&#x27;path&#x27;);
+var async = require(&#x27;async&#x27;);
+var Client = require(&#x27;ssh2&#x27;).Client;
+var glob = require(&quot;glob&quot;);
+var fs = require(&quot;fs-extra&quot;);
+var through = require(&#x27;through&#x27;);
+var _ = require(&quot;underscore&quot;);
+var _s = require(&quot;underscore.string&quot;);
+
+var pkg = require(&#x27;./package.json&#x27;);
+var debug = require(&#x27;debug&#x27;)(pkg.name);
+
+
+
+/**
+ * @throw err if then is null
+ * @param then
+ * @param err
+ */
+var returnOrThrow = function(then, err){
+  if(then){
+    var args = Array.prototype.slice.call(arguments);
+    args.shift();
+    then.apply(null, args);
+  } else if(err) {
+    debug(&#x27;returnOrThrow &#x27;+ err);
+    throw err;
+  }
+};
+
+var scanLocalDirectory = function(localPath, then){
+  // scan local directories
+  var options = {
+    cwd: localPath
+  };
+  glob( &#x27;**/&#x27;, options, function (er, dirs) {
+    // scan local files
+    options.nodir = true;
+    glob( &#x27;**&#x27;, options, function (er, files) {
+      then(dirs, files);
+    });
+  });
+};
+
+/**
+ * Server credentials information
+ * It can use password or key
+ * to login, or run sudo command
+ * transparently
+ *
+ * @note It is a class to only support documentation
+ * @constructor
+ */
+function ServerCredentials(){
+  this.username = &#x27;&#x27;;
+  this.password = &#x27;&#x27;;
+  this.host = &#x27;localhost&#x27;;
+  this.port = 22;
+  this.privateKey = &#x27;&#x27;;
+}
+
+/**
+ * sudo challenge completion over ssh
+ *
+ * If the login success, hasLogin is true
+ *
+ * @param stream Stream
+ * @param pwd string
+ * @param then callback(bool hasLogin)
+ */
+var sudoChallenge = function(stream, pwd, then){
+
+  debug(&#x27;waiting for sudo&#x27;);
+
+  var hasReceivedData = false;
+  var hasChallenge = false;
+
+  // this is a general timeout on the command
+  // passed this 10 secs, it fails
+  var tChallenge = setTimeout(function(){
+    debug(&#x27;Login has failed by timeout&#x27;);
+    stream.removeListener(&#x27;data&#x27;, checkPwdInput);
+    if (then) then(true);
+  }, 10000);
+
+  var checkPwdInput = function(data){
+
+    data = &#x27;&#x27;+data;
+    hasReceivedData = true;
+
+    // there can t be anything to resolve
+    // if the challenge has not been sent
+    if(!hasChallenge ){
+
+      // first data is always the challenge
+      if( data.match(/\[sudo\] password/) || data.match(/Password:/) ){
+        hasChallenge = true;
+        debug(&#x27;Challenge started...&#x27;);
+        // if so send the password on stdin
+        stream.write(pwd+&#x27;\n&#x27;);
+
+      }else{
+
+        // otherwise,
+        // the command has probably ran successfully
+        clearTimeout(tChallenge);
+        stream.removeListener(&#x27;data&#x27;, checkPwdInput);
+        debug(&#x27;Login done without a challenge&#x27;);
+        if (then) then(false);
+
+      }
+
+      // once the challenge is set,
+      // it must be concluded
+      // right after it s beginning
+    } else if(hasChallenge){
+
+      clearTimeout(tChallenge);
+      stream.removeListener(&#x27;data&#x27;, checkPwdInput);
+
+      hasChallenge = false;
+      // this case handle only en.
+      if(data.match(/Sorry, try again/) || data.match(/Password:/) ){
+        debug(&#x27;... Failed to resolve the challenge&#x27;);
+        if (then) then(true);
+      }else{
+        debug(&#x27;... Challenge was successfully resolved&#x27;);
+        if (then) then(false);
+      }
+    }
+  };
+  stream.on(&#x27;data&#x27;, checkPwdInput);
+
+  // this is for commands like rm -f /some
+  var checkEmptyOutputCommands = function(){
+    if(!hasReceivedData &amp;&amp; !hasChallenge){
+      clearTimeout(tChallenge);
+      stream.removeListener(&#x27;data&#x27;, checkPwdInput);
+      stream.removeListener(&#x27;data&#x27;, checkEmptyOutputCommands);
+      debug(&#x27;Login was done, without a challenge, without a data&#x27;);
+      if (then) then(false);
+    }
+  };
+  stream.on(&#x27;close&#x27;, checkEmptyOutputCommands);
+};
+
+// todo
+// better not to do that as it s a global
+process.setMaxListeners(100);
+/**
+ *
+ * @constructor
+ */
+function SSH2Utils(){}
+
+/**
+ * opens ssh connection
+ *
+ * @param server ServerCredentials
+ * @param done (err, ssh2.Client conn)
+ */
+var connect = function(server, done){
+
+  if(!server){
+    throw new Error(&#x27;missing server parameter&#x27;)
+  }
+
+  if( server instanceof Client ){
+    debug(&#x27;re using existing connection&#x27;);
+    done(false, server);
+  }else{
+    server.username = server.username || server.userName || server.user; // it is acceptable
+    debug(&#x27;%s@%s:%s&#x27;,server.username,server.host,server.port);
+
+    if(!server.username){
+      throw new Error(&#x27;invalid server parameter&#x27;)
+    }
+
+    var conn = new Client();
+    conn.on(&#x27;ready&#x27;, function() {
+      Object.keys(server).forEach(function(k){
+        if(conn[k]){
+          throw &#x27;Cannot redefine existing field &#x27;+k+&#x27; on ssh2Client object, it already exists.&#x27;
+        }
+        conn[k] = server[k];
+      });
+      done(null, conn);
+    });
+
+    try{
+      conn.connect(server);
+
+      debug(&#x27;connecting&#x27;);
+
+      conn.on(&#x27;error&#x27;,function(stderr){
+        if(stderr) debug(&#x27;&#x27;+stderr);
+        done(stderr, null);
+      });
+
+
+      // manage process termination
+      conn.pendingStreams = [];
+      var superEnd = conn.end;
+      conn.end = function(){
+        conn.pendingStreams.forEach(function(stream){
+          stream.kill(conn.pendingStreams.length);
+        });
+        conn.pendingStreams = [];
+        superEnd.call(conn);
+      };
+      // manage user pressing ctrl+C
+      var sigIntSent = function(){
+        conn.end();
+      };
+      process.on(&#x27;SIGINT&#x27;, sigIntSent);
+      conn.on(&#x27;close&#x27;,function(){
+        try{
+          process.removeListener(&#x27;SIGINT&#x27;, sigIntSent);
+        }catch(ex){}
+      });
+      conn.on(&#x27;end&#x27;,function(){
+        try{
+          process.removeListener(&#x27;SIGINT&#x27;, sigIntSent);
+        }catch(ex){}
+      });
+    }catch(ex){
+      debug(&#x27;&#x27;+ex);
+      done(ex, null);
+    }
+  }
+};
+
+/**
+ *
+ * @param cmd String
+ * @param stream Stream
+ */
+var sendSigInt = function(cmd, stream, length){
+  debug(&#x27;sendSigInt &#x27;+cmd);
+  try{
+    // this is a workaround for more ssh implementations
+    for(var i=0;i&lt;length;i++){
+      stream.write(&quot;\x03&quot;);
+    }
+  }catch(ex){ }
+  // this only works with openssh@centos
+  try{
+    for(var i=0;i&lt;length;i++){
+      stream.signal(&#x27;SIGINT&#x27;);
+    }
+  }catch(ex){ }
+};
+
+/**
+ * Execute a command and returns asap
+ *
+ * @param conn ssh2.Client
+ * @param server ServerCredentials
+ * @param cmd String
+ * @param done callback(err, ssh2._Channel_ stream)
+ */
+var sudoExec = function(conn, server, cmd, done){
+
+  var opts = {};
+
+  opts.pty = !!cmd.match(/^su(do\s|\s)/) &amp;&amp; (&#x27;password&#x27; in server);
+
+  debug(&#x27;cmd %j&#x27;, cmd);
+  debug(&#x27;pty %j&#x27;, opts.pty);
+
+  conn.exec(cmd, opts, function(err, stream) {
+
+    if (err) debug(&#x27;err %j&#x27;, err);
+    if (err) return done(err);
+
+    stream.stderr.on(&#x27;data&#x27;, function(data){
+      debug(&#x27;sudoExec stderr %s&#x27;, _s.trim(&#x27;&#x27;+data))
+    });
+    stream.on(&#x27;data&#x27;, function(data){
+      debug(&#x27;sudoExec stdout %s&#x27;, _s.trim(&#x27;&#x27;+data))
+    });
+
+    if(done) done(null, stream);
+
+    if( opts.pty ){
+      sudoChallenge(stream, server[&#x27;password&#x27;], function(hasLoginError){
+        if(hasLoginError) debug(
+          &#x27;login failure, hasLoginError:%j&#x27;, hasLoginError);
+      });
+    }
+
+    stream.kill = function(length){
+      sendSigInt(cmd, stream, length || 1);
+    };
+    // manage process termination with open handle
+    stream.on(&#x27;close&#x27;, function(){
+      var k = conn.pendingStreams.indexOf(stream);
+      if(k&gt;-1) conn.pendingStreams.splice(k,1);
+    });
+    conn.pendingStreams.push(stream);
+  });
+};
+
+/**
+ * @see connect
+ */
+SSH2Utils.prototype.getConnReady = connect;
+
+/**
+ * Executes a command and return its output
+ *  like child_process.exec.
+ * non-interactive
+ *
+ * also take care of
+ * - remote program termination with ctrl+C
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmd String
+ * @param done callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.execOne = function(server, cmd, done){
+
+  connect(server, function(err, conn){
+    if( err) return returnOrThrow(done, err, &#x27;&#x27;, &#x27;&#x27;+err, server, conn);
+
+    sudoExec(conn, server, cmd, function(err, stream){
+      if( err) return returnOrThrow(done, err, &#x27;&#x27;, &#x27;&#x27;+err, server, conn);
+
+      var stderr = &#x27;&#x27;;
+      var stdout = &#x27;&#x27;;
+      stream.stderr.on(&#x27;data&#x27;, function(data){
+        stderr += data.toString();
+      });
+      stream.on(&#x27;data&#x27;, function(data){
+        stdout += data.toString();
+      });
+
+      stream.on(&#x27;close&#x27;, function(){
+        var fineErr = null;
+        if(stderr){
+          fineErr = new Error(_s.trim(stderr));
+          debug(&#x27;stdout %j&#x27;, stdout);
+          debug(&#x27;stderr %j&#x27;, stderr);
+        }
+        returnOrThrow(done, fineErr, stdout, stderr, server, conn);
+      });
+    });
+  });
+
+};
+
+/**
+ * Executes a command and return its output
+ *  like child_process.exec.
+ * non-interactive
+ *
+ * also take care of
+ * - remote program termination with ctrl+C
+ *
+ * If cmd is an array of string,
+ * they are executed in serie,
+ * respective output of each stdout / stderr is join then returned.
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmd String|[String]
+ * @param doneEach callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
+ * @param done callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
+
+  var that = this;
+  if(_.isString(cmd)){
+    cmd = [cmd];
+  }
+  if(!done&amp;&amp; _.isFunction(doneEach) ){
+    done = doneEach;
+    doneEach = null;
+  }
+  var cmds = [];
+  var conn_;
+  var err_;
+  var stdout_ = &#x27;&#x27;;
+  var stderr_ = &#x27;&#x27;;
+  cmd.forEach(function(c){
+    cmds.push(function(next){
+      that.execOne(conn_ || server, c, function(err, stdout, stderr, server, conn){
+        conn_ = conn;
+        err_ = err;
+        stdout_ += stdout;
+        stderr_ += stderr;
+        if(doneEach) doneEach(err, stdout, stderr, server, conn);
+        next();
+      });
+    });
+  });
+
+  async.series(cmds, function(){
+    returnOrThrow(done, err_, stdout_, stderr_, server, conn_);
+  });
+
+};
+
+/**
+ * Executes a command and return its stream,
+ *  like of child_process.spawn.
+ * interactive
+ *
+ * also take care of
+ * - manage sudo cmd
+ * - log errors to output
+ *
+ * If cmd is an array, they are executed in serie,
+ * the pipe is open asap,
+ * you ll receive each stdout stderr data in serie
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmd String|[String]
+ * @param doneEach callback(bool err, String stdout, String stderr, ServerCredentials server, ssh2.Client conn)
+ * @param done callback(bool err, Stream stdout, Stream stderr, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
+  var stdoutStream = through();
+  var stderrStream = through();
+  if(_.isString(cmd)){
+    cmd = [cmd];
+  }
+  if(!done&amp;&amp; _.isFunction(doneEach) ){
+    done = doneEach;
+    doneEach = null;
+  }
+  var cmds = [];
+  var conn_;
+  var err_;
+  var stream_;
+  connect(server, function(err, conn){
+    if(err) return returnOrThrow(done, err, null, &#x27;&#x27;+err, server, conn);
+    cmd.forEach(function(c, i){
+      cmds.push(function(next){
+        sudoExec(conn, server, c, function(err, stream){
+          if(err) return returnOrThrow(done, err, stream, stream.stderr, server, conn);
+
+          conn_ = conn;
+          err_ = err;
+
+          (function(stream, i){
+            var onStdoutData = function(d){
+              stdoutStream.emit(&#x27;data&#x27;, d);
+            };
+            var onStderrData = function(d){
+              stderrStream.emit(&#x27;data&#x27;, d);
+            };
+            stream.on(&#x27;data&#x27;, onStdoutData);
+            stream.stderr.on(&#x27;data&#x27;, onStderrData);
+            var onClose = function(err){
+              setTimeout(function(){
+                if(i===cmds.length){
+                  stdoutStream.emit(&#x27;close&#x27;, err);
+                }
+                stream.removeListener(&#x27;close&#x27;, onClose);
+                stream.removeListener(&#x27;data&#x27;, onStdoutData);
+                stream.stderr.removeListener(&#x27;data&#x27;, onStderrData);
+              },500);
+            };
+            stream.on(&#x27;close&#x27;, onClose);
+          })(stream, i+1);
+
+          if(!stream_){ // execute only once
+            returnOrThrow(done, err, stdoutStream, stderrStream, server, conn);
+          }
+
+          if(doneEach) doneEach(err, stream, stream.stderr, server, conn);
+
+          stream_ = stream;
+          next();
+
+        });
+      })
+    });
+
+    async.series(cmds, function(){
+      if(!stream_){
+        returnOrThrow(done, err_, stdoutStream, stderrStream, server, conn_);
+      }
+    });
+
+  });
+
+};
+
+/**
+ * Executes a set of multiple and sequential commands.
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param cmds [String]
+ * @param cmdComplete callback(String command, String response, ServerCredentials server)
+ * @param then callback(err, String allSessionText, ServerCredentials server)
+ */
+SSH2Utils.prototype.runMultiple = SSH2Utils.prototype.run;
+
+/**
+ * Reads a file on the remote
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, String content, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.readFile = function(server, remoteFile, then){
+
+  var content = &#x27;&#x27;;
+  connect(server, function(err, conn){
+    if(err) return returnOrThrow(then, err, content, server, conn);
+
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, content, server, conn);
+
+      debug(&#x27;createReadStream %s&#x27;, remoteFile);
+      var stream = sftp.createReadStream(remoteFile);
+      stream.on(&#x27;data&#x27;, function(d){
+        content += &#x27;&#x27;+d;
+      });
+      var finish = function(readErr){
+        stream.removeListener(&#x27;error&#x27;, finish);
+        stream.removeListener(&#x27;close&#x27;, finish);
+        returnOrThrow(then, readErr, content, server, conn);
+      };
+      stream.on(&#x27;error&#x27;, finish);
+      stream.on(&#x27;close&#x27;, finish);
+    });
+  });
+};
+
+/**
+ * Reads a file on the remote via sudo
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, String content, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.readFileSudo = function(server, remoteFile, then){
+
+  var content = &#x27;&#x27;;
+  this.run(server, &#x27;sudo cat &#x27;+remoteFile+&#x27;&#x27;, function(err, stdout, stderr, server, conn){
+    if(err) return returnOrThrow(then, err, content, server, conn);
+
+    var readErr;
+    stdout.on(&#x27;data&#x27;, function(d){
+      content += &#x27;&#x27;+d;
+    });
+    stdout.on(&#x27;error&#x27;, function(e){
+      readErr = e;
+    });
+    stdout.on(&#x27;close&#x27;, function(){
+      returnOrThrow(then, readErr, content, server, conn);
+    });
+  });
+};
+
+/**
+ * Reads a large file on the remote
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, Stream data, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.streamReadFile = function(server, remoteFile, then){
+
+  connect(server, function(err,conn){
+    conn.sftp(function(err, sftp){
+      var stream = sftp.createReadStream(remoteFile);
+      returnOrThrow(then, err, stream, server, conn);
+    });
+  });
+};
+
+/**
+ * Reads a large file on the remote via sudo
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, Stream data, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.streamReadFileSudo = function(server, remoteFile, then){
+  this.run(server, &#x27;sudo cat &#x27;+remoteFile+&#x27;&#x27;, function(err, stdout, stderr, server, conn){
+    returnOrThrow(then, err, stdout, server, conn);
+  });
+};
+
+/**
+ * Downloads a file to the local
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param localPath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.getFile = function(server, remoteFile, localPath, then){
+
+  connect(server, function(err,conn){
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, server, conn);
+      sftp.fastGet(remoteFile, localPath, function(err){
+        returnOrThrow(then, err, server, conn);
+      });
+    });
+  });
+};
+
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param contain String
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, then){
+  var that = this;
+  that.exec(server, &#x27;grep &quot;&#x27;+contain+&#x27;&quot; &#x27;+remoteFile, function(err, stdout, stderr, server, conn){
+    var found = stdout.length&gt;0 &amp;&amp; stdout.match(contain);
+    if(found){
+      then(err, true, server, conn);
+    } else {
+      that.exec(conn, &#x27;echo &quot;&#x27;+contain+&#x27;&quot; &gt;&gt; &#x27;+remoteFile+&#x27;&#x27;, function(err, stdout, stderr, server, conn){
+        that.exec(conn, &#x27;grep &quot;&#x27;+contain+&#x27;&quot; &#x27;+remoteFile, function(err, stdout, stderr, server, conn){
+          then(err, (stdout.length&gt;0 &amp;&amp; stdout.match(contain)), server, conn);
+        });
+      });
+    }
+  });
+};
+
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param contain String
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureFileContainsSudo = function(server, remoteFile, contain, then){
+  var that = this;
+  that.exec(server, &#x27;sudo grep &quot;&#x27;+contain+&#x27;&quot; &#x27;+remoteFile, function(err, stdout, stderr, server, conn){
+    var found = stdout.length&gt;0 &amp;&amp; stdout.match(contain);
+    if(found){
+      then(err, true, server, conn);
+    } else {
+      that.exec(conn, &#x27;sudo echo &quot;&#x27;+contain+&#x27;&quot; &gt;&gt; &#x27;+remoteFile, function(err,stdout,stderr,server,conn){
+        then(err, !!err, server, conn);
+      });
+    }
+  });
+};
+
+/**
+ * Uploads a file on the remote remote
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param localFile String
+ * @param remoteFile String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.putFile = function(server, localFile, remoteFile, then){
+
+  debug(&#x27;from %s to %s&#x27;, path.relative(__dirname,localFile), remoteFile);
+
+  remoteFile = remoteFile.replace(/[\\]/g,&#x27;/&#x27;); // windows needs this
+  var remotePath = path.dirname(remoteFile);
+  this.mkdir(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, server, conn);
+
+      debug(&#x27;put %s %s&#x27;,
+        path.relative(process.cwd(),localFile), path.relative(remotePath,remoteFile));
+
+      sftp.fastPut(localFile, remoteFile, function(err){
+        returnOrThrow(then, err, server, conn);
+      });
+    });
+  });
+
+};
+
+/**
+ * Uploads a file on the remote via sudo support
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param localFile String
+ * @param remoteFile String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.putFileSudo = function(server, localFile, remoteFile, then){
+
+  var that = this;
+
+  debug(&#x27;from %s to %s&#x27;, path.relative(__dirname, localFile), remoteFile);
+
+  remoteFile = remoteFile.replace(/[\\]/g,&#x27;/&#x27;); // windows needs this
+  var remotePath = path.dirname(remoteFile);
+  var fileName = path.basename(remoteFile);
+
+  this.mktemp(server, pkg.name, function(err, tmpPath, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, server, conn);
+
+      debug(&#x27;put %s %s&#x27;,
+        path.relative(process.cwd(), localFile), path.relative(remotePath, remoteFile));
+
+      sftp.fastPut(localFile, tmpPath+&#x27;/&#x27;+fileName, function(err){
+        if(err) return returnOrThrow(then, err, server, conn);
+
+        that.mkdirSudo(conn,remotePath, function(err){
+          if(err) return returnOrThrow(then, err, server, conn);
+
+          that.exec(conn, &#x27;sudo cp &#x27;+tmpPath+&#x27;/&#x27;+fileName+&#x27; &#x27;+remoteFile, function(err, stdout, stderr){
+            if(err) return returnOrThrow(then, err, server, conn);
+
+            that.rmdirSudo(conn, tmpPath+&#x27;/&#x27;+fileName, function(err){
+              returnOrThrow(then, err, server, conn);
+            });
+
+          });
+
+        });
+
+      });
+    });
+  });
+
+};
+
+/**
+ * Writes content to a remote file
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.writeFile = function(server, remoteFile, content, then){
+
+  debug(&#x27;write to %s&#x27;,remoteFile);
+
+  remoteFile = remoteFile.replace(/[\\]/g,&#x27;/&#x27;); // windows needs this
+
+  var remotePath = path.dirname(remoteFile);
+  debug(&#x27;mkdir %s&#x27;, remotePath);
+  this.mkdir(server, remotePath, function(err, server, conn){
+    if(err){
+      return returnOrThrow(then, err, server, conn);
+    }
+
+    debug(&#x27;write %s&#x27;, remoteFile);
+
+    conn.sftp(function sftpOpen(err, sftp){
+      if(err){
+        return returnOrThrow(then, err, server, conn);
+      }
+      try{
+        debug(&#x27;stream start&#x27;);
+        var wStream = sftp.createWriteStream(remoteFile, {flags: &#x27;w+&#x27;, encoding: null});
+        wStream.on(&#x27;error&#x27;, function (err) {
+          debug(&#x27;stream error %j&#x27;, err);
+          wStream.removeAllListeners(&#x27;finish&#x27;);
+          returnOrThrow(then, err, server, conn);
+        });
+        wStream.on(&#x27;finish&#x27;, function () {
+          debug(&#x27;stream finish&#x27;);
+          returnOrThrow(then, err, server, conn);
+        });
+        wStream.end(&#x27;&#x27;+content);
+      }catch(ex){
+        debug(&#x27;stream ex %j&#x27;, ex);
+        return returnOrThrow(then, ex, server, conn);
+      }
+    });
+  });
+};
+
+/**
+ * Writes content to a remote file
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.writeFileSudo = function(server, remoteFile, content, then){
+  throw &#x27;todo&#x27;;
+};
+
+/**
+ * Tells if a file exists on remote
+ * by trying to open handle on it.
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, exists, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.fileExists = function(server, remoteFile, then){
+
+  remoteFile = remoteFile.replace(/[\\]/g,&#x27;/&#x27;); // windows needs this
+  debug(&#x27;fileExists %s&#x27;,remoteFile);
+
+  connect(server, function sshConnect(err, conn){
+    if (err) return returnOrThrow(then, err, server, conn);
+    conn.sftp(function sftpOpen(err, sftp){
+      if (err) return returnOrThrow(then, err, server, conn);
+      sftp.open(remoteFile, &#x27;r&#x27;, function stfpOpenFileHandle(err, handle){
+        if(handle) sftp.close(handle);
+        returnOrThrow(then, err, !err, server, conn);
+      })
+    });
+  });
+};
+
+/**
+ * Tells if a file exists on remote
+ * by trying to open handle on it.
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, exists, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.fileExistsSudo = function(server, remoteFile, then){
+
+  remoteFile = path.normalize(remoteFile).replace(/\\/g, &#x27;/&#x27;);
+  var remoteFileName = path.basename(remoteFile);
+  var remotePath = path.dirname(remoteFile);
+  debug(&#x27;fileExistsSudo %s&#x27;, remoteFile);
+
+  this.exec(server, &#x27;sudo ls -alh &#x27;+remotePath+&#x27;/&#x27;, function(err, stdout, stderr, server, conn){
+    returnOrThrow(then, err, !!stdout.match(remoteFileName), server, conn);
+  });
+};
+
+/**
+ * Deletes a file or directory
+ * rm -fr /some/path
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.rmdir = function(server, remotePath, then){
+  debug(&#x27;rmdir %s&#x27;,remotePath);
+  this.exec(server, &#x27;rm -fr &#x27;+remotePath, function rmdir (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
+  });
+};
+
+/**
+ * Deletes a file or directory
+ * sudo rm -fr /some/path
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.rmdirSudo = function(server, remotePath, then){
+  debug(&#x27;rmdirSudo %s&#x27;, remotePath);
+  this.exec(server, &#x27;sudo rm -fr &#x27;+remotePath, function rmdirSudo (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
+  });
+};
+
+/**
+ * Creates a concurrent-safe temporary remote directory.
+ *
+ * It does not attempt to keep track of temp files created during the session.
+ * Thus it won t delete them on connection close.
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param suffix String
+ * @param then callback(err, tmpDirName, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.mktemp = function(server, suffix, then){
+  debug(&#x27;mktemp %s&#x27;,suffix);
+  this.exec(server, &#x27;mktemp -d --suffix=&#x27;+suffix, function mkdir (err, stderr, stdout, server, conn){
+    // if response is done on stderr when everything s fine,
+    // errors may go into stdout or fd.pipe[3], it is unclear and for sure untested
+    var tempPath = _s.trim(stderr);
+    returnOrThrow(then, null, tempPath, server, conn);
+  });
+};
+
+/**
+ * Creates a remote directory
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.mkdir = function(server, remotePath, then){
+  debug(&#x27;mkdir %s&#x27;,remotePath);
+  this.exec(server, &#x27;mkdir -p &#x27;+remotePath, function mkdir (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
+  });
+};
+
+/**
+ * Creates a remote directory
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.mkdirSudo = function(server, remotePath, then){
+  debug(&#x27;mkdirSudo %s&#x27;,remotePath);
+  this.exec(server, &#x27;sudo mkdir -p &#x27;+remotePath, function mkdirSudo (err, stderr, stdout, server, conn){
+    var fineErr = null;
+    if( stdout ){
+      fineErr = new  Error(stdout);
+      fineErr.code = 3;
+    }
+    returnOrThrow(then, fineErr, server, conn);
+  });
+};
+
+/**
+ * Ensure a remote directory exists and is empty
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureEmptyDir = function(server, remotePath, then){
+  debug(&#x27;ensureEmptyDir %s&#x27;,remotePath);
+  var that = this;
+  that.rmdir(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.mkdir(server, remotePath, function(err, server, conn){
+      returnOrThrow(then, err, server, conn);
+    });
+  });
+};
+
+/**
+ * Ensure a remote directory exists and is empty
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureEmptyDirSudo = function(server, remotePath, then){
+  debug(&#x27;ensureEmptyDir %s&#x27;,remotePath);
+  var that = this;
+  that.rmdirSudo(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.mkdirSudo(server, remotePath, function(err, server, conn){
+      returnOrThrow(then, err, server, conn);
+    });
+  });
+};
+
+/**
+ * Ensure a file belongs to connected user
+ * by sudo chmod -R /path
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.ensureOwnership = function(server, remotePath, then){
+  debug(&#x27;ensureWritable %s&#x27;,remotePath);
+  var that = this;
+  server.username = server.username || server.userName || server.user;
+  that.exec(server, &#x27;sudo chown -R &#x27;+server.username+&#x27;:&#x27;+server.username+&#x27; &#x27;+remotePath, function(err, stdout, stderr, server, conn) {
+    returnOrThrow(then, err, server, conn);
+  });
+};
+
+/**
+ * Uploads a local directory to the remote.
+ * Partly in series, partly parallel.
+ * Proceed such
+ * sudo rm -fr /remotePath
+ * sudo mkdir -p /remotePath
+ * recursive sftp mkdir
+ * recursive sftp put
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param localPath String
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.putDir = function(server, localPath, remotePath, then){
+  var that = this;
+  that.ensureEmptyDir(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, server, conn);
+
+      debug(&#x27;ready&#x27;);
+      scanLocalDirectory(localPath, function(dirs, files){
+
+        // create remote directories
+        var dirHandlers = [];
+        dirs.forEach(function(f){
+          dirHandlers.push(function(next){
+            var to = path.join(remotePath, f).replace(/[\\]/g,&#x27;/&#x27;); // windows needs this
+            debug(pkg.name, &#x27;mkdir %s&#x27;, to);
+            that.mkdir(server, to, function(err){
+              if(err) debug(&#x27;mkdir %s %s&#x27;, to, err.message);
+              next();
+            });
+          })
+        });
+
+        // push files to remote
+        var filesHandlers = [];
+        files.forEach(function(f){
+          filesHandlers.push(function(next){
+            var from = path.join(localPath, f);
+            var to = path.join(remotePath, f).replace(/[\\]/g,&#x27;/&#x27;); // windows needs this
+            debug(pkg.name, &#x27;put %s %s&#x27;, path.relative(process.cwd(), from), to);
+            sftp.fastPut(from, to, function(err){
+              if(err) debug(&#x27;fastPut %s %s %s&#x27;, from, to, err.message);
+              next();
+            });
+          })
+        });
+
+        // then push the scanned files and directories
+        async.series(dirHandlers, function(){
+          async.parallelLimit(filesHandlers, 4, function(){
+            returnOrThrow(then, err, server, conn);
+          });
+        });
+      });
+    });
+  });
+};
+
+/**
+ * Uploads a local directory to the remote.
+ * Partly in series, partly parallel.
+ * Proceed such
+ * sudo rm -fr /remotePath
+ * sudo mkdir -p /remotePath
+ * recursive sftp mkdir
+ * recursive sftp put
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param localPath String
+ * @param remotePath String
+ * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.putDirSudo = function(server, localPath, remotePath, then){
+
+  var that = this;
+
+  var tmpRemotePath = path.join(&#x27;/tmp/ssh2-utils/&#x27;, remotePath);
+  that.ensureEmptyDirSudo(server, remotePath, function(err, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+
+    that.ensureEmptyDirSudo(conn, tmpRemotePath, function(err, server, conn){
+      if(err) return returnOrThrow(then, err, server, conn);
+
+      that.ensureOwnership(conn, tmpRemotePath, function(err, server, conn) {
+        if (err) return returnOrThrow(then, err, server, conn);
+
+        conn.sftp(function(err, sftp){
+          if(err) return returnOrThrow(then, err, server, conn);
+
+          debug(&#x27;ready&#x27;);
+          scanLocalDirectory(localPath, function(dirs, files){
+
+            // create remote directories
+            var dirHandlers = [];
+            dirs.forEach(function(f){
+              dirHandlers.push(function(next){
+                var to = path.join(tmpRemotePath, f).replace(/[\\]/g,&#x27;/&#x27;);
+                debug(pkg.name, &#x27;mkdir %s&#x27;, to);
+                that.mkdirSudo(to, function(err){
+                  if(err) debug(&#x27;mkdir %s %s&#x27;, to, err.message);
+                  next();
+                });
+              })
+            });
+
+            // push files to remote
+            var filesHandlers = [];
+            files.forEach(function(f){
+              filesHandlers.push(function(next){
+                var from = path.join(localPath, f);
+                var to = path.join(tmpRemotePath, f).replace(/[\\]/g,&#x27;/&#x27;); // windows needs this
+                debug(pkg.name, &#x27;put %s %s&#x27;, path.relative(process.cwd(), from), to);
+                sftp.fastPut(from, to, function(err){
+                  if(err) debug(&#x27;fastPut %s %s %s&#x27;, from, to, err.message);
+                  next();
+                });
+              })
+            });
+
+            // then push the scanned files and directories
+            async.series(dirHandlers, function(){
+              async.parallelLimit(filesHandlers, 4, function(){
+                if(err) return returnOrThrow(then, err, server, conn);
+                that.exec(conn, &#x27;sudo cp -R &#x27;+path.join(tmpRemotePath, &#x27;*&#x27;)+&#x27; &#x27;+remotePath+&#x27;/&#x27;, function(err, stdout, stderr, server, conn){
+                  if(err) return returnOrThrow(then, err, server, conn);
+                  that.rmdirSudo(conn, tmpRemotePath, function(err, server, conn){
+                    returnOrThrow(then, err, server, conn);
+                  });
+                });
+              });
+            });
+          });
+        });
+
+      });
+
+
+    });
+  });
+
+};
+
+/**
+ * Downloads a remote directory to the local.
+ * remote traverse directories over sftp.
+ * then get files in parallel
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remotePath String
+ * @param localPath String
+ * @param allDone callback(err, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.getDir = function(server, remotePath, localPath, allDone){
+
+  var that = this;
+  server.username = server.username || server.userName || server.user;
+
+  connect(server, function(err,conn){
+    conn.sftp(function(err, sftp){
+      if (err) throw err;
+
+      debug(&#x27;ready&#x27;);
+
+      var files = [];
+      var dirs = [];
+      function readdir(p, then){
+        sftp.readdir(p, function sftpReaddir(err,list){
+          if (err) throw err;
+          var toRead = [];
+          list.forEach(function(item){
+            var fpath = p+&#x27;/&#x27;+item.filename;
+            toRead.push(function(done){
+              sftp.stat(fpath, function sftpStats(err,stat){
+                if (err) throw err;
+                if(stat.isDirectory()){
+                  dirs.push(fpath.replace(remotePath, &#x27;&#x27; ) );
+                  readdir(fpath,done);
+                }else if(stat.isFile()){
+                  files.push(fpath.replace(remotePath, &#x27;&#x27; ) );
+                  done();
+                }
+              });
+            });
+          });
+          async.parallelLimit(toRead,4, function(){
+            if(then) then(dirs,files);
+          });
+        });
+      }
+
+      readdir(remotePath, function(dirs,files){
+        var todoDirs = [];
+        var todoFiles = [];
+        dirs.forEach(function(dir){
+          todoDirs.push(function(done){
+            fs.mkdirs(localPath+dir,done);
+          });
+        });
+        files.forEach(function(file){
+          todoFiles.push(function(done){
+            that.readFile(server, remotePath+file, localPath+file, done);
+          });
+        });
+
+        async.parallelLimit(todoDirs,4, function(){
+          async.parallelLimit(todoFiles,4, allDone);
+        });
+      });
+
+    });
+  });
+};
+
+module.exports = SSH2Utils;
+
+    </pre>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>
