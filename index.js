@@ -49,7 +49,7 @@ var scanLocalDirectory = function(localPath, then){
  * to login, or run sudo command
  * transparently
  *
- * @note It is a class to only support documentation
+ * @note It is a class to support documentation
  * @constructor
  */
 function ServerCredentials(){
@@ -63,7 +63,7 @@ function ServerCredentials(){
 /**
  * sudo challenge completion over ssh
  *
- * If the login success, hasLogin is true
+ * If the login succeed, hasLogin is true
  *
  * @param stream Stream
  * @param pwd string
