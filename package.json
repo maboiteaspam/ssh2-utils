@@ -1,6 +1,6 @@
 {
   "name": "ssh2-utils",
-  "version": "1.0.27",
+  "version": "1.0.28",
   "description": "ssh2 utilities to easy usage of mscdex/ssh2",
   "main": "index.js",
   "repository": {
