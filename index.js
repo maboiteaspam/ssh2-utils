@@ -651,6 +651,59 @@ SSH2Utils.prototype.ensureFileContainsSudo = function(server, remoteFile, contai
     }
   });
 };
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.prependFile = function(server, remoteFile, content, then){
+  var that = this;
+  that.mktemp(server, pkg.name, function(err, tmpPath, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.writeFile(server, tmpPath+'/t', content, function(err){
+      if(err) return returnOrThrow(then, err, server, conn);
+      that.exec(server, 'echo '+remoteFile+' >> '+tmpPath+'/t', content, function(err){
+        if(err) return returnOrThrow(then, err, server, conn);
+        that.exec(server, 'echo '+tmpPath+'/t > '+remoteFile, content, function(err){
+          if(err) return returnOrThrow(then, err, server, conn);
+          that.exec(server, 'rm '+tmpPath+'/t ', content, function(err){
+            if(err) return returnOrThrow(then, err, server, conn);
+          });
+        });
+      });
+    });
+  });
+};
+
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.prependFileSudo = function(server, remoteFile, content, then){
+  var that = this;
+  that.mktemp(server, pkg.name, function(err, tmpPath, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.writeFileSudo(server, tmpPath+'/t', content, function(err){
+      if(err) return returnOrThrow(then, err, server, conn);
+      that.exec(server, 'sudo echo '+remoteFile+' >> '+tmpPath+'/t', content, function(err){
+        if(err) return returnOrThrow(then, err, server, conn);
+        that.exec(server, 'sudo echo '+tmpPath+'/t > '+remoteFile, content, function(err){
+          if(err) return returnOrThrow(then, err, server, conn);
+          that.exec(server, 'sudo rm '+tmpPath+'/t ', content, function(err){
+            if(err) return returnOrThrow(then, err, server, conn);
+          });
+        });
+      });
+    });
+  });
+};
 
 /**
  * Uploads a file on the remote remote
