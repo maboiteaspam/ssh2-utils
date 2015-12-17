@@ -618,7 +618,7 @@ describe('sftp readFile', function(){
     ssh.readFile(hostPwd, '/home/vagrant/.bashrc', function(err, data){
       if(err) console.error(err);
       (!!err).should.be.false;
-      data.should.match(/bashrc/);
+      data.should.match(/export PATH/);
       done();
     });
   });
