@@ -14,6 +14,10 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 ---------------------------------------
 
 
+# Changes
+
+- 2015-12-17 : Tiny little christmas gift: Updated to latest dependencies, Updated travis tests to pass, Updated travis targets to add 4.x.
+
 # Documentation
 
 Automatic source code documentation generation 
