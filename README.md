@@ -383,3 +383,18 @@ This will help to prevent the system from asking the password.
 # Status
 
 In development. It needs some tests. some more methods implementation.
+
+---------------------------------------
+
+# Test
+
+For fedora users, use `virtualbox`,
+
+```
+sudo dnf install vagrant
+# see http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
+export VAGRANT_DEFAULT_PROVIDER=virtualbox
+mocha
+```
+
+or help me get started on `libvirt` to port forward on `vagrant@localhost -p 2222`
