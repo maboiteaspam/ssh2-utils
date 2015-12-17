@@ -239,8 +239,7 @@ describe('exec multiple', function(){
     ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
-      stdout.should.match(/No such file or directory/);
-      //stderr.should.match(/No such file or directory/);
+      stderr.should.match(/No such file or directory/);
       conn.end();
       done();
     });

@@ -16,7 +16,7 @@ Provide a set of methods to exec/run/getFile/putFile/getDir/putDir.
 
 # Changes
 
-- 2015-12-17 : Tiny little christmas gift: Updated to latest dependencies, Updated travis tests to pass, Updated travis targets to add 4.x.
+- 2015-12-17 : Tried to update to latest dependencies. Got problems.. Need to pass travis tests. Need to jump to 2.x after.
 
 # Documentation
 
