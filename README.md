@@ -34,6 +34,7 @@ is support by mocha https://github.com/maboiteaspam/ssh2-utils/tree/gh-pages/moc
     * [`runMultiple`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#runMultiple)
     * [`mktemp`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#mktemp)
     * [`readFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readFile)
+    * [`readFileSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#readFileSudo)
     * [`getFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#getFile)
     * [`putDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDir)
     * [`putDirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#putDirSudo)
@@ -54,7 +55,8 @@ is support by mocha https://github.com/maboiteaspam/ssh2-utils/tree/gh-pages/moc
     * [`ensureEmptyDir`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDir)
     * [`ensureEmptyDirSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureEmptyDirSudo)
     * [`ensureOwnership`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#ensureOwnership)
-
+    * [`streamReadFile`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#streamReadFile)
+    * [`streamReadFileSudo`](http://maboiteaspam.github.io/ssh2-utils/docs/SSH2Utils.html#streamReadFileSudo)
 
 ---------------------------------------
 

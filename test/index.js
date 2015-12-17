@@ -1,4 +1,3 @@
-
 require('should');
 var fs = require('fs-extra');
 var _ = require('underscore');
@@ -81,9 +80,9 @@ describe('ident', function(){
       username: 'wrong',
       password: 'credentials'
     };
-    ssh.exec(wrongHost, 'ls -alh', function(err, stdout, stderr, server){
+    ssh.exec(wrongHost, 'ls -alh', function(err, stdout, stderr){
       (!!err).should.be.true;
-      (stdout===null).should.be.true;
+      (stdout).should.be.empty;
       (err.message).should.match(/failed/);
       (stderr).should.match(/failed/);
       done();
@@ -96,7 +95,7 @@ describe('ident', function(){
       username: 'wrong',
       privateKey: hostKey.privateKey
     };
-    ssh.run(wrongHost, 'ls -alh', function(err, stdout, stderr, server){
+    ssh.run(wrongHost, 'ls -alh', function(err, stdout, stderr){
       (!!err).should.be.true;
       (stdout===null).should.be.true;
       (err.message).should.match(/failed/);
@@ -109,24 +108,26 @@ describe('ident', function(){
 describe('exec', function(){
   this.timeout(10000);
   it('can execute command', function(done){
-    ssh.exec(hostPwd,'ls -alh /var/log/', function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,'ls -alh /var/log/', function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
-      done()
+      conn.end();
+      done();
     });
   });
   it('can execute command with private key', function(done){
-    ssh.exec(hostKey,'ls -alh /var/log/', function(err, stdout, stderr, server){
+    ssh.exec(hostKey,'ls -alh /var/log/', function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
+      conn.end();
       done()
     });
   });
   it('can execute sudo command', function(done){
     this.timeout(50000);
-    ssh.exec(hostPwd,'sudo ls -alh', function(err, stdout, stderr, server,conn){
+    ssh.exec(hostPwd,'sudo ls -alh', function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(new RegExp(server.username));
       stderr.should.be.empty;
@@ -135,13 +136,14 @@ describe('exec', function(){
         (!!err).should.be.false;
         stdout.should.match(new RegExp(server.username));
         stderr.should.be.empty;
+        conn.end();
         done();
       });
     });
   });
   it('can connect with private key and execute sudo command', function(done){
     this.timeout(50000);
-    ssh.exec(hostKey,'sudo ls -alh', function(err, stdout, stderr, server,conn){
+    ssh.exec(hostKey,'sudo ls -alh', function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(new RegExp(server.username));
       stderr.should.be.empty;
@@ -150,25 +152,36 @@ describe('exec', function(){
         (!!err).should.be.false;
         stdout.should.match(new RegExp(server.username));
         stderr.should.be.empty;
+        conn.end();
         done();
       });
     });
   });
   it('can fail properly', function(done){
-    ssh.exec(hostPwd,'ls -alh /nofile', function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,'ls -alh /nofile', function(err, stdout, stderr, server, conn){
       (!!err).should.be.true;
       stderr.should.match(/No such file or directory/);
       err.message.should.match(/No such file or directory/);
       stdout.should.be.empty;
+      conn.end();
       done();
     });
   });
   it('can fail properly', function(done){
-    ssh.exec(hostPwd, 'dsscdc', function(err, stdout, stderr, server){
+    ssh.exec(hostPwd, 'dsscdc', function(err, stdout, stderr, server, conn){
       (!!err).should.be.true;
       stderr.should.match(/command not found/);
       err.message.should.match(/command not found/);
       stdout.should.be.empty;
+      conn.end();
+      done();
+    });
+  });
+  it('can fail correctly when it can t execute a command', function(done){
+    ssh.exec(hostPwd, 'echo some >> /root/cannot', function(err,stdout,stderr, server, conn){
+      (!!err).should.be.true;
+      err.message.should.match(/Permission denied/);
+      conn.end();
       done();
     });
   });
@@ -177,18 +190,20 @@ describe('exec', function(){
 describe('exec multiple', function(){
   this.timeout(10000);
   it('can execute multiple commands', function(done){
-    ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
+      conn.end();
       done()
     });
   });
   it('can execute multiple sudo commands', function(done){
-    ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
+      conn.end();
       done()
     });
   });
@@ -197,11 +212,12 @@ describe('exec multiple', function(){
     var doneEach = function(){
       doneCnt++;
     };
-    ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,['ls', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
       doneCnt.should.eql(2);
+      conn.end();
       done()
     });
   });
@@ -210,35 +226,51 @@ describe('exec multiple', function(){
     var doneEach = function(){
       doneCnt++;
     };
-    ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+    ssh.exec(hostPwd,['sudo ls', 'sudo ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
       stderr.should.be.empty;
       doneCnt.should.eql(2);
+      conn.end();
       done()
     });
   });
-  it('can fail properly while executing multiple commands', function(done){
-    ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], function(err, stdout, stderr, server){
+  it('can fail properly', function(done){
+    ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
-      stderr.should.be.empty;
+      stderr.should.match(/No such file or directory/);
+      conn.end();
       done();
     });
   });
-  it('can fail properly while executing multiple commands', function(done){
+  it('can fail properly', function(done){
     var doneCnt = 0;
     var failedCnt = 0;
     var doneEach = function(err){
       doneCnt++;
       if(err) failedCnt++;
     };
-    ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server){
+    ssh.exec(hostPwd, ['ls', 'ls -alh /nofile', 'ls -alh /var/log/'], doneEach, function(err, stdout, stderr, server, conn){
       (!!err).should.be.false;
       stdout.should.match(/root/);
-      stderr.should.be.empty;
+      stderr.should.match(/No such file or directory/);
       doneCnt.should.eql(3);
       failedCnt.should.eql(1);
+      conn.end();
+      done();
+    });
+  });
+  it('can process commands in order', function(done){
+    var cmds = [
+      'echo "processed"',
+      'echo "in"',
+      'echo "order"'
+    ];
+    ssh.exec(hostPwd, cmds, function(err, stdout, stderr, server, conn){
+      (!!err).should.be.false;
+      stdout.replace(/\n/g, ' ').should.eql('processed in order ');
+      conn.end();
       done();
     });
   });
@@ -246,8 +278,13 @@ describe('exec multiple', function(){
 
 describe('run', function(){
   this.timeout(10000);
-  it('can run sudo command with password', function(done){
-    ssh.run(hostPwd,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
+  it('can execute sudo command with password', function(done){
+    var cmds = [
+      //'sudo tail -f /var/log/{auth.log,secure}',
+      'sudo tail -f /var/log/secure',
+      'sudo tail -f /var/log/auth.log'
+    ];
+    ssh.run(hostPwd, cmds, function(err, stdouts, stderrs, server, conn){
       (!!err).should.be.false;
       var stdout = '';
       stdouts.on('data', function(data){
@@ -266,8 +303,13 @@ describe('run', function(){
       },500);
     });
   });
-  it('can connect with private key and run sudo command with password', function(done){
-    ssh.run(hostKey,'sudo tail -f /var/log/{auth.log,secure}', function(err, stdouts, stderrs, server, conn){
+  it('can execute sudo command with key', function(done){
+    var cmds = [
+      //'sudo tail -f /var/log/{auth.log,secure}',
+      'sudo tail -f /var/log/secure',
+      'sudo tail -f /var/log/auth.log'
+    ];
+    ssh.run(hostKey, cmds, function(err, stdouts, stderrs, server, conn){
       (!!err).should.be.false;
       var stdout = '';
       stdouts.on('data', function(data){
@@ -286,7 +328,7 @@ describe('run', function(){
       },500);
     });
   });
-  it('run can fail properly', function(done){
+  it('can fail properly', function(done){
     ssh.run(hostPwd,'ls -alh /var/log/nofile', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
@@ -305,7 +347,7 @@ describe('run', function(){
       (!!err).should.be.false;
     });
   });
-  it('run can fail properly', function(done){
+  it('can fail properly', function(done){
     ssh.run(hostPwd, 'dsscdc', function(err, stdouts, stderrs, server, conn){
       var stdout = '';
       var stderr = '';
@@ -328,7 +370,7 @@ describe('run', function(){
 
 describe('run multiple', function(){
   this.timeout(10000);
-  it('can multiple run sudo command with password', function(done){
+  it('can execute multiple commands with sudo mixin using password', function(done){
     var cmds = [
       'sudo ls -alh /var/log/{auth.log,secure}',
       'sudo ls -alh /var/log/{auth.log,secure}',
@@ -350,7 +392,7 @@ describe('run multiple', function(){
 
     });
   });
-  it('can run multiple sudo command with password', function(done){
+  it('can execute multiple commands with sudo mixin using key', function(done){
     var cmds = [
       'sudo ls -alh /var/log/{auth.log,secure}',
       'sudo ls -alh /var/log/{auth.log,secure}',
@@ -370,9 +412,10 @@ describe('run multiple', function(){
       });
     });
   });
-  it('can run multiple command and fail properly', function(done){
+  it('can fail properly', function(done){
     var cmds = [
-      'sudo ls -alh /var/log/{auth.log,secure}',
+      'sudo tail -f /var/log/secure',
+      'sudo tail -f /var/log/auth.log',
       'ls -alh /var/log/',
       'ls -alh /var/log/nofile'
     ];
@@ -387,17 +430,19 @@ describe('run multiple', function(){
         stderr+=''+data;
       });
       stdouts.on('close', function(){
-        stderr.should.match(/No such file or directory/)
-        stdout.should.match(/root/)
-        stdout.should.match(/total/)
+        stderr.should.match(/No such file or directory/);
+        stdout.should.match(/root/);
+        stdout.should.match(/total/);
         conn.end();
         done();
       });
     });
   });
-  it('can run multiple sudo command and fail properly', function(done){
+  it('can fail properly', function(done){
     var cmds = [
-      'sudo tail -f /var/log/{auth.log,secure}',
+      'sudo tail -f ~/.bashrc',
+      'sudo tail -f /var/log/secure',
+      'sudo tail -f /var/log/auth.log',
       'ls -alh /var/log/',
       'dsscdc'
     ];
@@ -441,6 +486,7 @@ describe('sftp ensureEmptyDir', function(){
       ssh.fileExists(conn, '/home/vagrant/putdir-test', function(err2, exists){
         (!!err).should.be.false;
         (exists).should.be.true;
+        conn.end();
         done();
       });
     });
@@ -453,6 +499,7 @@ describe('sftp ensureEmptyDir', function(){
         if(err2) console.error(err2);
         (!!err2).should.be.false;
         (exists).should.be.true;
+        conn.end();
         done();
       });
     });
@@ -471,12 +518,20 @@ describe('sftp ensureEmptyDir', function(){
 describe('sftp fileExists', function(){
   this.timeout(10000);
 
+  it('can test file exists', function(done){
+    ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err, exists){
+      (!!err).should.be.false;
+      (exists).should.be.true;
+      done();
+    });
+  });
   it('can ensure a remote path exists', function(done){
     ssh.ensureEmptyDir(hostPwd, '/home/vagrant/fileExists-test', function(err, server, conn){
       (!!err).should.be.false;
       ssh.fileExists(conn, '/home/vagrant/fileExists-test', function(err2, exists){
         (!!err2).should.be.false;
         (exists).should.be.true;
+        conn.end();
         done();
       });
     });
@@ -487,14 +542,16 @@ describe('sftp fileExists', function(){
       ssh.fileExistsSudo(conn, '/home/vagrant/fileExists-test', function(err2, exists){
         (!!err2).should.be.false;
         (exists).should.be.true;
+        conn.end();
         done();
       });
     });
   });
   it('can fail properly', function(done){
-    ssh.fileExists(hostPwd, '/root/fileExists-fail', function(err, exists){
+    ssh.fileExists(hostPwd, '/root/fileExists-fail', function(err, exists, server, conn){
       (!!err).should.be.true;
       (exists).should.be.false;
+      conn.end();
       done();
     });
   });
@@ -513,6 +570,7 @@ describe('sftp putDir', function(){
             fs.mkdirsSync(fixturePath);
             fs.emptyDirSync(fixturePath);
             fs.writeFileSync(fixturePath+'/temp'+t, t);
+            conn.end();
             done();
           });
         });
@@ -524,6 +582,7 @@ describe('sftp putDir', function(){
       ssh.fileExists(conn, tmpRemotePath+'/putdir-test/temp'+t, function(err2, exists){
         (!!err).should.be.false;
         (exists).should.be.true;
+        conn.end();
         done();
       });
     });
@@ -536,6 +595,7 @@ describe('sftp putDir', function(){
         if(err2) console.error(err2);
         (!!err2).should.be.false;
         (exists).should.be.true;
+        conn.end();
         done();
       });
     });
@@ -545,6 +605,7 @@ describe('sftp putDir', function(){
       ssh.fileExists(conn, '/root/putdir-test-fail/temp'+t, function(err2, exists){
         (!!err).should.be.true;
         (exists).should.be.false;
+        conn.end();
         done();
       });
     });
@@ -561,7 +622,26 @@ describe('sftp readFile', function(){
       done();
     });
   });
+  it('can read a file from remote via sudo', function(done){
+    ssh.readFileSudo(hostPwd, '/root/.bashrc', function(err, data){
+      if(err) console.error(err);
+      (!!err).should.be.false;
+      data.should.match(/bashrc/);
+      done();
+    });
+  });
+  it('can properly fail permission', function(done){
+    this.timeout(25000);
+    ssh.readFile(hostPwd, '/root/.bashrc', function(err, data){
+      if(err) console.error(err);
+      (!!err).should.be.true;
+      err.code.should.eql(3);
+      err.message.should.match(/Permission denied/);
+      done();
+    });
+  });
   it('can properly fail to read a file from remote', function(done){
+    this.timeout(25000);
     ssh.readFile(hostPwd, '~/NoSuchFile', function(err, data){
       if(err) console.error(err);
       (!!err).should.be.true;
@@ -588,11 +668,12 @@ describe('sftp getFile', function(){
   });
 
   it('can download a file', function(done){
-    ssh.writeFile(hostPwd, tmpRemotePath+'/remote'+t, t, function(err,server,conn){
+    ssh.writeFile(hostPwd, tmpRemotePath+'/remote'+t, t, function(err, server, conn){
       (!!err).should.be.false;
       ssh.getFile(conn, tmpRemotePath+'/remote'+t, fixturePath + 'local'+t, function(err){
         (!!err).should.be.false;
         fs.readFileSync(fixturePath + 'local'+t,'utf-8').should.eql(''+t);
+        conn.end();
         done();
       });
     });
@@ -610,9 +691,110 @@ describe('sftp mktemp', function(){
         ssh.readFile(conn, tempPath+'/test', function(err, data){
           (!!err).should.be.false;
           data.should.eql(''+t);
+          conn.end();
           done();
         });
       });
+    });
+  });
+});
+
+describe('sftp mkdir', function(){
+  this.timeout(10000);
+
+  it('can create a directory', function(done){
+    ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err,server,conn){
+      (!!err).should.be.false;
+      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
+        (!!err).should.be.false;
+        conn.end();
+        done();
+      });
+    });
+  });
+
+  it('can fail correctly when it can t mkdir', function(done){
+    ssh.mkdir(hostPwd, '/root/cannot', function(err){
+      (!!err).should.be.true;
+      err.code.should.eql(3);
+      err.message.should.match(/Permission denied/);
+      done();
+    });
+  });
+});
+
+describe('sftp rmdir', function(){
+  this.timeout(10000);
+
+  it('can delete a directory', function(done){
+    ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err, server, conn){
+      (!!err).should.be.false;
+      ssh.fileExists(conn, '/home/vagrant/examples', function(err, exists){
+        (!!err).should.be.false;
+        (exists).should.be.true;
+        ssh.rmdir(conn, '/home/vagrant/examples', function(err, server, conn){
+          (!!err).should.be.false;
+          ssh.fileExists(conn, '/home/vagrant/examples', function(err, exists){
+            (!!err).should.be.true;
+            (exists).should.be.false;
+            (err.message).should.match(/No such file/i);
+            conn.end();
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  it('can fail correctly when it can t rmdir', function(done){
+    ssh.exec(hostPwd, 'sudo mkdir -p /root/some', function(err,stdout,sterr,sever,conn){
+      ssh.rmdir(conn, '/root/some', function(err){
+        (!!err).should.be.true;
+        err.code.should.eql(3);
+        err.message.should.match(/Permission denied/);
+        conn.end();
+        done();
+      });
+    });
+  });
+});
+
+describe('sftp writeFile', function(){
+  this.timeout(10000);
+  var t = (new Date()).getTime();
+
+  before(function(done){
+    fs.mkdirsSync(fixturePath);
+    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
+      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
+        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
+          done();
+        });
+      });
+    });
+  });
+
+  it('can write a file content', function(done){
+    ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err,server,conn){
+      (!!err).should.be.false;
+      ssh.fileExists(conn, tmpRemotePath+'/remote2'+t, function(err){
+        (!!err).should.be.false;
+        ssh.getFile(conn, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
+          (!!err).should.be.false;
+          fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
+          conn.end();
+          done();
+        });
+      });
+    });
+  });
+
+  it('can fail correctly when it can t write a file', function(done){
+    ssh.writeFile(hostPwd, '/root/cannot', 'some', function(err){
+      (!!err).should.be.true;
+      err.code.should.eql(3);
+      err.message.should.match(/Permission denied/);
+      done();
     });
   });
 });
@@ -635,7 +817,7 @@ describe('sftp ensureFileContains', function(){
   it('can ensure a file contains a certain piece of text', function(done){
     ssh.writeFile(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err){
       (!!err).should.be.false;
-      ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(contains, err){
+      ssh.ensureFileContains(hostPwd, tmpRemotePath+'/remote5'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
         done(err);
@@ -648,7 +830,7 @@ describe('sftp ensureFileContains', function(){
     fs.writeFileSync(fixturePath + 'local'+t, t);
     ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/remote8'+t, function(err){
       (!!err).should.be.false;
-      ssh.ensureFileContainsSudo(hostPwd, '/root/remote8'+t, t, function(contains, err){
+      ssh.ensureFileContainsSudo(hostPwd, '/root/remote8'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
         done(err);
@@ -656,8 +838,16 @@ describe('sftp ensureFileContains', function(){
     });
   });
 
-});
+  it('can fail correctly', function(done){
+    t++;
+    ssh.ensureFileContains(hostPwd, '/root/some'+t, t, function(err, contains){
+      (!!err).should.be.true;
+      (contains).should.be.false;
+      done();
+    });
+  });
 
+});
 
 describe('sftp putFile', function(){
   this.timeout(10000);
@@ -678,9 +868,10 @@ describe('sftp putFile', function(){
     fs.writeFileSync(fixturePath + 'local'+t, t);
     ssh.putFile(hostPwd, fixturePath + 'local'+t, tmpRemotePath+'/remote'+t, function(err, server, conn){
       (!!err).should.be.false;
-      ssh.ensureFileContains(conn, tmpRemotePath+'/remote'+t, t, function(contains, err){
+      ssh.ensureFileContains(conn, tmpRemotePath+'/remote'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
+        conn.end();
         done();
       });
     });
@@ -691,7 +882,7 @@ describe('sftp putFile', function(){
     fs.writeFileSync(fixturePath + 'local'+t, t);
     ssh.putFileSudo(hostPwd, fixturePath + 'local'+t, '/root/some'+t, function(err){
       (!!err).should.be.false;
-      ssh.ensureFileContainsSudo(hostPwd, '/root/some'+t, t, function(contains, err){
+      ssh.ensureFileContainsSudo(hostPwd, '/root/some'+t, t, function(err, contains){
         (!!err).should.be.false;
         (contains).should.be.true;
         done(err);
@@ -701,114 +892,3 @@ describe('sftp putFile', function(){
 
 });
 
-describe('sftp', function(){
-  this.timeout(10000);
-  var t = (new Date()).getTime();
-
-  before(function(done){
-    fs.mkdirsSync(fixturePath);
-    ssh.exec(hostPwd, 'sudo rm -fr '+tmpRemotePath+'', function(err, stdout, stderr, server, conn){
-      ssh.exec(conn, 'sudo mkdir -p '+tmpRemotePath+'', function(){
-        ssh.exec(conn, 'sudo chmod -R 0777 '+tmpRemotePath+'', function(){
-          done();
-        });
-      });
-    });
-  });
-  it('can test file exists', function(done){
-    ssh.fileExists(hostPwd, '/home/vagrant/.bashrc', function(err, exists){
-      (!!err).should.be.false;
-      (exists).should.be.true;
-      done();
-    });
-  });
-  it('can write a file content', function(done){
-    ssh.writeFile(hostPwd, tmpRemotePath+'/remote2'+t, t, function(err){
-      (!!err).should.be.false;
-      ssh.fileExists(hostPwd, tmpRemotePath+'/remote2'+t, function(err){
-        (!!err).should.be.false;
-        ssh.getFile(hostPwd, tmpRemotePath+'/remote2'+t, fixturePath + 'local2'+t, function(err){
-          (!!err).should.be.false;
-          fs.readFileSync(fixturePath + 'local2'+t,'utf-8').should.eql(''+t);
-          done();
-        });
-      });
-    });
-  });
-  it('can create a directory', function(done){
-    ssh.mkdir(hostPwd, '/home/vagrant/examples', function(err){
-      (!!err).should.be.false;
-      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err){
-        (!!err).should.be.false;
-        done();
-      });
-    });
-  });
-  it('can put a directory', function(done){
-    ssh.putDir(hostPwd, __dirname+'/../examples', '/home/vagrant/examples', function(err, server, conn){
-      (!!err).should.be.false;
-      ssh.fileExists(conn, '/home/vagrant/examples/exec.js', function(err){
-        (!!err).should.be.false;
-        done();
-      });
-    });
-  });
-  it('can delete a directory', function(done){
-    ssh.rmdir(hostPwd, '/home/vagrant/examples', function(err){
-      (!!err).should.be.false;
-      ssh.fileExists(hostPwd, '/home/vagrant/examples', function(err, exists){
-        (!!err).should.be.true;
-        (err.message).should.match(/No such file/i);
-        done();
-      });
-    });
-  });
-});
-
-describe('sftp failures', function(){
-  this.timeout(10000);
-  it('can fail correctly when it can t test if a file', function(done){
-    ssh.fileExists(hostPwd, '/root/.bashrc', function(err){
-      (!!err).should.be.true;
-      err.code.should.eql(3);
-      err.message.should.match(/Permission denied/);
-      done();
-    });
-  });
-  it('can fail correctly when it can t write a file', function(done){
-    ssh.writeFile(hostPwd, '/root/cannot', 'some', function(err){
-      (!!err).should.be.true;
-      err.code.should.eql(3);
-      err.message.should.match(/Permission denied/);
-      done();
-    });
-  });
-  it('can fail correctly when it can t mkdir', function(done){
-    ssh.mkdir(hostPwd, '/root/cannot', function(err){
-      (!!err).should.be.true;
-      err.code.should.eql(3);
-      err.message.should.match(/Permission denied/);
-      done();
-    });
-  });
-  it('can fail correctly when it can t rmdir', function(done){
-    ssh.exec(hostPwd, 'sudo mkdir -p /root/some', function(err,stdout,sterr,sever,conn){
-      ssh.rmdir(hostPwd, '/root/some', function(err){
-        (!!err).should.be.true;
-        err.code.should.eql(3);
-        err.message.should.match(/Permission denied/);
-        done();
-      });
-    });
-  });
-});
-
-describe('exec failures', function(){
-  it('can fail correctly when it can t execute a command', function(done){
-    ssh.exec(hostPwd, 'echo some >> /root/cannot', function(err,stdout,stderr){
-      (!!err).should.be.true;
-      err.message.should.match(/Permission denied/);
-      done();
-    });
-  });
-});

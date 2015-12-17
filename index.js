@@ -49,7 +49,7 @@ var scanLocalDirectory = function(localPath, then){
  * to login, or run sudo command
  * transparently
  *
- * @note It is a class to only support documentation
+ * @note It is a class to support documentation
  * @constructor
  */
 function ServerCredentials(){
@@ -63,7 +63,7 @@ function ServerCredentials(){
 /**
  * sudo challenge completion over ssh
  *
- * If the login success, hasLogin is true
+ * If the login succeed, hasLogin is true
  *
  * @param stream Stream
  * @param pwd string
@@ -145,6 +145,9 @@ var sudoChallenge = function(stream, pwd, then){
   stream.on('close', checkEmptyOutputCommands);
 };
 
+// todo
+// better not to do that as it s a global
+process.setMaxListeners(100);
 /**
  *
  * @constructor
@@ -194,11 +197,59 @@ var connect = function(server, done){
         if(stderr) debug(''+stderr);
         done(stderr, null);
       });
+
+
+      // manage process termination
+      conn.pendingStreams = [];
+      var superEnd = conn.end;
+      conn.end = function(){
+        conn.pendingStreams.forEach(function(stream){
+          stream.kill(conn.pendingStreams.length);
+        });
+        conn.pendingStreams = [];
+        superEnd.call(conn);
+      };
+      // manage user pressing ctrl+C
+      var sigIntSent = function(){
+        conn.end();
+      };
+      process.on('SIGINT', sigIntSent);
+      conn.on('close',function(){
+        try{
+          process.removeListener('SIGINT', sigIntSent);
+        }catch(ex){}
+      });
+      conn.on('end',function(){
+        try{
+          process.removeListener('SIGINT', sigIntSent);
+        }catch(ex){}
+      });
     }catch(ex){
       debug(''+ex);
       done(ex, null);
     }
   }
+};
+
+/**
+ *
+ * @param cmd String
+ * @param stream Stream
+ */
+var sendSigInt = function(cmd, stream, length){
+  debug('sendSigInt '+cmd);
+  try{
+    // this is a workaround for more ssh implementations
+    for(var i=0;i<length;i++){
+      stream.write("\x03");
+    }
+  }catch(ex){ }
+  // this only works with openssh@centos
+  try{
+    for(var i=0;i<length;i++){
+      stream.signal('SIGINT');
+    }
+  }catch(ex){ }
 };
 
 /**
@@ -237,31 +288,17 @@ var sudoExec = function(conn, server, cmd, done){
         if(hasLoginError) debug(
           'login failure, hasLoginError:%j', hasLoginError);
       });
-    }else{
-
     }
 
-    // manage user pressing ctrl+C
-    var sigIntSent = function(){
-      // this is supposed to be compatible : /
-      try{
-        stream.signal('SIGINT');
-      }catch(ex){ console.log(ex) }
-      // but this only works with openssh@centos
-      try{
-        // this is a workaround for more ssh implementations
-        stream.write("\x03");
-      }catch(ex){ console.log(ex) }
-      setTimeout(function(){
-        conn.end();
-        // if the connection ends to soon,
-        // suspect the remote process is not killed.
-      },2000);
+    stream.kill = function(length){
+      sendSigInt(cmd, stream, length || 1);
     };
-    process.on('SIGINT', sigIntSent);
+    // manage process termination with open handle
     stream.on('close', function(){
-      process.removeListener('SIGINT', sigIntSent);
+      var k = conn.pendingStreams.indexOf(stream);
+      if(k>-1) conn.pendingStreams.splice(k,1);
     });
+    conn.pendingStreams.push(stream);
   });
 };
 
@@ -285,10 +322,10 @@ SSH2Utils.prototype.getConnReady = connect;
 SSH2Utils.prototype.execOne = function(server, cmd, done){
 
   connect(server, function(err, conn){
-    if( err) return returnOrThrow(done, err, null,''+err, server, conn);
+    if( err) return returnOrThrow(done, err, '', ''+err, server, conn);
 
     sudoExec(conn, server, cmd, function(err, stream){
-      if( err) return returnOrThrow(done, err, null,''+err, server, conn);
+      if( err) return returnOrThrow(done, err, '', ''+err, server, conn);
 
       var stderr = '';
       var stdout = '';
@@ -343,15 +380,15 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
   var cmds = [];
   var conn_;
   var err_;
-  var stdout_;
-  var stderr_;
+  var stdout_ = '';
+  var stderr_ = '';
   cmd.forEach(function(c){
     cmds.push(function(next){
       that.execOne(conn_ || server, c, function(err, stdout, stderr, server, conn){
         conn_ = conn;
         err_ = err;
-        stdout_ = stdout;
-        stderr_ = stderr;
+        stdout_ += stdout;
+        stderr_ += stderr;
         if(doneEach) doneEach(err, stdout, stderr, server, conn);
         next();
       });
@@ -359,7 +396,7 @@ SSH2Utils.prototype.exec = function(server, cmd, doneEach, done){
   });
 
   async.series(cmds, function(){
-    done(err_, stdout_, stderr_, server, conn_);
+    returnOrThrow(done, err_, stdout_, stderr_, server, conn_);
   });
 
 };
@@ -401,9 +438,10 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
     cmd.forEach(function(c, i){
       cmds.push(function(next){
         sudoExec(conn, server, c, function(err, stream){
+          if(err) return returnOrThrow(done, err, stream, stream.stderr, server, conn);
+
           conn_ = conn;
           err_ = err;
-
 
           (function(stream, i){
             var onStdoutData = function(d){
@@ -416,7 +454,7 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
             stream.stderr.on('data', onStderrData);
             var onClose = function(err){
               setTimeout(function(){
-                if(i+1===cmds.length){
+                if(i===cmds.length){
                   stdoutStream.emit('close', err);
                 }
                 stream.removeListener('close', onClose);
@@ -425,12 +463,14 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
               },500);
             };
             stream.on('close', onClose);
-          })(stream, i);
+          })(stream, i+1);
 
-          if(!stream_){
+          if(!stream_){ // execute only once
             returnOrThrow(done, err, stdoutStream, stderrStream, server, conn);
           }
+
           if(doneEach) doneEach(err, stream, stream.stderr, server, conn);
+
           stream_ = stream;
           next();
 
@@ -463,27 +503,86 @@ SSH2Utils.prototype.runMultiple = SSH2Utils.prototype.run;
  *
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
- * @param then callback(err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(err, String content, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.readFile = function(server, remoteFile, then){
 
-  connect(server, function(err,conn){
-    conn.sftp(function(err, sftp){
-      if(err) return returnOrThrow(then, err, server, conn);
+  var content = '';
+  connect(server, function(err, conn){
+    if(err) return returnOrThrow(then, err, content, server, conn);
 
-      var content = '';
-      var streamErr;
+    conn.sftp(function(err, sftp){
+      if(err) return returnOrThrow(then, err, content, server, conn);
+
+      debug('createReadStream %s', remoteFile);
       var stream = sftp.createReadStream(remoteFile);
       stream.on('data', function(d){
         content += ''+d;
       });
-      stream.on('error', function(e){
-        streamErr = e;
-      });
-      stream.on('close', function(){
-        returnOrThrow(then, streamErr, content, server, conn);
-      });
+      var finish = function(readErr){
+        stream.removeListener('error', finish);
+        stream.removeListener('close', finish);
+        returnOrThrow(then, readErr, content, server, conn);
+      };
+      stream.on('error', finish);
+      stream.on('close', finish);
     });
+  });
+};
+
+/**
+ * Reads a file on the remote via sudo
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, String content, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.readFileSudo = function(server, remoteFile, then){
+
+  var content = '';
+  this.run(server, 'sudo cat '+remoteFile+'', function(err, stdout, stderr, server, conn){
+    if(err) return returnOrThrow(then, err, content, server, conn);
+
+    var readErr;
+    stdout.on('data', function(d){
+      content += ''+d;
+    });
+    stdout.on('error', function(e){
+      readErr = e;
+    });
+    stdout.on('close', function(){
+      returnOrThrow(then, readErr, content, server, conn);
+    });
+  });
+};
+
+/**
+ * Reads a large file on the remote
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, Stream data, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.streamReadFile = function(server, remoteFile, then){
+
+  connect(server, function(err,conn){
+    conn.sftp(function(err, sftp){
+      var stream = sftp.createReadStream(remoteFile);
+      returnOrThrow(then, err, stream, server, conn);
+    });
+  });
+};
+
+/**
+ * Reads a large file on the remote via sudo
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param then callback(err, Stream data, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.streamReadFileSudo = function(server, remoteFile, then){
+  this.run(server, 'sudo cat '+remoteFile+'', function(err, stdout, stderr, server, conn){
+    returnOrThrow(then, err, stdout, server, conn);
   });
 };
 
@@ -513,16 +612,19 @@ SSH2Utils.prototype.getFile = function(server, remoteFile, localPath, then){
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
  * @param contain String
- * @param then callback(contains, err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, then){
   var that = this;
   that.exec(server, 'grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
-    if(stdout.length>0){
-      then(true, err, stdout, stderr, server, conn)
+    var found = stdout.length>0 && stdout.match(contain);
+    if(found){
+      then(err, true, server, conn);
     } else {
-      that.exec(conn, 'echo "'+contain+'" >> '+remoteFile, function(err, stdout, stderr, server, conn){
-        then(!!err, err, stdout, stderr, server, conn);
+      that.exec(conn, 'echo "'+contain+'" >> '+remoteFile+'', function(err, stdout, stderr, server, conn){
+        that.exec(conn, 'grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
+          then(err, (stdout.length>0 && stdout.match(contain)), server, conn);
+        });
       });
     }
   });
@@ -534,18 +636,72 @@ SSH2Utils.prototype.ensureFileContains = function(server, remoteFile, contain, t
  * @param server ServerCredentials|ssh2.Client
  * @param remoteFile String
  * @param contain String
- * @param then callback(contains, err, ServerCredentials server, ssh2.Client conn)
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
  */
 SSH2Utils.prototype.ensureFileContainsSudo = function(server, remoteFile, contain, then){
   var that = this;
   that.exec(server, 'sudo grep "'+contain+'" '+remoteFile, function(err, stdout, stderr, server, conn){
-    if(stdout.length>0){
-      then(true, err, stdout, stderr, server, conn)
+    var found = stdout.length>0 && stdout.match(contain);
+    if(found){
+      then(err, true, server, conn);
     } else {
       that.exec(conn, 'sudo echo "'+contain+'" >> '+remoteFile, function(err,stdout,stderr,server,conn){
-        then(!!err, err, stdout, stderr, server, conn);
+        then(err, !!err, server, conn);
       });
     }
+  });
+};
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.prependFile = function(server, remoteFile, content, then){
+  var that = this;
+  that.mktemp(server, pkg.name, function(err, tmpPath, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.writeFile(server, tmpPath+'/t', content, function(err){
+      if(err) return returnOrThrow(then, err, server, conn);
+      that.exec(server, 'echo '+remoteFile+' >> '+tmpPath+'/t', content, function(err){
+        if(err) return returnOrThrow(then, err, server, conn);
+        that.exec(server, 'echo '+tmpPath+'/t > '+remoteFile, content, function(err){
+          if(err) return returnOrThrow(then, err, server, conn);
+          that.exec(server, 'rm '+tmpPath+'/t ', content, function(err){
+            if(err) return returnOrThrow(then, err, server, conn);
+          });
+        });
+      });
+    });
+  });
+};
+
+/**
+ * Ensure a remote file contains a certain text piece of text
+ *
+ * @param server ServerCredentials|ssh2.Client
+ * @param remoteFile String
+ * @param content String
+ * @param then callback(err, Bool contains, ServerCredentials server, ssh2.Client conn)
+ */
+SSH2Utils.prototype.prependFileSudo = function(server, remoteFile, content, then){
+  var that = this;
+  that.mktemp(server, pkg.name, function(err, tmpPath, server, conn){
+    if(err) return returnOrThrow(then, err, server, conn);
+    that.writeFileSudo(server, tmpPath+'/t', content, function(err){
+      if(err) return returnOrThrow(then, err, server, conn);
+      that.exec(server, 'sudo echo '+remoteFile+' >> '+tmpPath+'/t', content, function(err){
+        if(err) return returnOrThrow(then, err, server, conn);
+        that.exec(server, 'sudo echo '+tmpPath+'/t > '+remoteFile, content, function(err){
+          if(err) return returnOrThrow(then, err, server, conn);
+          that.exec(server, 'sudo rm '+tmpPath+'/t ', content, function(err){
+            if(err) return returnOrThrow(then, err, server, conn);
+          });
+        });
+      });
+    });
   });
 };
 
@@ -727,9 +883,10 @@ SSH2Utils.prototype.fileExistsSudo = function(server, remoteFile, then){
 
   remoteFile = path.normalize(remoteFile).replace(/\\/g, '/');
   var remoteFileName = path.basename(remoteFile);
+  var remotePath = path.dirname(remoteFile);
   debug('fileExistsSudo %s', remoteFile);
 
-  this.exec(server, 'sudo ls -alh '+path.normalize(remoteFile)+'', function(err, stdout, stderr, server, conn){
+  this.exec(server, 'sudo ls -alh '+remotePath+'/', function(err, stdout, stderr, server, conn){
     returnOrThrow(then, err, !!stdout.match(remoteFileName), server, conn);
   });
 };
