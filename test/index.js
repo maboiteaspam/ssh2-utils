@@ -295,7 +295,7 @@ describe('run', function(){
         ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
           stdout2.on('data', function(data){
             data.toString().should.match(/root/);
-            stdout.toString().should.match(/session/);
+            stdout.toString().should.match(/sshd/);
             conn.end();
             done();
           });
@@ -320,7 +320,7 @@ describe('run', function(){
         ssh.run(conn,'ls -alh /var/log/', function(err2, stdout2){
           stdout2.on('data', _.debounce(function(data){
             data.toString().should.match(/root/);
-            stdout.toString().should.match(/session/);
+            stdout.toString().should.match(/sshd/);
             conn.end();
             done();
           }, 500 ) );
