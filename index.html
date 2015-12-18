@@ -49,6 +49,13 @@
 <hr>
 
 <h1>
+<a id="changes" class="anchor" href="#changes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Changes</h1>
+
+<ul>
+<li>2015-12-17 : Tried to update to latest dependencies. Got problems.. Need to pass travis tests. Need to jump to 2.x after.</li>
+</ul>
+
+<h1>
 <a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
 
 <p>Automatic source code documentation generation </p>
@@ -124,7 +131,7 @@
 
 <ul>
 <li>
-<code>err</code> isa Boolean.</li>
+<code>err</code> is a Boolean.</li>
 <li>
 <code>stdout</code> <code>stderr</code> are String.</li>
 <li>
@@ -137,15 +144,15 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.<span class="pl-c1">exec</span>(server, <span class="pl-s"><span class="pl-pds">'</span>ls<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>,<span class="pl-smi">stdout</span>,<span class="pl-smi">stderr</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
-        <span class="pl-en">console</span><span class="pl-c1">.log</span>(stdout);
-        <span class="pl-en">console</span><span class="pl-c1">.log</span>(stderr);
+    <span class="pl-smi">ssh</span>.<span class="pl-c1">exec</span>(server, <span class="pl-s"><span class="pl-pds">'</span>ls<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>,<span class="pl-smi">stdout</span>,<span class="pl-smi">stderr</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(stdout);
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(stderr);
     });</pre></div>
 
 <p><a name="run"></a></p>
@@ -180,21 +187,21 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.run(server, [<span class="pl-s"><span class="pl-pds">'</span>ls<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>time<span class="pl-pds">'</span></span>], <span class="pl-k">function</span>(<span class="pl-smi">err</span>,<span class="pl-smi">stdout</span>,<span class="pl-smi">stderr</span>,<span class="pl-smi">server</span>,<span class="pl-smi">conn</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
-        stdout.on(<span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
-            <span class="pl-en">console</span><span class="pl-c1">.log</span>(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">+</span>data);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">run</span>(server, [<span class="pl-s"><span class="pl-pds">'</span>ls<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>time<span class="pl-pds">'</span></span>], <span class="pl-k">function</span>(<span class="pl-smi">err</span>,<span class="pl-smi">stdout</span>,<span class="pl-smi">stderr</span>,<span class="pl-smi">server</span>,<span class="pl-smi">conn</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
+        <span class="pl-smi">stdout</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+            <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">+</span>data);
         });
-        stderr.on(<span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
-            <span class="pl-en">console</span><span class="pl-c1">.log</span>(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">+</span>data);
+        <span class="pl-smi">stderr</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+            <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span><span class="pl-k">+</span>data);
         });
-        stdout.on(<span class="pl-s"><span class="pl-pds">'</span>close<span class="pl-pds">'</span></span>,<span class="pl-k">function</span>(){
-            conn.end();
+        <span class="pl-smi">stdout</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>close<span class="pl-pds">'</span></span>,<span class="pl-k">function</span>(){
+            <span class="pl-smi">conn</span>.<span class="pl-en">end</span>();
         });
     });</pre></div>
 
@@ -243,13 +250,13 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.runMultiple(server, [<span class="pl-s"><span class="pl-pds">'</span>ls<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>time<span class="pl-pds">'</span></span>], <span class="pl-k">function</span>(<span class="pl-smi">sessionText</span>, <span class="pl-smi">sshObj</span>){
-        <span class="pl-en">console</span><span class="pl-c1">.log</span>(sessionText);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">runMultiple</span>(server, [<span class="pl-s"><span class="pl-pds">'</span>ls<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>time<span class="pl-pds">'</span></span>], <span class="pl-k">function</span>(<span class="pl-smi">sessionText</span>, <span class="pl-smi">sshObj</span>){
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(sessionText);
     });</pre></div>
 
 <p><a name="getFile"></a></p>
@@ -284,13 +291,13 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.getFile(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_remote<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_local<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">getFile</span>(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_remote<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_local<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
     });</pre></div>
 
 <p><a name="putFile"></a></p>
@@ -325,13 +332,13 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.putFile(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_local<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">putFile</span>(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_local<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
     });</pre></div>
 
 <p><a name="putDir"></a></p>
@@ -366,13 +373,13 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.putDir(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_local<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">putDir</span>(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/from_some_local<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
     });</pre></div>
 
 <p><a name="mkdir"></a></p>
@@ -405,13 +412,13 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.mkdir(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">mkdir</span>(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
     });</pre></div>
 
 <p><a name="rmdir"></a></p>
@@ -446,13 +453,13 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.rmdir(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">rmdir</span>(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
     });</pre></div>
 
 <p><a name="fileExists"></a></p>
@@ -485,13 +492,13 @@
 
 <p><strong>Examples</strong></p>
 
-<div class="highlight highlight-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> SSH2Utils <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>ssh2-utils<span class="pl-pds">'</span></span>);
     <span class="pl-k">var</span> ssh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SSH2Utils</span>();
 
     <span class="pl-k">var</span> server <span class="pl-k">=</span> {host<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, username<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>, password<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span> };
 
-    ssh.fileExists(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
-        <span class="pl-k">if</span>(err) <span class="pl-en">console</span><span class="pl-c1">.log</span>(err);
+    <span class="pl-smi">ssh</span>.<span class="pl-en">fileExists</span>(server,<span class="pl-s"><span class="pl-pds">'</span>/tmp/to_some_remote<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>){
+        <span class="pl-k">if</span>(err) <span class="pl-en">console</span>.<span class="pl-c1">log</span>(err);
     });</pre></div>
 
 <hr>
@@ -538,6 +545,21 @@
 <a id="status" class="anchor" href="#status" aria-hidden="true"><span class="octicon octicon-link"></span></a>Status</h1>
 
 <p>In development. It needs some tests. some more methods implementation.</p>
+
+<hr>
+
+<h1>
+<a id="test" class="anchor" href="#test" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test</h1>
+
+<p>For fedora users, use <code>virtualbox</code>,</p>
+
+<pre><code>sudo dnf install vagrant
+# see http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
+export VAGRANT_DEFAULT_PROVIDER=virtualbox
+mocha
+</code></pre>
+
+<p>or help me get started on <code>libvirt</code> to port forward on <code>vagrant@localhost -p 2222</code></p>
       </section>
     </div>
 
