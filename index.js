@@ -203,7 +203,9 @@ var connect = function(server, done){
       conn.pendingStreams = [];
       var superEnd = conn.end;
       conn.end = function(){
-        conn.pendingStreams.forEach(function(stream){
+        debug('end connection %s', conn.pendingStreams.length);
+        conn.pendingStreams.forEach(function(stream, i){
+          debug('kill stream %s', i);
           stream.kill(conn.pendingStreams.length);
         });
         conn.pendingStreams = [];
