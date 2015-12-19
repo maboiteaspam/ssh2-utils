@@ -398,3 +398,10 @@ mocha
 ```
 
 or help me get started on `libvirt` to port forward on `vagrant@localhost -p 2222`
+
+## More
+
+- https://github.com/mscdex/ssh2/
+- https://github.com/maboiteaspam/check-machine
+- https://github.com/maboiteaspam/diff-machines
+
