@@ -466,7 +466,8 @@ SSH2Utils.prototype.run = function(server, cmd, doneEach, done){
           })(stream, i+1);
 
           if(!stream_){ // execute only once
-            returnOrThrow(done, err, stdoutStream, stderrStream, server, conn);
+            returnOrThrow(done, err, stdoutStream, stderrStream, server, conn); // boooh. take care of this one, it is not writable.
+            // call it like this, with two fn callback, ssh2.run(host, cmd, fnEach, fnDone), to get access writable stream in fnEach
           }
 
           if(doneEach) doneEach(err, stream, stream.stderr, server, conn);
