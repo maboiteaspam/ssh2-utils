@@ -12,28 +12,35 @@ else
 var SSH2Utils = require('../index.js');
 var ssh = new SSH2Utils();
 
+
+// use differnt credz to tests different scenarios
 var hostKey = {
-  'host':'127.0.0.1',
-  port: pwd.localhost.port || 22,
-  username: pwd.localhost.user,
-  password: pwd.localhost.pwd || undefined,
-  privateKey: pwd.localhost.privateKey?fs.readFileSync(pwd.localhost.privateKey):null
+  'host':       '127.0.0.1',
+  'port':       pwd.localhost.port || 22,
+  'username':   pwd.localhost.user,
+  'password':   pwd.localhost.pwd || undefined,
+  'privateKey': pwd.localhost.privateKey?fs.readFileSync(pwd.localhost.privateKey):null
 };
 
 var hostPwd = {
-  'host':'127.0.0.1',
-  port: pwd.localhostpwd.port || 22,
-  username: pwd.localhostpwd.user,
-  password: pwd.localhostpwd.pwd || undefined
+  'host':       '127.0.0.1',
+  'port':       pwd.localhostpwd.port || 22,
+  'username':   pwd.localhostpwd.user,
+  'password':   pwd.localhostpwd.pwd || undefined
 };
+
+// travis does not support password based auth
 if( process.env['TRAVIS'] ){
   hostPwd.privateKey = hostKey.privateKey;
 }
 
 
+// in local, stop, start vagrant
 if( !process.env['TRAVIS'] ){
 
-  var vagrant = new Vagrant();
+  var vagrant = new Vagrant({
+    provider: 'virtualbox'
+  });
 
   var hasBooted = true;
 
@@ -67,7 +74,9 @@ if( !process.env['TRAVIS'] ){
 
 }
 
+// the path to store files on the remote
 var tmpRemotePath = '/tmp/tmp_remote';
+// the local path to et fixtures from
 var fixturePath = __dirname + '/fixtures/';
 
 
@@ -618,7 +627,7 @@ describe('sftp readFile', function(){
     ssh.readFile(hostPwd, '/home/vagrant/.bashrc', function(err, data){
       if(err) console.error(err);
       (!!err).should.be.false;
-      data.should.match(/export PATH/);
+      data.should.match(/(export PATH|bashrc)/); // depending the os hosting the remote ssh, content vary
       done();
     });
   });

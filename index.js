@@ -1,15 +1,15 @@
 
-var path = require('path');
-var async = require('async');
-var Client = require('ssh2').Client;
-var glob = require("glob");
-var fs = require("fs-extra");
+var path    = require('path');
+var async   = require('async');
+var Client  = require('ssh2').Client;
+var glob    = require("glob");
+var fs      = require("fs-extra");
 var through = require('through');
-var _ = require("underscore");
-var _s = require("underscore.string");
+var _       = require("underscore");
+var _s      = require("underscore.string");
 
-var pkg = require('./package.json');
-var debug = require('debug')(pkg.name);
+var pkg     = require('./package.json');
+var debug   = require('debug')(pkg.name);
 
 
 
@@ -203,7 +203,9 @@ var connect = function(server, done){
       conn.pendingStreams = [];
       var superEnd = conn.end;
       conn.end = function(){
-        conn.pendingStreams.forEach(function(stream){
+        debug('end connection %s', conn.pendingStreams.length);
+        conn.pendingStreams.forEach(function(stream, i){
+          debug('kill stream %s', i);
           stream.kill(conn.pendingStreams.length);
         });
         conn.pendingStreams = [];
